@@ -8,7 +8,7 @@ import (
 	ory "github.com/ory/client-go"
 )
 
-func SessionKeyFromOrySession(session *ory.Session) uint32 {
+func HandoffSessionKeyFromOrySession(session *ory.Session) uint32 {
 	h := fnv.New32a()
 	if err := gob.
 		NewEncoder(h).

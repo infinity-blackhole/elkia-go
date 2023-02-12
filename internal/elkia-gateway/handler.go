@@ -2,14 +2,15 @@ package elkiagateway
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"net"
 	"net/textproto"
-	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/pkg/core"
+	"github.com/infinity-blackhole/elkia/pkg/crypto"
 )
 
 type HandlerConfig struct {
@@ -40,8 +41,8 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := textproto.NewReader(bufio.NewReader(c))
-	_, lastSN, err := h.handleHandoff(ctx, c, r)
+	r := NewReader(bufio.NewReader(c))
+	_, lastSequenceNumber, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
 	}
@@ -50,42 +51,34 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		if err != nil {
 			panic(err)
 		}
-		ss := strings.Split(s, " ")
-		if 0 >= len(ss) {
+		ss := bytes.Split(s, []byte{' '})
+		if len(ss) == 0 {
 			panic(errors.New("invalid message"))
 		}
-		sn, err := ParseUint32(ss[0])
+		sequenceNumber, err := ParseUint32(ss[0])
 		if err != nil {
 			panic(err)
 		}
-		if sn != lastSN+1 {
+		if sequenceNumber != lastSequenceNumber+1 {
 			panic(errors.New("invalid sequence number"))
 		} else {
-			lastSN = sn
+			lastSequenceNumber = sequenceNumber
 		}
 		h.kafkaProducer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Partition: kafka.PartitionAny,
 			},
-			Value: []byte(s),
+			Value: s,
 		}, nil)
 	}
 }
 
-func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *textproto.Reader) (uint32, uint32, error) {
-	s, err := r.ReadLine()
+func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uint32, uint32, error) {
+	syncMessage, err := ReadSyncMessage(r)
 	if err != nil {
 		return 0, 0, err
 	}
-	syncMessage, err := ParseSyncMessage(s)
-	if err != nil {
-		return 0, 0, err
-	}
-	s, err = r.ReadLine()
-	if err != nil {
-		return 0, 0, err
-	}
-	credsMessage, err := ParseCredentialsMessage(s)
+	credsMessage, err := ReadCredentialsMessage(r)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -118,4 +111,40 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *textproto.Re
 		return 0, 0, err
 	}
 	return credsMessage.Key, syncMessage.SequenceNumber, nil
+}
+
+type Reader struct {
+	r      *textproto.Reader
+	crypto *crypto.SimpleSubstitution
+}
+
+func NewReader(r *bufio.Reader) *Reader {
+	return &Reader{
+		r:      textproto.NewReader(r),
+		crypto: new(crypto.SimpleSubstitution),
+	}
+}
+
+func (r *Reader) ReadLine() ([]byte, error) {
+	s, err := r.r.ReadLineBytes()
+	if err != nil {
+		return nil, err
+	}
+	return r.crypto.Decrypt(s), nil
+}
+
+func ReadSyncMessage(r *Reader) (*SyncMessage, error) {
+	s, err := r.ReadLine()
+	if err != nil {
+		return nil, err
+	}
+	return ParseSyncMessage(s)
+}
+
+func ReadCredentialsMessage(r *Reader) (*CredentialsMessage, error) {
+	s, err := r.ReadLine()
+	if err != nil {
+		return nil, err
+	}
+	return ParseCredentialsMessage(s)
 }

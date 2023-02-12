@@ -1,6 +1,7 @@
 package elkiaauthserver
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -15,16 +16,16 @@ type CredentialsMessage struct {
 	ClientChecksum string
 }
 
-func ParseCredentialsMessage(msg string) (*CredentialsMessage, error) {
-	ss := strings.Split(msg, " ")
+func ParseCredentialsMessage(msg []byte) (*CredentialsMessage, error) {
+	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 7 {
 		return nil, errors.New("invalid auth message")
 	}
 	return &CredentialsMessage{
-		Identifier:     ss[1],
-		Password:       ss[2],
-		ClientVersion:  ss[4],
-		ClientChecksum: ss[6],
+		Identifier:     string(ss[1]),
+		Password:       string(ss[2]),
+		ClientVersion:  string(ss[4]),
+		ClientChecksum: string(ss[6]),
 	}, nil
 }
 

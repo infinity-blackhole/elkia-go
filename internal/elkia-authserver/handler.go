@@ -8,6 +8,7 @@ import (
 	"net/textproto"
 
 	"github.com/infinity-blackhole/elkia/pkg/core"
+	"github.com/infinity-blackhole/elkia/pkg/crypto"
 )
 
 type HandlerConfig struct {
@@ -32,12 +33,8 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := textproto.NewReader(bufio.NewReader(c))
-	s, err := r.ReadLine()
-	if err != nil {
-		panic(err)
-	}
-	m, err := ParseCredentialsMessage(s)
+	r := NewReader(bufio.NewReader(c))
+	m, err := ReadCredentialsMessage(r)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +47,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	key := SessionKeyFromOrySession(session)
+	key := HandoffSessionKeyFromOrySession(session)
 	if err := h.sessionStore.SetHandoffSession(ctx, key, &core.HandoffSession{
 		Identifier:   m.Identifier,
 		SessionToken: token,
@@ -71,4 +68,32 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		Gateways: gateways,
 	}
 	fmt.Fprint(c, evs)
+}
+
+type Reader struct {
+	r      *textproto.Reader
+	crypto *crypto.SimpleSubstitution
+}
+
+func NewReader(r *bufio.Reader) *Reader {
+	return &Reader{
+		r:      textproto.NewReader(r),
+		crypto: new(crypto.SimpleSubstitution),
+	}
+}
+
+func (r *Reader) ReadLine() ([]byte, error) {
+	s, err := r.r.ReadLineBytes()
+	if err != nil {
+		return nil, err
+	}
+	return r.crypto.Decrypt(s), nil
+}
+
+func ReadCredentialsMessage(r *Reader) (*CredentialsMessage, error) {
+	s, err := r.ReadLine()
+	if err != nil {
+		return nil, err
+	}
+	return ParseCredentialsMessage(s)
 }
