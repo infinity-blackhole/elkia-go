@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/pkg/core"
 	"github.com/infinity-blackhole/elkia/pkg/crypto"
+	"github.com/infinity-blackhole/elkia/pkg/messages"
 )
 
 type HandlerConfig struct {
@@ -55,7 +56,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		if len(ss) == 0 {
 			panic(errors.New("invalid message"))
 		}
-		sequenceNumber, err := ParseUint32(ss[0])
+		sequenceNumber, err := messages.ParseUint32(ss[0])
 		if err != nil {
 			panic(err)
 		}
@@ -78,14 +79,14 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if err != nil {
 		return 0, 0, err
 	}
-	credsMessage, err := ReadCredentialsMessage(r)
+	handoffMessage, err := ReadHandoffMessage(r)
 	if err != nil {
 		return 0, 0, err
 	}
-	if credsMessage.SequenceNumber != syncMessage.SequenceNumber+1 {
+	if handoffMessage.SequenceNumber != syncMessage.SequenceNumber+1 {
 		return 0, 0, errors.New("invalid sequence number")
 	}
-	presence, err := h.sessionStore.GetHandoffSession(ctx, credsMessage.Key)
+	presence, err := h.sessionStore.GetHandoffSession(ctx, handoffMessage.Key)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -99,7 +100,7 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	credentialsSession, _, err := h.identityProvider.PerformLoginFlowWithPasswordMethod(
 		ctx,
 		presence.Identifier,
-		credsMessage.Password,
+		handoffMessage.Password,
 	)
 	if err != nil {
 		return 0, 0, err
@@ -107,10 +108,10 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if keySession.Identity.Id != credentialsSession.Identity.Id {
 		return 0, 0, errors.New("invalid credentials")
 	}
-	if err := h.sessionStore.DeleteHandoffSession(ctx, credsMessage.Key); err != nil {
+	if err := h.sessionStore.DeleteHandoffSession(ctx, handoffMessage.Key); err != nil {
 		return 0, 0, err
 	}
-	return credsMessage.Key, syncMessage.SequenceNumber, nil
+	return handoffMessage.Key, syncMessage.SequenceNumber, nil
 }
 
 type Reader struct {
@@ -133,18 +134,18 @@ func (r *Reader) ReadLine() ([]byte, error) {
 	return r.crypto.Decrypt(s), nil
 }
 
-func ReadSyncMessage(r *Reader) (*SyncMessage, error) {
+func ReadSyncMessage(r *Reader) (*messages.SyncMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return ParseSyncMessage(s)
+	return messages.ParseSyncMessage(s)
 }
 
-func ReadCredentialsMessage(r *Reader) (*CredentialsMessage, error) {
+func ReadHandoffMessage(r *Reader) (*messages.HandoffMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return ParseCredentialsMessage(s)
+	return messages.ParseHandoffMessage(s)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/infinity-blackhole/elkia/pkg/core"
 	"github.com/infinity-blackhole/elkia/pkg/crypto"
+	"github.com/infinity-blackhole/elkia/pkg/messages"
 )
 
 type HandlerConfig struct {
@@ -59,11 +60,11 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	gateways := make([]Gateway, len(worlds))
+	gateways := make([]messages.Gateway, len(worlds))
 	for _, w := range worlds {
 		gateways = append(gateways, GatewaysFromFleetWorld(&w)...)
 	}
-	evs := ListGatewaysMessage{
+	evs := messages.ListGatewaysMessage{
 		Key:      key,
 		Gateways: gateways,
 	}
@@ -90,10 +91,10 @@ func (r *Reader) ReadLine() ([]byte, error) {
 	return r.crypto.Decrypt(s), nil
 }
 
-func ReadCredentialsMessage(r *Reader) (*CredentialsMessage, error) {
+func ReadCredentialsMessage(r *Reader) (*messages.CredentialsMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return ParseCredentialsMessage(s)
+	return messages.ParseCredentialsMessage(s)
 }

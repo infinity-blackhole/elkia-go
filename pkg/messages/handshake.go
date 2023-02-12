@@ -1,4 +1,4 @@
-package elkiagateway
+package messages
 
 import (
 	"bytes"
@@ -6,12 +6,8 @@ import (
 	"strconv"
 )
 
-type Message struct {
-	SequenceNumber uint32
-}
-
 type SyncMessage struct {
-	*Message
+	*StreamMessage
 }
 
 func ParseSyncMessage(msg []byte) (*SyncMessage, error) {
@@ -24,19 +20,19 @@ func ParseSyncMessage(msg []byte) (*SyncMessage, error) {
 		return nil, err
 	}
 	return &SyncMessage{
-		Message: &Message{
+		StreamMessage: &StreamMessage{
 			SequenceNumber: sn,
 		},
 	}, nil
 }
 
-type CredentialsMessage struct {
-	*Message
+type HandoffMessage struct {
+	*StreamMessage
 	Key      uint32
 	Password string
 }
 
-func ParseCredentialsMessage(msg []byte) (*CredentialsMessage, error) {
+func ParseHandoffMessage(msg []byte) (*HandoffMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 4 {
 		return nil, errors.New("invalid auth message")
@@ -56,10 +52,10 @@ func ParseCredentialsMessage(msg []byte) (*CredentialsMessage, error) {
 	if sni != snp+1 {
 		return nil, errors.New("sequence number mismatch")
 	}
-	return &CredentialsMessage{
-		Message:  &Message{SequenceNumber: snp},
-		Key:      key,
-		Password: string(ss[3]),
+	return &HandoffMessage{
+		StreamMessage: &StreamMessage{SequenceNumber: snp},
+		Key:           key,
+		Password:      string(ss[3]),
 	}, nil
 }
 

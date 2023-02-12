@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 
 	"github.com/infinity-blackhole/elkia/pkg/core"
+	"github.com/infinity-blackhole/elkia/pkg/messages"
 	ory "github.com/ory/client-go"
 )
 
@@ -18,22 +19,22 @@ func HandoffSessionKeyFromOrySession(session *ory.Session) uint32 {
 	return h.Sum32()
 }
 
-func GatewaysFromFleetWorld(world *core.World) []Gateway {
-	gateways := make([]Gateway, len(world.Gateways))
+func GatewaysFromFleetWorld(world *core.World) []messages.Gateway {
+	gateways := make([]messages.Gateway, len(world.Gateways))
 	for _, g := range world.Gateways {
 		gateways = append(gateways, GatewayFromFleetGateway(world.ID, world.Name, &g))
 	}
 	return gateways
 }
 
-func GatewayFromFleetGateway(id, name string, g *core.Gateway) Gateway {
+func GatewayFromFleetGateway(id, name string, g *core.Gateway) messages.Gateway {
 	h := fnv.New32a()
 	h.Write([]byte(id))
 	worldIdNum := h.Sum32()
 	h = fnv.New32a()
 	h.Write([]byte(g.ID))
 	gatewayId := h.Sum32()
-	return Gateway{
+	return messages.Gateway{
 		Addr:       g.Addr,
 		Population: g.Population,
 		Capacity:   g.Capacity,

@@ -1,4 +1,4 @@
-package elkiaauthserver
+package messages
 
 import (
 	"bytes"
