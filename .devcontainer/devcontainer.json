@@ -14,7 +14,9 @@
         "mkhl.direnv",
         "yzhang.markdown-all-in-one",
         "SonarSource.sonarlint-vscode",
-        "golang.go"
+        "golang.go",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml"
       ]
     }
   },
