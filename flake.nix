@@ -42,6 +42,7 @@
               packages = [
                 pkgs.nixpkgs-fmt
                 pkgs.docker
+                pkgs.gnumake
               ];
             }
             {
@@ -51,6 +52,9 @@
               packages = [
                 pkgs.go
                 pkgs.gotools
+                pkgs.protobuf
+                pkgs.protoc-gen-go
+                pkgs.protoc-gen-go-grpc
               ];
             }
           ];
