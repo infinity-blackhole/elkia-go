@@ -26,6 +26,12 @@ message Handoff {
   string token = 3;
 }
 
+message Session {
+  string id = 1;
+  string identity_id = 2;
+  string token = 3;
+}
+
 message ListClusterRequest {}
 
 message ListClusterResponse { repeated Cluster clusters = 1; }

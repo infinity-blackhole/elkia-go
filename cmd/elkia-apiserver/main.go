@@ -34,15 +34,15 @@ func init() {
 }
 
 func main() {
-	clientset, err := NewKubernetesClientSet()
-	if err != nil {
-		panic(err)
-	}
 	lis, err := net.Listen("unix", elkiaApiServerEndpoint)
 	if err != nil {
 		panic(err)
 	}
-	sessionStore, err := NewSessionStoreClient()
+	sessionStore, err := NewSessionStore()
+	if err != nil {
+		panic(err)
+	}
+	orchestrator, err := NewOrchestrator()
 	if err != nil {
 		panic(err)
 	}
@@ -50,9 +50,9 @@ func main() {
 	fleetv1alha1pb.RegisterFleetServiceServer(
 		srv,
 		apiserver.NewFleetService(apiserver.FleetServiceConfig{
-			KubernetesClientSet: clientset,
-			IdentityProvider:    NewIdentityProviderClient(),
-			SessionStore:        sessionStore,
+			Orchestrator:     orchestrator,
+			IdentityProvider: NewIdentityProvider(),
+			SessionStore:     sessionStore,
 		}),
 	)
 	if err := srv.Serve(lis); err != nil {
@@ -60,20 +60,30 @@ func main() {
 	}
 }
 
-func NewIdentityProviderClient() *apiserver.IdentityProvider {
-	return apiserver.NewIdentityProviderService(&apiserver.IdentityProviderServiceConfig{
+func NewOrchestrator() (*apiserver.Orchestrator, error) {
+	clientset, err := NewKubernetesClientSet()
+	if err != nil {
+		return nil, err
+	}
+	return apiserver.NewOrchestrator(apiserver.OrchestratorConfig{
+		KubernetesClientSet: clientset,
+	}), nil
+}
+
+func NewIdentityProvider() *apiserver.IdentityProvider {
+	return apiserver.NewIdentityProvider(&apiserver.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(ory.NewConfiguration()),
 	})
 }
 
-func NewEtcdClient() (*etcd.Client, error) {
+func NewEtcd() (*etcd.Client, error) {
 	return etcd.New(etcd.Config{
 		Endpoints: etcdEndpoints,
 	})
 }
 
-func NewSessionStoreClient() (*apiserver.SessionStore, error) {
-	etcd, err := NewEtcdClient()
+func NewSessionStore() (*apiserver.SessionStore, error) {
+	etcd, err := NewEtcd()
 	if err != nil {
 		return nil, err
 	}

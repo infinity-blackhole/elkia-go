@@ -3,6 +3,7 @@ package apiserver
 import (
 	"context"
 
+	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 )
 
@@ -10,7 +11,7 @@ type IdentityProviderServiceConfig struct {
 	OryClient *ory.APIClient
 }
 
-func NewIdentityProviderService(config *IdentityProviderServiceConfig) *IdentityProvider {
+func NewIdentityProvider(config *IdentityProviderServiceConfig) *IdentityProvider {
 	return &IdentityProvider{
 		oryClient: config.OryClient,
 	}
@@ -23,12 +24,12 @@ type IdentityProvider struct {
 func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 	ctx context.Context,
 	identifier, password string,
-) (*ory.Session, string, error) {
+) (*fleetv1alpha1pb.Session, error) {
 	flow, _, err := i.oryClient.FrontendApi.
 		CreateNativeLoginFlow(ctx).
 		Execute()
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	ulf, _, err := i.oryClient.FrontendApi.
 		UpdateLoginFlow(ctx).
@@ -44,14 +45,18 @@ func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 		).
 		Execute()
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	return &ulf.Session, *ulf.SessionToken, nil
+	return &fleetv1alpha1pb.Session{
+		Id:         ulf.Session.Id,
+		IdentityId: ulf.Session.Identity.Id,
+		Token:      *ulf.SessionToken,
+	}, nil
 }
 
 func (i *IdentityProvider) GetSession(
 	ctx context.Context, token string,
-) (*ory.Session, error) {
+) (*fleetv1alpha1pb.Session, error) {
 	session, _, err := i.oryClient.FrontendApi.
 		ToSession(ctx).
 		XSessionToken(token).
@@ -59,7 +64,11 @@ func (i *IdentityProvider) GetSession(
 	if err != nil {
 		return nil, err
 	}
-	return session, nil
+	return &fleetv1alpha1pb.Session{
+		Id:         session.Id,
+		IdentityId: session.Identity.Id,
+		Token:      token,
+	}, nil
 }
 
 func (i *IdentityProvider) Logout(ctx context.Context, sessionToken string) error {
