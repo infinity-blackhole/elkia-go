@@ -16,7 +16,7 @@ FROM debug as build
 # Build optimized binary
 RUN go build -ldflags "-linkmode=external" -o /usr/bin/elkia-authserver ./cmd/api
 
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
 COPY --from=build /usr/bin/elkia-authserver /usr/bin

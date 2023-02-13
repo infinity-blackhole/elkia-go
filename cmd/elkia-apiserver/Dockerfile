@@ -14,14 +14,14 @@ COPY pkg pkg
 FROM debug as build
 
 # Build optimized binary
-RUN go build -ldflags "-linkmode=external" -o /usr/bin/elkia-gateway ./cmd/api
+RUN go build -ldflags "-linkmode=external" -o /usr/bin/elkia-apiserver ./cmd/api
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/bin/elkia-gateway /usr/bin
+COPY --from=build /usr/bin/elkia-apiserver /usr/bin
 
 # HTTP Function
 EXPOSE 8080
 
-ENTRYPOINT ["elkia-gateway"]
+ENTRYPOINT ["elkia-apiserver"]

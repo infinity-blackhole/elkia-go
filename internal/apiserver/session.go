@@ -1,12 +1,13 @@
-package core
+package apiserver
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
+	fleetv1alpha1 "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	etcd "go.etcd.io/etcd/client/v3"
+	"google.golang.org/protobuf/proto"
 )
 
 type SessionStoreConfig struct {
@@ -23,7 +24,10 @@ type SessionStore struct {
 	etcd *etcd.Client
 }
 
-func (s *SessionStore) GetHandoffSession(ctx context.Context, key uint32) (*HandoffSession, error) {
+func (s *SessionStore) GetHandoffSession(
+	ctx context.Context,
+	key uint32,
+) (*fleetv1alpha1.Handoff, error) {
 	res, err := s.etcd.Get(ctx, fmt.Sprintf("handoff_sessions:%d", key))
 	if err != nil {
 		return nil, err
@@ -31,8 +35,8 @@ func (s *SessionStore) GetHandoffSession(ctx context.Context, key uint32) (*Hand
 	if len(res.Kvs) == 1 {
 		return nil, errors.New("invalid key")
 	}
-	var presence HandoffSession
-	if err := json.Unmarshal(res.Kvs[0].Value, &presence); err != nil {
+	var presence fleetv1alpha1.Handoff
+	if err := proto.Unmarshal(res.Kvs[0].Value, &presence); err != nil {
 		return nil, err
 	}
 	return &presence, nil
@@ -41,9 +45,9 @@ func (s *SessionStore) GetHandoffSession(ctx context.Context, key uint32) (*Hand
 func (s *SessionStore) SetHandoffSession(
 	ctx context.Context,
 	key uint32,
-	presence *HandoffSession,
+	handoff *fleetv1alpha1.Handoff,
 ) error {
-	d, err := json.Marshal(presence)
+	d, err := proto.Marshal(handoff)
 	if err != nil {
 		return err
 	}

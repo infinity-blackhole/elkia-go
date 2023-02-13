@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package io.elkia.fleets.v1alpha1;
+
+option go_package = "pkg/api/fleet/v1alpha1";
+
+import "google/protobuf/empty.proto";
+
+message World {
+  string id = 1;
+  string name = 2;
+}
+
+message Gateway {
+  string id = 1;
+  string address = 2;
+  uint32 population = 3;
+  uint32 capacity = 4;
+}
+
+message Handoff {
+  string identifier = 1;
+  string token = 2;
+}
+
+message ListWorldRequest {}
+
+message ListWorldResponse { repeated World worlds = 1; }
+
+message GetWorldRequest { string id = 1; }
+
+message ListGatewayRequest { string world_id = 1; }
+
+message ListGatewayResponse { repeated Gateway gateways = 1; }
+
+message GetGatewayRequest { string id = 1; }
+
+message CreateHandoffRequest {
+  string identifier = 1;
+  string token = 2;
+}
+
+message CreateHandoffResponse {
+  uint32 key = 1;
+}
+
+message PerformHandoffRequest {
+  uint32 key = 1;
+  string token = 2;
+}
+
+service FleetService {
+  rpc ListWorlds(ListWorldRequest) returns (ListWorldResponse);
+  rpc GetWorld(GetWorldRequest) returns (World);
+  rpc ListGateways(ListGatewayRequest) returns (ListGatewayResponse);
+  rpc GetGateway(GetGatewayRequest) returns (Gateway);
+  rpc CreateHandoff(CreateHandoffRequest) returns (CreateHandoffResponse);
+  rpc PerformHandoff(PerformHandoffRequest) returns (google.protobuf.Empty);
+}

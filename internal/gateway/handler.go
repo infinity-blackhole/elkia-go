@@ -1,75 +1,61 @@
-package elkiagateway
+package gateway
 
 import (
 	"bufio"
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net"
 	"net/textproto"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/infinity-blackhole/elkia/pkg/core"
+	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/crypto"
 	"github.com/infinity-blackhole/elkia/pkg/messages"
 )
 
 type HandlerConfig struct {
-	IAMClient     *core.IdentityProvider
-	SessionStore  *core.SessionStore
-	Fleet         *core.FleetClient
+	FleetClient   fleetv1alpha1pb.FleetServiceClient
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		identityProvider: cfg.IAMClient,
-		sessionStore:     cfg.SessionStore,
-		fleet:            cfg.Fleet,
-		kafkaProducer:    cfg.KafkaProducer,
-		kafkaConsumer:    cfg.KafkaConsumer,
+		fleet:         cfg.FleetClient,
+		kafkaProducer: cfg.KafkaProducer,
+		kafkaConsumer: cfg.KafkaConsumer,
 	}
 }
 
 type Handler struct {
-	identityProvider *core.IdentityProvider
-	sessionStore     *core.SessionStore
-	fleet            *core.FleetClient
-	kafkaProducer    *kafka.Producer
-	kafkaConsumer    *kafka.Consumer
+	fleet         fleetv1alpha1pb.FleetServiceClient
+	kafkaProducer *kafka.Producer
+	kafkaConsumer *kafka.Consumer
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	r := NewReader(bufio.NewReader(c))
-	_, lastSequenceNumber, err := h.handleHandoff(ctx, c, r)
+	_, lastSeqNum, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
 	}
 	for {
-		s, err := r.ReadLine()
+		_, seqNum, _, err := h.readerMessage(r)
 		if err != nil {
 			panic(err)
 		}
-		ss := bytes.Split(s, []byte{' '})
-		if len(ss) == 0 {
-			panic(errors.New("invalid message"))
-		}
-		sequenceNumber, err := messages.ParseUint32(ss[0])
-		if err != nil {
-			panic(err)
-		}
-		if sequenceNumber != lastSequenceNumber+1 {
+		if seqNum != lastSeqNum+1 {
 			panic(errors.New("invalid sequence number"))
 		} else {
-			lastSequenceNumber = sequenceNumber
+			lastSeqNum = seqNum
 		}
 		h.kafkaProducer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Partition: kafka.PartitionAny,
 			},
-			Value: s,
 		}, nil)
 	}
 }
@@ -86,32 +72,34 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if handoffMessage.SequenceNumber != syncMessage.SequenceNumber+1 {
 		return 0, 0, errors.New("invalid sequence number")
 	}
-	presence, err := h.sessionStore.GetHandoffSession(ctx, handoffMessage.Key)
 	if err != nil {
-		return 0, 0, err
+		panic(err)
 	}
-	keySession, err := h.identityProvider.GetSession(ctx, presence.SessionToken)
+	_, err = h.fleet.
+		PerformHandoff(ctx, &fleetv1alpha1pb.PerformHandoffRequest{
+			Key:   handoffMessage.Key,
+			Token: handoffMessage.Password,
+		})
 	if err != nil {
-		return 0, 0, err
-	}
-	if err := h.identityProvider.Logout(ctx, presence.SessionToken); err != nil {
-		return 0, 0, err
-	}
-	credentialsSession, _, err := h.identityProvider.PerformLoginFlowWithPasswordMethod(
-		ctx,
-		presence.Identifier,
-		handoffMessage.Password,
-	)
-	if err != nil {
-		return 0, 0, err
-	}
-	if keySession.Identity.Id != credentialsSession.Identity.Id {
-		return 0, 0, errors.New("invalid credentials")
-	}
-	if err := h.sessionStore.DeleteHandoffSession(ctx, handoffMessage.Key); err != nil {
 		return 0, 0, err
 	}
 	return handoffMessage.Key, syncMessage.SequenceNumber, nil
+}
+
+func (h *Handler) readerMessage(r *Reader) (string, uint32, io.Reader, error) {
+	s, err := r.ReadLine()
+	if err != nil {
+		panic(err)
+	}
+	ss := bytes.Split(s, []byte{' '})
+	if len(ss) == 0 {
+		panic(errors.New("invalid message"))
+	}
+	sequenceNumber, err := messages.ParseUint32(ss[0])
+	if err != nil {
+		panic(err)
+	}
+	return string(ss[0]), sequenceNumber, bytes.NewReader(ss[1]), nil
 }
 
 type Reader struct {

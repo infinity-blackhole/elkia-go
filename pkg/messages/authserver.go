@@ -33,10 +33,10 @@ var GatewayTerminator = "-1 -1 -1 10000 10000 1"
 
 type ListGatewaysMessage struct {
 	Key      uint32
-	Gateways []Gateway
+	Gateways []*Gateway
 }
 
-func (e ListGatewaysMessage) String() string {
+func (e *ListGatewaysMessage) String() string {
 	gateways := make([]string, len(e.Gateways))
 	for i, g := range e.Gateways {
 		gateways[i] = g.String()
@@ -52,13 +52,13 @@ func (e ListGatewaysMessage) String() string {
 type Gateway struct {
 	ID         uint32
 	Addr       string
-	Population uint
-	Capacity   uint
+	Population uint32
+	Capacity   uint32
 	WorldID    uint32
 	WorldName  string
 }
 
-func (g Gateway) String() string {
+func (g *Gateway) String() string {
 	host, port, err := net.SplitHostPort(g.Addr)
 	if err != nil {
 		panic(err)

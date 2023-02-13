@@ -1,4 +1,4 @@
-package core
+package apiserver
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	ory "github.com/ory/client-go"
 )
 
-type IdentityProviderClientConfig struct {
+type IdentityProviderServiceConfig struct {
 	OryClient *ory.APIClient
 }
 
-func NewIdentityProviderClient(config *IdentityProviderClientConfig) *IdentityProvider {
+func NewIdentityProviderService(config *IdentityProviderServiceConfig) *IdentityProvider {
 	return &IdentityProvider{
 		oryClient: config.OryClient,
 	}
