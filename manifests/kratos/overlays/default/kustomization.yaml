@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+  - name: kratos
+    namespace: elkia
+    repo: https://k8s.ory.sh/helm/charts
+    version: "0.28.0"
+    releaseName: kratos

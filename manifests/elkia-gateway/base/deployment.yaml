@@ -1,0 +1,30 @@
+apiVersion: apps
+kind: Deployment
+metadata:
+  name: elkia-gateway
+  namespace: elkia
+  labels:
+    fleet.elkia.io/gateway: "true"
+    fleet.elkia.io/channel: alpha
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elkia-gateway
+    spec:
+      containers:
+        - name: elkia-gateway
+          image: gcr.io/infinity-blackhole/elkia-gateway
+          args:
+            - --elkia-apiserver-endpoint=http://elkia-apiserver:8080
+          ports:
+            - containerPort: 4124
+              name: elkia
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

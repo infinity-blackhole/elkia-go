@@ -26,3 +26,7 @@ go.work
 
 # Direnv
 .direnv/
+
+# Kustomize
+manifests/etcd/overlays/default/charts
+manifests/kratos/overlays/default/charts

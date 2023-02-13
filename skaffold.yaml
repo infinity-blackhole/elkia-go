@@ -5,11 +5,22 @@ metadata:
 build:
   artifacts:
     - image: gcr.io/infinity-blackhole/elkia-authserver
+      context: .
       docker:
         dockerfile: cmd/elkia-authserver/Dockerfile
     - image: gcr.io/infinity-blackhole/elkia-apiserver
+      context: .
       docker:
         dockerfile: cmd/elkia-apiserver/Dockerfile
     - image: gcr.io/infinity-blackhole/elkia-gateway
+      context: .
       docker:
         dockerfile: cmd/elkia-gateway/Dockerfile
+manifests:
+  kustomize:
+    paths:
+      - manifests/elkia-authserver/base
+      - manifests/elkia-apiserver/base
+      - manifests/elkia-gateway/base
+    buildArgs:
+      - --enable-helm

@@ -1,0 +1,28 @@
+apiVersion: apps
+kind: Deployment
+metadata:
+  name: elkia-apiserver
+  namespace: elkia
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elkia-apiserver
+    spec:
+      containers:
+        - name: elkia-apiserver
+          image: gcr.io/infinity-blackhole/elkia-apiserver
+          args:
+            - --kratos-endpoint=http://kratos:4433
+            - --etcd-endpoint=http://etcd:2379
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
