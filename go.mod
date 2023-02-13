@@ -3,9 +3,9 @@ module github.com/infinity-blackhole/elkia
 go 1.19
 
 require (
-	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
 	github.com/ory/client-go v1.1.7
+	github.com/spf13/pflag v1.0.5
 	go.etcd.io/etcd/client/v3 v3.5.7
 	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1

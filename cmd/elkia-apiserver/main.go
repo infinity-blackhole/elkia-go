@@ -4,35 +4,54 @@ import (
 	"net"
 
 	"github.com/infinity-blackhole/elkia/internal/apiserver"
-	"github.com/infinity-blackhole/elkia/internal/app"
-	fleetv1alha1 "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleetv1alha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
+	"github.com/spf13/pflag"
 	etcd "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
+var (
+	elkiaApiServerEndpoint string
+	etcdEndpoints          []string
+)
+
+func init() {
+	pflag.StringVar(
+		&elkiaApiServerEndpoint,
+		"elkia-api-server-endpoint",
+		"/var/run/elkia.sock",
+		"Elkia API Server endpoint",
+	)
+	pflag.StringSliceVar(
+		&etcdEndpoints,
+		"etcd-endpoints",
+		[]string{"http://localhost:2379"},
+		"etcd endpoints",
+	)
+}
+
 func main() {
-	c := new(app.Config)
-	clientset, err := NewKubernetesClientSet(c)
+	clientset, err := NewKubernetesClientSet()
 	if err != nil {
 		panic(err)
 	}
-	lis, err := net.Listen("unix", "/var/run/elkia.sock")
+	lis, err := net.Listen("unix", elkiaApiServerEndpoint)
 	if err != nil {
 		panic(err)
 	}
-	sessionStore, err := NewSessionStoreClient(c)
+	sessionStore, err := NewSessionStoreClient()
 	if err != nil {
 		panic(err)
 	}
 	srv := grpc.NewServer()
-	fleetv1alha1.RegisterFleetServiceServer(
+	fleetv1alha1pb.RegisterFleetServiceServer(
 		srv,
 		apiserver.NewFleetService(apiserver.FleetServiceConfig{
 			KubernetesClientSet: clientset,
-			IdentityProvider:    NewIdentityProviderClient(c),
+			IdentityProvider:    NewIdentityProviderClient(),
 			SessionStore:        sessionStore,
 		}),
 	)
@@ -41,20 +60,20 @@ func main() {
 	}
 }
 
-func NewIdentityProviderClient(c *app.Config) *apiserver.IdentityProvider {
+func NewIdentityProviderClient() *apiserver.IdentityProvider {
 	return apiserver.NewIdentityProviderService(&apiserver.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(ory.NewConfiguration()),
 	})
 }
 
-func NewEtcdClient(c *app.Config) (*etcd.Client, error) {
+func NewEtcdClient() (*etcd.Client, error) {
 	return etcd.New(etcd.Config{
-		Endpoints: []string{"http://localhost:2379"},
+		Endpoints: etcdEndpoints,
 	})
 }
 
-func NewSessionStoreClient(c *app.Config) (*apiserver.SessionStore, error) {
-	etcd, err := NewEtcdClient(c)
+func NewSessionStoreClient() (*apiserver.SessionStore, error) {
+	etcd, err := NewEtcdClient()
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +82,12 @@ func NewSessionStoreClient(c *app.Config) (*apiserver.SessionStore, error) {
 	}), nil
 }
 
-func NewKubernetesConfig(c *app.Config) (*rest.Config, error) {
+func NewKubernetesConfig() (*rest.Config, error) {
 	return rest.InClusterConfig()
 }
 
-func NewKubernetesClientSet(c *app.Config) (*kubernetes.Clientset, error) {
-	config, err := NewKubernetesConfig(c)
+func NewKubernetesClientSet() (*kubernetes.Clientset, error) {
+	config, err := NewKubernetesConfig()
 	if err != nil {
 		return nil, err
 	}

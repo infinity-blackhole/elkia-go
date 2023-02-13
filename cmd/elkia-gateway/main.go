@@ -5,15 +5,32 @@ import (
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
+	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 )
 
 var (
-	IdentityTopic = "identity"
+	elkiaApiServerAddress string
+	kafkaTopics           []string
 )
 
+func init() {
+	pflag.StringVar(
+		&elkiaApiServerAddress,
+		"elkia-api-server-address",
+		"unix:///var/run/elkia.sock",
+		"Elkia API Server address",
+	)
+	pflag.StringSliceVar(
+		&kafkaTopics,
+		"kafka-topics",
+		[]string{"identity"},
+		"Kafka topics",
+	)
+}
+
 func main() {
-	conn, err := grpc.Dial("unix:///var/run/elkia.sock", grpc.WithInsecure())
+	conn, err := grpc.Dial(elkiaApiServerAddress, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +44,7 @@ func main() {
 		panic(err)
 	}
 	defer kc.Close()
-	kc.SubscribeTopics([]string{IdentityTopic}, nil)
+	kc.SubscribeTopics(kafkaTopics, nil)
 	s := nostale.NewServer(nostale.ServerConfig{
 		Addr: ":8080",
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
