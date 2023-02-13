@@ -10,15 +10,22 @@ import (
 )
 
 var (
+	address               string
 	elkiaApiServerAddress string
 	kafkaTopics           []string
 )
 
 func init() {
 	pflag.StringVar(
+		&address,
+		"address",
+		":4124",
+		"Address",
+	)
+	pflag.StringVar(
 		&elkiaApiServerAddress,
 		"elkia-api-server-address",
-		"unix:///var/run/elkia.sock",
+		"localhost:8080",
 		"Elkia API Server address",
 	)
 	pflag.StringSliceVar(
@@ -46,7 +53,7 @@ func main() {
 	defer kc.Close()
 	kc.SubscribeTopics(kafkaTopics, nil)
 	s := nostale.NewServer(nostale.ServerConfig{
-		Addr: ":8080",
+		Addr: address,
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
 			FleetClient:   fleetv1alpha1pb.NewFleetServiceClient(conn),
 			KafkaProducer: kp,

@@ -14,16 +14,16 @@ import (
 )
 
 var (
-	elkiaApiServerEndpoint string
-	etcdEndpoints          []string
+	address       string
+	etcdEndpoints []string
 )
 
 func init() {
 	pflag.StringVar(
-		&elkiaApiServerEndpoint,
-		"elkia-api-server-endpoint",
-		"/var/run/elkia.sock",
-		"Elkia API Server endpoint",
+		&address,
+		"address",
+		":8080",
+		"Address",
 	)
 	pflag.StringSliceVar(
 		&etcdEndpoints,
@@ -34,7 +34,7 @@ func init() {
 }
 
 func main() {
-	lis, err := net.Listen("unix", elkiaApiServerEndpoint)
+	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		panic(err)
 	}

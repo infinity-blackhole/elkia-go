@@ -11,25 +11,32 @@ import (
 )
 
 var (
+	address               string
 	elkiaApiServerAddress string
 )
 
 func init() {
 	pflag.StringVar(
+		&address,
+		"address",
+		":4123",
+		"Address",
+	)
+	pflag.StringVar(
 		&elkiaApiServerAddress,
 		"elkia-api-server-address",
 		"localhost:8080",
-		"Elkia API Server address",
+		"Elkia API Server Address",
 	)
 }
 
 func main() {
-	conn, err := grpc.Dial(elkiaApiServerAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 	srv := nostale.NewServer(nostale.ServerConfig{
-		Addr: ":8080",
+		Addr: address,
 		Handler: authserver.NewHandler(authserver.HandlerConfig{
 			FleetClient: fleetv1alpha1pb.NewFleetServiceClient(conn),
 		}),
