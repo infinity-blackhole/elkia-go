@@ -66,6 +66,8 @@ func NewServer(cfg ServerConfig) *Server {
 		handler:     cfg.Handler,
 		baseContext: cfg.BaseContext,
 		connContext: cfg.ConnContext,
+		listeners:   make(map[*net.Listener]struct{}),
+		activeConn:  make(map[net.Conn]struct{}),
 	}
 }
 
