@@ -1,0 +1,12 @@
+apiVersion: skaffold/v4beta2
+kind: Config
+metadata:
+  name: elkia
+build:
+  artifacts:
+    - image: gcr.io/infinity-blackhole/elkia-authserver
+      docker:
+        dockerfile: cmd/elkia-authserver/Dockerfile
+    - image: gcr.io/infinity-blackhole/elkia-gateway
+      docker:
+        dockerfile: cmd/elkia-gateway/Dockerfile
