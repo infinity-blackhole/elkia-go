@@ -62,14 +62,16 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			panic(err)
 		}
 		for _, g := range listGateways.Gateways {
-			gateways = append(gateways, GatewayFromFleetGateway(w.Id, w.Name, g))
+			gateways = append(
+				gateways,
+				GatewayFromFleetGateway(w.Id, w.Name, g),
+			)
 		}
 	}
-	evs := messages.ListGatewaysMessage{
+	fmt.Fprint(c, messages.ListGatewaysMessage{
 		Key:      handoff.Key,
 		Gateways: gateways,
-	}
-	fmt.Fprint(c, evs)
+	})
 }
 
 type Reader struct {
