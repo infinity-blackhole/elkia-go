@@ -41,7 +41,7 @@ func NewFleetServiceClient(cc grpc.ClientConnInterface) FleetServiceClient {
 
 func (c *fleetServiceClient) ListWorlds(ctx context.Context, in *ListWorldRequest, opts ...grpc.CallOption) (*ListWorldResponse, error) {
 	out := new(ListWorldResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/ListWorlds", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListWorlds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *fleetServiceClient) ListWorlds(ctx context.Context, in *ListWorldReques
 
 func (c *fleetServiceClient) GetWorld(ctx context.Context, in *GetWorldRequest, opts ...grpc.CallOption) (*World, error) {
 	out := new(World)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/GetWorld", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetWorld", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c *fleetServiceClient) GetWorld(ctx context.Context, in *GetWorldRequest, 
 
 func (c *fleetServiceClient) ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error) {
 	out := new(ListGatewayResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/ListGateways", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListGateways", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c *fleetServiceClient) ListGateways(ctx context.Context, in *ListGatewayRe
 
 func (c *fleetServiceClient) GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error) {
 	out := new(Gateway)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/GetGateway", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetGateway", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *fleetServiceClient) GetGateway(ctx context.Context, in *GetGatewayReque
 
 func (c *fleetServiceClient) CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error) {
 	out := new(CreateHandoffResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/CreateHandoff", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/CreateHandoff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *fleetServiceClient) CreateHandoff(ctx context.Context, in *CreateHandof
 
 func (c *fleetServiceClient) PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleets.v1alpha1.FleetService/PerformHandoff", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/PerformHandoff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func _FleetService_ListWorlds_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/ListWorlds",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListWorlds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).ListWorlds(ctx, req.(*ListWorldRequest))
@@ -169,7 +169,7 @@ func _FleetService_GetWorld_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/GetWorld",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetWorld",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).GetWorld(ctx, req.(*GetWorldRequest))
@@ -187,7 +187,7 @@ func _FleetService_ListGateways_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/ListGateways",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListGateways",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).ListGateways(ctx, req.(*ListGatewayRequest))
@@ -205,7 +205,7 @@ func _FleetService_GetGateway_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/GetGateway",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetGateway",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).GetGateway(ctx, req.(*GetGatewayRequest))
@@ -223,7 +223,7 @@ func _FleetService_CreateHandoff_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/CreateHandoff",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/CreateHandoff",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).CreateHandoff(ctx, req.(*CreateHandoffRequest))
@@ -241,7 +241,7 @@ func _FleetService_PerformHandoff_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleets.v1alpha1.FleetService/PerformHandoff",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/PerformHandoff",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FleetServiceServer).PerformHandoff(ctx, req.(*PerformHandoffRequest))
@@ -253,7 +253,7 @@ func _FleetService_PerformHandoff_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FleetService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.fleets.v1alpha1.FleetService",
+	ServiceName: "io.elkia.fleet.v1alpha1.FleetService",
 	HandlerType: (*FleetServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
