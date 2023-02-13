@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"net"
 	"strings"
 
 	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -46,18 +45,14 @@ func MarshallProposeHandoffMessage(
 func MarshallGateway(
 	msg *eventingv1alpha1pb.Gateway,
 ) string {
-	host, port, err := net.SplitHostPort(msg.Address)
-	if err != nil {
-		panic(err)
-	}
 	return fmt.Sprintf(
 		"%s %s %d %.f %d %d %s",
-		host,
-		port,
+		msg.Host,
+		msg.Port,
 		msg.Population,
 		math.Round(float64(msg.Population)/float64(msg.Capacity)*20)+1,
 		msg.WorldId,
-		msg.Id,
+		msg.ChannelId,
 		msg.WorldName,
 	)
 }

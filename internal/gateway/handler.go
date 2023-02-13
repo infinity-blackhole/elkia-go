@@ -70,8 +70,11 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if err != nil {
 		return 0, 0, err
 	}
-	if handoffMessage.Sequence != syncMessage.Sequence+1 {
-		return 0, 0, errors.New("invalid sequence number")
+	if syncMessage.Sequence != handoffMessage.KeySequence+1 {
+		return 0, 0, errors.New("corrupted sync message")
+	}
+	if handoffMessage.KeySequence != handoffMessage.PasswordSequence+1 {
+		return 0, 0, errors.New("corrupted handoff message")
 	}
 	if err != nil {
 		panic(err)

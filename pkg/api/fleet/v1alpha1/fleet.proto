@@ -6,35 +6,37 @@ option go_package = "pkg/api/fleet/v1alpha1";
 
 import "google/protobuf/empty.proto";
 
-message World {
-  uint32 id = 1;
-  string name = 2;
+message Cluster {
+  string id = 1;
+  uint32 world_id = 2;
+  string name = 3;
 }
 
 message Gateway {
-  uint32 id = 1;
-  string address = 2;
-  uint32 population = 3;
-  uint32 capacity = 4;
+  string id = 1;
+  uint32 channel_id = 2;
+  string address = 3;
+  uint32 population = 4;
+  uint32 capacity = 5;
 }
 
 message Handoff {
-  uint32 id = 1;
+  string id = 1;
   string identifier = 2;
   string token = 3;
 }
 
-message ListWorldRequest {}
+message ListClusterRequest {}
 
-message ListWorldResponse { repeated World worlds = 1; }
+message ListClusterResponse { repeated Cluster clusters = 1; }
 
-message GetWorldRequest { uint32 id = 1; }
+message GetClusterRequest { string id = 1; }
 
-message ListGatewayRequest { uint32 world_id = 1; }
+message ListGatewayRequest { string id = 1; }
 
 message ListGatewayResponse { repeated Gateway gateways = 1; }
 
-message GetGatewayRequest { uint32 id = 1; }
+message GetGatewayRequest { string id = 1; }
 
 message CreateHandoffRequest {
   string identifier = 1;
@@ -51,8 +53,8 @@ message PerformHandoffRequest {
 }
 
 service FleetService {
-  rpc ListWorlds(ListWorldRequest) returns (ListWorldResponse);
-  rpc GetWorld(GetWorldRequest) returns (World);
+  rpc ListClusters(ListClusterRequest) returns (ListClusterResponse);
+  rpc GetCluster(GetClusterRequest) returns (Cluster);
   rpc ListGateways(ListGatewayRequest) returns (ListGatewayResponse);
   rpc GetGateway(GetGatewayRequest) returns (Gateway);
   rpc CreateHandoff(CreateHandoffRequest) returns (CreateHandoffResponse);

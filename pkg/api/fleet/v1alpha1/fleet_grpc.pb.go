@@ -23,8 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FleetServiceClient interface {
-	ListWorlds(ctx context.Context, in *ListWorldRequest, opts ...grpc.CallOption) (*ListWorldResponse, error)
-	GetWorld(ctx context.Context, in *GetWorldRequest, opts ...grpc.CallOption) (*World, error)
+	ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error)
+	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error)
 	ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error)
 	GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error)
 	CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error)
@@ -39,18 +39,18 @@ func NewFleetServiceClient(cc grpc.ClientConnInterface) FleetServiceClient {
 	return &fleetServiceClient{cc}
 }
 
-func (c *fleetServiceClient) ListWorlds(ctx context.Context, in *ListWorldRequest, opts ...grpc.CallOption) (*ListWorldResponse, error) {
-	out := new(ListWorldResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListWorlds", in, out, opts...)
+func (c *fleetServiceClient) ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error) {
+	out := new(ListClusterResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListClusters", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) GetWorld(ctx context.Context, in *GetWorldRequest, opts ...grpc.CallOption) (*World, error) {
-	out := new(World)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetWorld", in, out, opts...)
+func (c *fleetServiceClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error) {
+	out := new(Cluster)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (c *fleetServiceClient) PerformHandoff(ctx context.Context, in *PerformHand
 // All implementations must embed UnimplementedFleetServiceServer
 // for forward compatibility
 type FleetServiceServer interface {
-	ListWorlds(context.Context, *ListWorldRequest) (*ListWorldResponse, error)
-	GetWorld(context.Context, *GetWorldRequest) (*World, error)
+	ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error)
+	GetCluster(context.Context, *GetClusterRequest) (*Cluster, error)
 	ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error)
 	GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error)
 	CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error)
@@ -110,11 +110,11 @@ type FleetServiceServer interface {
 type UnimplementedFleetServiceServer struct {
 }
 
-func (UnimplementedFleetServiceServer) ListWorlds(context.Context, *ListWorldRequest) (*ListWorldResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListWorlds not implemented")
+func (UnimplementedFleetServiceServer) ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClusters not implemented")
 }
-func (UnimplementedFleetServiceServer) GetWorld(context.Context, *GetWorldRequest) (*World, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWorld not implemented")
+func (UnimplementedFleetServiceServer) GetCluster(context.Context, *GetClusterRequest) (*Cluster, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCluster not implemented")
 }
 func (UnimplementedFleetServiceServer) ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGateways not implemented")
@@ -141,38 +141,38 @@ func RegisterFleetServiceServer(s grpc.ServiceRegistrar, srv FleetServiceServer)
 	s.RegisterService(&FleetService_ServiceDesc, srv)
 }
 
-func _FleetService_ListWorlds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorldRequest)
+func _FleetService_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).ListWorlds(ctx, in)
+		return srv.(FleetServiceServer).ListClusters(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListWorlds",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListClusters",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).ListWorlds(ctx, req.(*ListWorldRequest))
+		return srv.(FleetServiceServer).ListClusters(ctx, req.(*ListClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_GetWorld_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWorldRequest)
+func _FleetService_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).GetWorld(ctx, in)
+		return srv.(FleetServiceServer).GetCluster(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetWorld",
+		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).GetWorld(ctx, req.(*GetWorldRequest))
+		return srv.(FleetServiceServer).GetCluster(ctx, req.(*GetClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -257,12 +257,12 @@ var FleetService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*FleetServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListWorlds",
-			Handler:    _FleetService_ListWorlds_Handler,
+			MethodName: "ListClusters",
+			Handler:    _FleetService_ListClusters_Handler,
 		},
 		{
-			MethodName: "GetWorld",
-			Handler:    _FleetService_GetWorld_Handler,
+			MethodName: "GetCluster",
+			Handler:    _FleetService_GetCluster_Handler,
 		},
 		{
 			MethodName: "ListGateways",

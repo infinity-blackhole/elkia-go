@@ -41,13 +41,11 @@ func ParsePerformHandoffMessage(
 	if err != nil {
 		return nil, err
 	}
-	if sni != snp+1 {
-		return nil, errors.New("sequence number mismatch")
-	}
 	return &eventingv1alpha1pb.PerformHandoffMessage{
-		Sequence: snp,
-		Key:      key,
-		Password: string(ss[3]),
+		KeySequence:      snp,
+		Key:              key,
+		PasswordSequence: sni,
+		Password:         string(ss[3]),
 	}, nil
 }
 

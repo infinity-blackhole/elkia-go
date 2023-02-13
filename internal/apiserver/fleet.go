@@ -38,22 +38,25 @@ type FleetService struct {
 	identityProvider    *IdentityProvider
 }
 
-func (s *FleetService) ListWorlds(
+func (s *FleetService) ListClusters(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListWorldRequest,
-) (*fleetv1alpha1pb.ListWorldResponse, error) {
+	in *fleetv1alpha1pb.ListClusterRequest,
+) (*fleetv1alpha1pb.ListClusterResponse, error) {
 	nss, err := s.kubernetesClientSet.
 		CoreV1().
 		Namespaces().
-		List(ctx, metav1.ListOptions{
-			LabelSelector: labels.SelectorFromSet(map[string]string{
-				"fleet.elkia.io/world": "true",
-			}).String(),
-		})
+		List(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: labels.SelectorFromSet(map[string]string{
+					"fleet.elkia.io/world": "true",
+				}).String(),
+			},
+		)
 	if err != nil {
 		return nil, err
 	}
-	worlds := make([]*fleetv1alpha1pb.World, len(nss.Items))
+	clusters := make([]*fleetv1alpha1pb.Cluster, len(nss.Items))
 	for i, ns := range nss.Items {
 		idUint, err := strconv.ParseUint(
 			ns.Labels["fleet.elkia.io/world-id"],
@@ -62,13 +65,14 @@ func (s *FleetService) ListWorlds(
 		if err != nil {
 			return nil, err
 		}
-		worlds[i] = &fleetv1alpha1pb.World{
-			Id:   uint32(idUint),
-			Name: ns.Labels["fleet.elkia.io/world-name"],
+		clusters[i] = &fleetv1alpha1pb.Cluster{
+			Id:      ns.Name,
+			WorldId: uint32(idUint),
+			Name:    ns.Labels["fleet.elkia.io/world-name"],
 		}
 	}
-	return &fleetv1alpha1pb.ListWorldResponse{
-		Worlds: worlds,
+	return &fleetv1alpha1pb.ListClusterResponse{
+		Clusters: clusters,
 	}, nil
 }
 
@@ -76,51 +80,54 @@ func (s *FleetService) ListGateways(
 	ctx context.Context,
 	in *fleetv1alpha1pb.ListGatewayRequest,
 ) (*fleetv1alpha1pb.ListGatewayResponse, error) {
-	nss, err := s.kubernetesClientSet.
+	gateways := []*fleetv1alpha1pb.Gateway{}
+	svcs, err := s.kubernetesClientSet.
 		CoreV1().
-		Namespaces().
+		Services(in.Id).
 		List(ctx, metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(map[string]string{
-				"fleet.elkia.io/world":    "true",
-				"fleet.elkia.io/world-id": fmt.Sprintf("%d", in.WorldId),
+				"fleet.elkia.io/gateway": "true",
+			}).String(),
+			FieldSelector: fields.SelectorFromSet(map[string]string{
+				"spec.type": "LoadBalancer",
 			}).String(),
 		})
 	if err != nil {
 		return nil, err
 	}
-	gateways := []*fleetv1alpha1pb.Gateway{}
-	for _, ns := range nss.Items {
-		svcs, err := s.kubernetesClientSet.
-			CoreV1().
-			Services(ns.Name).
-			List(ctx, metav1.ListOptions{
-				LabelSelector: labels.SelectorFromSet(map[string]string{
-					"fleet.elkia.io/gateway": "true",
-				}).String(),
-				FieldSelector: fields.SelectorFromSet(map[string]string{
-					"spec.type": "LoadBalancer",
-				}).String(),
-			})
+	for _, svc := range svcs.Items {
+		addr, err := s.getGatewayAddrFromService(&svc)
 		if err != nil {
 			return nil, err
 		}
-		for _, svc := range svcs.Items {
-			addr, err := s.getGatewayAddrFromService(&svc)
-			if err != nil {
-				return nil, err
-			}
-			idUint, err := strconv.ParseUint(
-				ns.Labels["fleet.elkia.io/gateway-id"],
-				10, 32,
-			)
-			if err != nil {
-				return nil, err
-			}
-			gateways = append(gateways, &fleetv1alpha1pb.Gateway{
-				Id:      uint32(idUint),
-				Address: addr,
-			})
+		idUint, err := strconv.ParseUint(
+			svc.Labels["fleet.elkia.io/gateway-id"],
+			10, 32,
+		)
+		if err != nil {
+			return nil, err
 		}
+		populationUint, err := strconv.ParseUint(
+			svc.Labels["fleet.elkia.io/gateway-population"],
+			10, 32,
+		)
+		if err != nil {
+			return nil, err
+		}
+		capacityUint, err := strconv.ParseUint(
+			svc.Labels["fleet.elkia.io/gateway-capacity"],
+			10, 32,
+		)
+		if err != nil {
+			return nil, err
+		}
+		gateways = append(gateways, &fleetv1alpha1pb.Gateway{
+			Id:         svc.Name,
+			ChannelId:  uint32(idUint),
+			Address:    addr,
+			Population: uint32(populationUint),
+			Capacity:   uint32(capacityUint),
+		})
 	}
 	return &fleetv1alpha1pb.ListGatewayResponse{
 		Gateways: gateways,
@@ -200,6 +207,7 @@ func (s *FleetService) CreateHandoff(
 		ctx,
 		key,
 		&fleetv1alpha1pb.Handoff{
+			Id:         session.Id,
 			Identifier: in.Identifier,
 			Token:      token,
 		},

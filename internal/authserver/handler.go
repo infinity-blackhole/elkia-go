@@ -47,30 +47,35 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		panic(err)
 	}
 
-	listWorlds, err := h.fleet.
-		ListWorlds(ctx, &fleetv1alpha1pb.ListWorldRequest{})
+	listClusters, err := h.fleet.
+		ListClusters(ctx, &fleetv1alpha1pb.ListClusterRequest{})
 	if err != nil {
 		panic(err)
 	}
-	gateways := make([]*eventingv1alpha1pb.Gateway, len(listWorlds.Worlds))
-	for _, w := range listWorlds.Worlds {
+	gateways := make([]*eventingv1alpha1pb.Gateway, len(listClusters.Clusters))
+	for _, c := range listClusters.Clusters {
 		listGateways, err := h.fleet.
 			ListGateways(ctx, &fleetv1alpha1pb.ListGatewayRequest{
-				WorldId: w.Id,
+				Id: c.Id,
 			})
 		if err != nil {
 			panic(err)
 		}
 		for _, g := range listGateways.Gateways {
+			host, port, err := net.SplitHostPort(g.Address)
+			if err != nil {
+				panic(err)
+			}
 			gateways = append(
 				gateways,
 				&eventingv1alpha1pb.Gateway{
-					Address:    g.Address,
+					Host:       host,
+					Port:       port,
 					Population: g.Population,
 					Capacity:   g.Capacity,
-					WorldId:    w.Id,
-					Id:         g.Id,
-					WorldName:  w.Name,
+					WorldId:    c.WorldId,
+					ChannelId:  g.ChannelId,
+					WorldName:  c.Name,
 				},
 			)
 		}
