@@ -21,8 +21,6 @@ build:
 manifests:
   kustomize:
     paths:
-      - manifests/elkia-authserver/base
-      - manifests/elkia-apiserver/base
-      - manifests/elkia-gateway/base
+      - manifests/elkia/overlays/default
     buildArgs:
       - --enable-helm
