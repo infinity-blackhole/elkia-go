@@ -30,3 +30,4 @@ go.work
 # Kustomize
 manifests/etcd/overlays/default/charts
 manifests/kratos/overlays/default/charts
+manifests/mysql/overlays/default/charts

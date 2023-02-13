@@ -18,7 +18,20 @@ spec:
           image: gcr.io/infinity-blackhole/elkia-apiserver
           args:
             - --kratos-endpoint=http://kratos:4433
-            - --etcd-endpoint=http://etcd:2379
+            - --etcd-endpoints=http://etcd:2379
+            - --etcd-username=$(ETCD_USERNAME)
+            - --etcd-password=$(ETCD_PASSWORD)
+          env:
+            - name: ETCD_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: etcd
+                  key: username
+            - name: ETCD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: etcd
+                  key: password
           ports:
             - containerPort: 8080
               name: http

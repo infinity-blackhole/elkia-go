@@ -6,3 +6,17 @@ helmCharts:
     repo: https://charts.bitnami.com/bitnami
     version: "8.7.3"
     releaseName: etcd
+    valuesInline:
+      auth:
+        rbac:
+          existingSecret: etcd
+          existingSecretPasswordKey: password
+secretGenerator:
+  - name: etcd
+    namespace: elkia
+    literals:
+      - username=root
+      - password=7c^8i$33V$2&dU
+    type: kubernetes.io/basic-auth
+    options:
+      disableNameSuffixHash: true

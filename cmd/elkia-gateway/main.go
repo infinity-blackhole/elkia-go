@@ -28,7 +28,7 @@ func init() {
 	)
 	pflag.StringVar(
 		&elkiaApiServerEndpoint,
-		"elkia-api-server-endpoint",
+		"elkia-apiserver-endpoint",
 		"localhost:8080",
 		"Elkia API Server endpoint",
 	)
@@ -53,6 +53,7 @@ func init() {
 }
 
 func main() {
+	pflag.Parse()
 	conn, err := grpc.Dial(elkiaApiServerEndpoint, grpc.WithInsecure())
 	if err != nil {
 		panic(err)

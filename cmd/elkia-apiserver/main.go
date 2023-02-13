@@ -16,6 +16,8 @@ import (
 var (
 	address        string
 	etcdEndpoints  []string
+	etchUsername   string
+	etchPassword   string
 	kratosEndpoint string
 )
 
@@ -30,11 +32,30 @@ func init() {
 		&etcdEndpoints,
 		"etcd-endpoints",
 		[]string{"http://localhost:2379"},
-		"etcd endpoints",
+		"Etcd endpoints",
+	)
+	pflag.StringVar(
+		&etchUsername,
+		"etcd-username",
+		"",
+		"Etcd username",
+	)
+	pflag.StringVar(
+		&etchPassword,
+		"etcd-password",
+		"",
+		"Etcd password",
+	)
+	pflag.StringVar(
+		&kratosEndpoint,
+		"kratos-endpoint",
+		"http://localhost:4433",
+		"Kratos endpoint",
 	)
 }
 
 func main() {
+	pflag.Parse()
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		panic(err)
@@ -87,6 +108,8 @@ func NewIdentityProvider() *apiserver.IdentityProvider {
 func NewEtcd() (*etcd.Client, error) {
 	return etcd.New(etcd.Config{
 		Endpoints: etcdEndpoints,
+		Username:  etchUsername,
+		Password:  etchPassword,
 	})
 }
 

@@ -6,3 +6,7 @@ helmCharts:
     repo: https://charts.bitnami.com/bitnami
     version: "9.4.8"
     releaseName: mysql
+    valuesInline:
+      auth:
+        rootPassword: n4BXtC32XLx5C8
+        database: kratos
