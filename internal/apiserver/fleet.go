@@ -38,6 +38,20 @@ type FleetService struct {
 	identityProvider    *IdentityProvider
 }
 
+func (s *FleetService) GetCluster(
+	ctx context.Context,
+	in *fleetv1alpha1pb.GetClusterRequest,
+) (*fleetv1alpha1pb.Cluster, error) {
+	ns, err := s.kubernetesClientSet.
+		CoreV1().
+		Namespaces().
+		Get(ctx, in.Id, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return s.getClusterFromNamespace(ns)
+}
+
 func (s *FleetService) ListClusters(
 	ctx context.Context,
 	in *fleetv1alpha1pb.ListClusterRequest,
@@ -58,22 +72,45 @@ func (s *FleetService) ListClusters(
 	}
 	clusters := make([]*fleetv1alpha1pb.Cluster, len(nss.Items))
 	for i, ns := range nss.Items {
-		idUint, err := strconv.ParseUint(
-			ns.Labels["fleet.elkia.io/world-id"],
-			10, 32,
-		)
+		clusters[i], err = s.getClusterFromNamespace(&ns)
 		if err != nil {
 			return nil, err
-		}
-		clusters[i] = &fleetv1alpha1pb.Cluster{
-			Id:      ns.Name,
-			WorldId: uint32(idUint),
-			Name:    ns.Labels["fleet.elkia.io/world-name"],
 		}
 	}
 	return &fleetv1alpha1pb.ListClusterResponse{
 		Clusters: clusters,
 	}, nil
+}
+
+func (s *FleetService) getClusterFromNamespace(
+	ns *corev1.Namespace,
+) (*fleetv1alpha1pb.Cluster, error) {
+	idUint, err := strconv.ParseUint(
+		ns.Labels["fleet.elkia.io/cluster-world"],
+		10, 32,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &fleetv1alpha1pb.Cluster{
+		Id:      ns.Name,
+		WorldId: uint32(idUint),
+		Name:    ns.Labels["fleet.elkia.io/cluster-tenant"],
+	}, nil
+}
+
+func (s *FleetService) GetGateway(
+	ctx context.Context,
+	in *fleetv1alpha1pb.GetGatewayRequest,
+) (*fleetv1alpha1pb.Gateway, error) {
+	svc, err := s.kubernetesClientSet.
+		CoreV1().
+		Services(in.Id).
+		Get(ctx, in.Id, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return s.getGatewayFromService(svc)
 }
 
 func (s *FleetService) ListGateways(
@@ -96,41 +133,51 @@ func (s *FleetService) ListGateways(
 		return nil, err
 	}
 	for _, svc := range svcs.Items {
-		addr, err := s.getGatewayAddrFromService(&svc)
+		gateway, err := s.getGatewayFromService(&svc)
 		if err != nil {
 			return nil, err
 		}
-		idUint, err := strconv.ParseUint(
-			svc.Labels["fleet.elkia.io/gateway-id"],
-			10, 32,
-		)
-		if err != nil {
-			return nil, err
-		}
-		populationUint, err := strconv.ParseUint(
-			svc.Labels["fleet.elkia.io/gateway-population"],
-			10, 32,
-		)
-		if err != nil {
-			return nil, err
-		}
-		capacityUint, err := strconv.ParseUint(
-			svc.Labels["fleet.elkia.io/gateway-capacity"],
-			10, 32,
-		)
-		if err != nil {
-			return nil, err
-		}
-		gateways = append(gateways, &fleetv1alpha1pb.Gateway{
-			Id:         svc.Name,
-			ChannelId:  uint32(idUint),
-			Address:    addr,
-			Population: uint32(populationUint),
-			Capacity:   uint32(capacityUint),
-		})
+		gateways = append(gateways, gateway)
 	}
 	return &fleetv1alpha1pb.ListGatewayResponse{
 		Gateways: gateways,
+	}, nil
+}
+
+func (s *FleetService) getGatewayFromService(
+	svc *corev1.Service,
+) (*fleetv1alpha1pb.Gateway, error) {
+	addr, err := s.getGatewayAddrFromService(svc)
+	if err != nil {
+		return nil, err
+	}
+	idUint, err := strconv.ParseUint(
+		svc.Labels["fleet.elkia.io/gateway-channel"],
+		10, 32,
+	)
+	if err != nil {
+		return nil, err
+	}
+	populationUint, err := strconv.ParseUint(
+		svc.Labels["fleet.elkia.io/gateway-population"],
+		10, 32,
+	)
+	if err != nil {
+		return nil, err
+	}
+	capacityUint, err := strconv.ParseUint(
+		svc.Labels["fleet.elkia.io/gateway-capacity"],
+		10, 32,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &fleetv1alpha1pb.Gateway{
+		Id:         svc.Name,
+		ChannelId:  uint32(idUint),
+		Address:    addr,
+		Population: uint32(populationUint),
+		Capacity:   uint32(capacityUint),
 	}, nil
 }
 
@@ -172,12 +219,12 @@ func (s *FleetService) getGatewayPortFromService(
 		)
 	}
 	for _, port := range svc.Spec.Ports {
-		if port.Name == "nostale" {
+		if port.Name == "elkia" {
 			return port.Port, nil
 		}
 	}
 	return 0, fmt.Errorf(
-		"service %s/%s has no port named 'nostale'",
+		"service %s/%s has no port named 'elkia'",
 		svc.Namespace,
 		svc.Name,
 	)
