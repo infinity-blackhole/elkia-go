@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	address       string
-	etcdEndpoints []string
+	address        string
+	etcdEndpoints  []string
+	kratosEndpoint string
 )
 
 func init() {
@@ -72,7 +73,14 @@ func NewOrchestrator() (*apiserver.Orchestrator, error) {
 
 func NewIdentityProvider() *apiserver.IdentityProvider {
 	return apiserver.NewIdentityProvider(&apiserver.IdentityProviderServiceConfig{
-		OryClient: ory.NewAPIClient(ory.NewConfiguration()),
+		OryClient: ory.NewAPIClient(&ory.Configuration{
+			DefaultHeader: make(map[string]string),
+			UserAgent:     "OpenAPI-Generator/1.0.0/go",
+			Debug:         false,
+			Servers: ory.ServerConfigurations{
+				{URL: kratosEndpoint},
+			},
+		}),
 	})
 }
 

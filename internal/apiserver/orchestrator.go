@@ -52,7 +52,7 @@ func (s *Orchestrator) ListClusters(
 			ctx,
 			metav1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(map[string]string{
-					"fleet.elkia.io/world": "true",
+					"fleet.elkia.io/cluster": "true",
 				}).String(),
 			},
 		)

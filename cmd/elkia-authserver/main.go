@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	address               string
-	elkiaApiServerAddress string
+	address                string
+	elkiaApiServerEndpoint string
 )
 
 func init() {
@@ -23,10 +23,10 @@ func init() {
 		"Address",
 	)
 	pflag.StringVar(
-		&elkiaApiServerAddress,
-		"elkia-api-server-address",
+		&elkiaApiServerEndpoint,
+		"elkia-api-server-endpoint",
 		"localhost:8080",
-		"Elkia API Server Address",
+		"Elkia API Server endpoint",
 	)
 }
 
