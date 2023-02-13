@@ -3,7 +3,6 @@ package nostale
 import (
 	"context"
 	"errors"
-	"log"
 	"math/rand"
 	"net"
 	"sync"
@@ -12,7 +11,7 @@ import (
 )
 
 var (
-	// ServerContextKey is a context key. It can be used in HTTP
+	// ServerContextKey is a context key. It can be used in NosTale
 	// handlers with Context.Value to access the server that
 	// started the handler. The associated value will be of
 	// type *Server.
@@ -25,7 +24,7 @@ type Handler interface {
 }
 
 // The HandlerFunc type is an adapter to allow the use of
-// ordinary functions as HTTP handlers. If f is a function
+// ordinary functions as NosTale handlers. If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
 // Handler that calls f.
 type HandlerFunc func(net.Conn)
@@ -99,7 +98,6 @@ type Server struct {
 	listeners  map[*net.Listener]struct{}
 	activeConn map[net.Conn]struct{}
 	doneChan   chan struct{}
-	onShutdown []func()
 
 	listenerGroup sync.WaitGroup
 }
@@ -177,12 +175,6 @@ const shutdownPollIntervalMax = 500 * time.Millisecond
 // ListenAndServeTLS immediately return ErrServerClosed. Make sure the
 // program doesn't exit and waits instead for Shutdown to return.
 //
-// Shutdown does not attempt to close nor wait for hijacked
-// connections such as WebSockets. The caller of Shutdown should
-// separately notify such long-lived connections of shutdown and wait
-// for them to close, if desired. See RegisterOnShutdown for a way to
-// register shutdown notification functions.
-//
 // Once Shutdown has been called on a server, it may not be reused;
 // future calls to methods such as Serve will return ErrServerClosed.
 func (srv *Server) Shutdown(ctx context.Context) error {
@@ -191,9 +183,6 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 	srv.mu.Lock()
 	lnerr := srv.closeListenersLocked()
 	srv.closeDoneChanLocked()
-	for _, f := range srv.onShutdown {
-		go f()
-	}
 	srv.mu.Unlock()
 	srv.listenerGroup.Wait()
 
@@ -305,8 +294,6 @@ func (srv *Server) Serve(l net.Listener) error {
 		}
 	}
 
-	var tempDelay time.Duration // how long to sleep on accept failure
-
 	ctx := context.WithValue(baseCtx, ServerContextKey, srv)
 	for {
 		rw, err := l.Accept()
@@ -315,19 +302,6 @@ func (srv *Server) Serve(l net.Listener) error {
 			case <-srv.getDoneChan():
 				return ErrServerClosed
 			default:
-			}
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				if tempDelay == 0 {
-					tempDelay = 5 * time.Millisecond
-				} else {
-					tempDelay *= 2
-				}
-				if max := 1 * time.Second; tempDelay > max {
-					tempDelay = max
-				}
-				log.Printf("nostale: Accept error: %v; retrying in %v", err, tempDelay)
-				time.Sleep(tempDelay)
-				continue
 			}
 			return err
 		}
@@ -338,7 +312,6 @@ func (srv *Server) Serve(l net.Listener) error {
 				panic("ConnContext returned nil")
 			}
 		}
-		tempDelay = 0
 		go srv.handler.ServeNosTale(rw)
 	}
 }
