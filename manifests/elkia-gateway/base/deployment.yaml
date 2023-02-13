@@ -8,6 +8,9 @@ metadata:
     fleet.elkia.io/channel: alpha
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: elkia-gateway
   template:
     metadata:
       labels:

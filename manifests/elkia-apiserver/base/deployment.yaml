@@ -5,6 +5,9 @@ metadata:
   namespace: elkia
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: elkia-apiserver
   template:
     metadata:
       labels:
