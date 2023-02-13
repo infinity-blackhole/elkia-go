@@ -16,6 +16,8 @@ build:
       context: .
       docker:
         dockerfile: cmd/elkia-gateway/Dockerfile
+  local:
+    useBuildkit: true
 manifests:
   kustomize:
     paths:

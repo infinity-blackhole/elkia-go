@@ -5,7 +5,8 @@ WORKDIR /go/src/github.com/infinity-blackhole/elkia
 
 # Pull dependencies
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go mod download
 
 # Build sources
 COPY cmd cmd
@@ -15,7 +16,9 @@ COPY pkg pkg
 FROM debug as build
 
 # Build optimized binary
-RUN go build \
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    --mount=type=cache,target=/root/.cache/go-build/ \
+    go build \
     -ldflags "-linkmode=external" \
     -o /usr/bin/elkia-authserver \
     ./cmd/elkia-authserver
