@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"strconv"
 
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -42,16 +45,25 @@ func (s *FleetService) ListWorlds(
 	nss, err := s.kubernetesClientSet.
 		CoreV1().
 		Namespaces().
-		List(context.Background(), metav1.ListOptions{
-			LabelSelector: "fleet.elkia.io/world=true",
+		List(ctx, metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"fleet.elkia.io/world": "true",
+			}).String(),
 		})
 	if err != nil {
 		return nil, err
 	}
 	worlds := make([]*fleetv1alpha1pb.World, len(nss.Items))
 	for i, ns := range nss.Items {
+		idUint, err := strconv.ParseUint(
+			ns.Labels["fleet.elkia.io/world-id"],
+			10, 32,
+		)
+		if err != nil {
+			return nil, err
+		}
 		worlds[i] = &fleetv1alpha1pb.World{
-			Id:   ns.Name,
+			Id:   uint32(idUint),
 			Name: ns.Labels["fleet.elkia.io/world-name"],
 		}
 	}
@@ -64,25 +76,50 @@ func (s *FleetService) ListGateways(
 	ctx context.Context,
 	in *fleetv1alpha1pb.ListGatewayRequest,
 ) (*fleetv1alpha1pb.ListGatewayResponse, error) {
-	svcs, err := s.kubernetesClientSet.
+	nss, err := s.kubernetesClientSet.
 		CoreV1().
-		Services(in.WorldId).
-		List(context.Background(), metav1.ListOptions{
-			LabelSelector: "fleet.elkia.io/gateway=true",
-			FieldSelector: "spec.type=LoadBalancer",
+		Namespaces().
+		List(ctx, metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"fleet.elkia.io/world":    "true",
+				"fleet.elkia.io/world-id": fmt.Sprintf("%d", in.WorldId),
+			}).String(),
 		})
 	if err != nil {
 		return nil, err
 	}
-	gateways := make([]*fleetv1alpha1pb.Gateway, len(svcs.Items))
-	for i, svc := range svcs.Items {
-		addr, err := s.getGatewayAddrFromService(&svc)
+	gateways := []*fleetv1alpha1pb.Gateway{}
+	for _, ns := range nss.Items {
+		svcs, err := s.kubernetesClientSet.
+			CoreV1().
+			Services(ns.Name).
+			List(ctx, metav1.ListOptions{
+				LabelSelector: labels.SelectorFromSet(map[string]string{
+					"fleet.elkia.io/gateway": "true",
+				}).String(),
+				FieldSelector: fields.SelectorFromSet(map[string]string{
+					"spec.type": "LoadBalancer",
+				}).String(),
+			})
 		if err != nil {
 			return nil, err
 		}
-		gateways[i] = &fleetv1alpha1pb.Gateway{
-			Id:      svc.Name,
-			Address: addr,
+		for _, svc := range svcs.Items {
+			addr, err := s.getGatewayAddrFromService(&svc)
+			if err != nil {
+				return nil, err
+			}
+			idUint, err := strconv.ParseUint(
+				ns.Labels["fleet.elkia.io/gateway-id"],
+				10, 32,
+			)
+			if err != nil {
+				return nil, err
+			}
+			gateways = append(gateways, &fleetv1alpha1pb.Gateway{
+				Id:      uint32(idUint),
+				Address: addr,
+			})
 		}
 	}
 	return &fleetv1alpha1pb.ListGatewayResponse{

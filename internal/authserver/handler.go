@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"hash/fnv"
 	"net"
 	"net/textproto"
 
+	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/crypto"
-	"github.com/infinity-blackhole/elkia/pkg/messages"
+	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
 type HandlerConfig struct {
@@ -52,7 +52,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	gateways := make([]*messages.Gateway, len(listWorlds.Worlds))
+	gateways := make([]*eventingv1alpha1pb.Gateway, len(listWorlds.Worlds))
 	for _, w := range listWorlds.Worlds {
 		listGateways, err := h.fleet.
 			ListGateways(ctx, &fleetv1alpha1pb.ListGatewayRequest{
@@ -64,11 +64,18 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		for _, g := range listGateways.Gateways {
 			gateways = append(
 				gateways,
-				GatewayFromFleetGateway(w.Id, w.Name, g),
+				&eventingv1alpha1pb.Gateway{
+					Address:    g.Address,
+					Population: g.Population,
+					Capacity:   g.Capacity,
+					WorldId:    w.Id,
+					Id:         g.Id,
+					WorldName:  w.Name,
+				},
 			)
 		}
 	}
-	fmt.Fprint(c, messages.ListGatewaysMessage{
+	fmt.Fprint(c, eventingv1alpha1pb.ProposeHandoffMessage{
 		Key:      handoff.Key,
 		Gateways: gateways,
 	})
@@ -94,27 +101,12 @@ func (r *Reader) ReadLine() ([]byte, error) {
 	return r.crypto.Decrypt(s), nil
 }
 
-func ReadCredentialsMessage(r *Reader) (*messages.CredentialsMessage, error) {
+func ReadCredentialsMessage(
+	r *Reader,
+) (*eventingv1alpha1pb.RequestHandoffMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return messages.ParseCredentialsMessage(s)
-}
-
-func GatewayFromFleetGateway(id, name string, g *fleetv1alpha1pb.Gateway) *messages.Gateway {
-	h := fnv.New32a()
-	h.Write([]byte(id))
-	worldIdNum := h.Sum32()
-	h = fnv.New32a()
-	h.Write([]byte(g.Id))
-	gatewayId := h.Sum32()
-	return &messages.Gateway{
-		Addr:       g.Address,
-		Population: g.Population,
-		Capacity:   g.Capacity,
-		WorldID:    worldIdNum,
-		ID:         gatewayId,
-		WorldName:  name,
-	}
+	return protonostale.ParseRequestHandoffMessage(s)
 }

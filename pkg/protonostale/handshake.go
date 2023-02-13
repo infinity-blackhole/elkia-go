@@ -1,16 +1,14 @@
-package messages
+package protonostale
 
 import (
 	"bytes"
 	"errors"
 	"strconv"
+
+	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-type SyncMessage struct {
-	*StreamMessage
-}
-
-func ParseSyncMessage(msg []byte) (*SyncMessage, error) {
+func ParseSyncMessage(msg []byte) (*eventingv1alpha1pb.SyncMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 1 {
 		return nil, errors.New("invalid auth message")
@@ -19,20 +17,14 @@ func ParseSyncMessage(msg []byte) (*SyncMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SyncMessage{
-		StreamMessage: &StreamMessage{
-			SequenceNumber: sn,
-		},
+	return &eventingv1alpha1pb.SyncMessage{
+		Sequence: sn,
 	}, nil
 }
 
-type HandoffMessage struct {
-	*StreamMessage
-	Key      uint32
-	Password string
-}
-
-func ParseHandoffMessage(msg []byte) (*HandoffMessage, error) {
+func ParsePerformHandoffMessage(
+	msg []byte,
+) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 4 {
 		return nil, errors.New("invalid auth message")
@@ -52,10 +44,10 @@ func ParseHandoffMessage(msg []byte) (*HandoffMessage, error) {
 	if sni != snp+1 {
 		return nil, errors.New("sequence number mismatch")
 	}
-	return &HandoffMessage{
-		StreamMessage: &StreamMessage{SequenceNumber: snp},
-		Key:           key,
-		Password:      string(ss[3]),
+	return &eventingv1alpha1pb.PerformHandoffMessage{
+		Sequence: snp,
+		Key:      key,
+		Password: string(ss[3]),
 	}, nil
 }
 

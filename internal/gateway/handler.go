@@ -10,9 +10,10 @@ import (
 	"net/textproto"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/crypto"
-	"github.com/infinity-blackhole/elkia/pkg/messages"
+	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
 type HandlerConfig struct {
@@ -69,7 +70,7 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if err != nil {
 		return 0, 0, err
 	}
-	if handoffMessage.SequenceNumber != syncMessage.SequenceNumber+1 {
+	if handoffMessage.Sequence != syncMessage.Sequence+1 {
 		return 0, 0, errors.New("invalid sequence number")
 	}
 	if err != nil {
@@ -83,7 +84,7 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	if err != nil {
 		return 0, 0, err
 	}
-	return handoffMessage.Key, syncMessage.SequenceNumber, nil
+	return handoffMessage.Key, syncMessage.Sequence, nil
 }
 
 func (h *Handler) readerMessage(r *Reader) (string, uint32, io.Reader, error) {
@@ -95,7 +96,7 @@ func (h *Handler) readerMessage(r *Reader) (string, uint32, io.Reader, error) {
 	if len(ss) == 0 {
 		panic(errors.New("invalid message"))
 	}
-	sequenceNumber, err := messages.ParseUint32(ss[0])
+	sequenceNumber, err := protonostale.ParseUint32(ss[0])
 	if err != nil {
 		panic(err)
 	}
@@ -122,18 +123,18 @@ func (r *Reader) ReadLine() ([]byte, error) {
 	return r.crypto.Decrypt(s), nil
 }
 
-func ReadSyncMessage(r *Reader) (*messages.SyncMessage, error) {
+func ReadSyncMessage(r *Reader) (*eventingv1alpha1pb.SyncMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return messages.ParseSyncMessage(s)
+	return protonostale.ParseSyncMessage(s)
 }
 
-func ReadHandoffMessage(r *Reader) (*messages.HandoffMessage, error) {
+func ReadHandoffMessage(r *Reader) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
 	s, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	return messages.ParseHandoffMessage(s)
+	return protonostale.ParsePerformHandoffMessage(s)
 }
