@@ -31,3 +31,4 @@ go.work
 manifests/etcd/overlays/default/charts
 manifests/kratos/overlays/default/charts
 manifests/mysql/overlays/default/charts
+manifests/kafka/overlays/default/charts
