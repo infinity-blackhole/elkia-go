@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elkia-apiserver
+  name: elkia-fleet
   namespace: elkia
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: elkia-apiserver
+      app: elkia-fleet
   template:
     metadata:
       labels:
-        app: elkia-apiserver
+        app: elkia-fleet
     spec:
       containers:
-        - name: elkia-apiserver
-          image: gcr.io/infinity-blackhole/elkia-apiserver
+        - name: elkia-fleet
+          image: gcr.io/infinity-blackhole/elkia-fleet
           args:
             - --kratos-endpoint=http://kratos:4433
             - --etcd-endpoints=http://etcd:2379

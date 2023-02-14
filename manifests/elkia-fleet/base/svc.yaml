@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: elkia-apiserver
+  name: elkia-fleet
   namespace: elkia
 spec:
   ports:
@@ -9,4 +9,4 @@ spec:
       port: 8080
       targetPort: http
   selector:
-    app: elkia-apiserver
+    app: elkia-fleet

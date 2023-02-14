@@ -3,8 +3,8 @@ package main
 import (
 	"net"
 
-	"github.com/infinity-blackhole/elkia/internal/apiserver"
-	fleetv1alha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/infinity-blackhole/elkia/internal/fleet"
+	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/spf13/pflag"
 	etcd "go.etcd.io/etcd/client/v3"
@@ -69,9 +69,9 @@ func main() {
 		panic(err)
 	}
 	srv := grpc.NewServer()
-	fleetv1alha1pb.RegisterFleetServiceServer(
+	fleetv1alpha1pb.RegisterFleetServiceServer(
 		srv,
-		apiserver.NewFleetService(apiserver.FleetServiceConfig{
+		fleet.NewFleetService(fleet.FleetServiceConfig{
 			Orchestrator:     orchestrator,
 			IdentityProvider: NewIdentityProvider(),
 			SessionStore:     sessionStore,
@@ -82,18 +82,18 @@ func main() {
 	}
 }
 
-func NewOrchestrator() (*apiserver.Orchestrator, error) {
+func NewOrchestrator() (*fleet.Orchestrator, error) {
 	clientset, err := NewKubernetesClientSet()
 	if err != nil {
 		return nil, err
 	}
-	return apiserver.NewOrchestrator(apiserver.OrchestratorConfig{
+	return fleet.NewOrchestrator(fleet.OrchestratorConfig{
 		KubernetesClientSet: clientset,
 	}), nil
 }
 
-func NewIdentityProvider() *apiserver.IdentityProvider {
-	return apiserver.NewIdentityProvider(&apiserver.IdentityProviderServiceConfig{
+func NewIdentityProvider() *fleet.IdentityProvider {
+	return fleet.NewIdentityProvider(&fleet.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(&ory.Configuration{
 			DefaultHeader: make(map[string]string),
 			UserAgent:     "OpenAPI-Generator/1.0.0/go",
@@ -113,12 +113,12 @@ func NewEtcd() (*etcd.Client, error) {
 	})
 }
 
-func NewSessionStore() (*apiserver.SessionStore, error) {
+func NewSessionStore() (*fleet.SessionStore, error) {
 	etcd, err := NewEtcd()
 	if err != nil {
 		return nil, err
 	}
-	return apiserver.NewSessionStoreClient(apiserver.SessionStoreConfig{
+	return fleet.NewSessionStoreClient(fleet.SessionStoreConfig{
 		Etcd: etcd,
 	}), nil
 }

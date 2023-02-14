@@ -20,15 +20,15 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=cache,target=/root/.cache/go-build/ \
     go build \
     -ldflags "-linkmode=external" \
-    -o /usr/bin/elkia-apiserver \
-    ./cmd/elkia-apiserver
+    -o /usr/bin/elkia-fleet \
+    ./cmd/elkia-fleet
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/bin/elkia-apiserver /usr/bin
+COPY --from=build /usr/bin/elkia-fleet /usr/bin
 
 # HTTP Function
 EXPOSE 8080
 
-ENTRYPOINT ["elkia-apiserver"]
+ENTRYPOINT ["elkia-fleet"]

@@ -8,10 +8,10 @@ build:
       context: .
       docker:
         dockerfile: cmd/elkia-authserver/Dockerfile
-    - image: gcr.io/infinity-blackhole/elkia-apiserver
+    - image: gcr.io/infinity-blackhole/elkia-fleet
       context: .
       docker:
-        dockerfile: cmd/elkia-apiserver/Dockerfile
+        dockerfile: cmd/elkia-fleet/Dockerfile
     - image: gcr.io/infinity-blackhole/elkia-gateway
       context: .
       docker:

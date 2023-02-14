@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	address                string
-	elkiaApiServerEndpoint string
-	kafkaEndpoints         []string
-	kafkaTopics            []string
-	kafkaGroupID           string
+	address            string
+	elkiaFleetEndpoint string
+	kafkaEndpoints     []string
+	kafkaTopics        []string
+	kafkaGroupID       string
 )
 
 func init() {
@@ -27,10 +27,10 @@ func init() {
 		"Address",
 	)
 	pflag.StringVar(
-		&elkiaApiServerEndpoint,
-		"elkia-apiserver-endpoint",
+		&elkiaFleetEndpoint,
+		"elkia-fleet-endpoint",
 		"localhost:8080",
-		"Elkia API Server endpoint",
+		"Elkia Fleet endpoint",
 	)
 	pflag.StringSliceVar(
 		&kafkaEndpoints,
@@ -54,7 +54,7 @@ func init() {
 
 func main() {
 	pflag.Parse()
-	conn, err := grpc.Dial(elkiaApiServerEndpoint, grpc.WithInsecure())
+	conn, err := grpc.Dial(elkiaFleetEndpoint, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
