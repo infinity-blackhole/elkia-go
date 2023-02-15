@@ -21,16 +21,17 @@ func NewServerReader(r *bufio.Reader) *ServerReader {
 	}
 }
 
-// ReadLine reads a single line from r,
+// ReadMessage reads a single line from r,
 // eliding the final \n or \r\n from the returned string.
-func (r *ServerReader) ReadLine() (string, error) {
-	line, err := r.readLineSlice()
+func (r *ServerReader) ReadMessage() (string, error) {
+	line, err := r.readMessageSlice()
 	return string(line), err
 }
 
-// ReadLineBytes is like ReadLine but returns a []byte instead of a string.
-func (r *ServerReader) ReadLineBytes() ([]byte, error) {
-	line, err := r.readLineSlice()
+// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
+// string.
+func (r *ServerReader) ReadMessageBytes() ([]byte, error) {
+	line, err := r.readMessageSlice()
 	if line != nil {
 		buf := make([]byte, len(line))
 		copy(buf, line)
@@ -39,7 +40,7 @@ func (r *ServerReader) ReadLineBytes() ([]byte, error) {
 	return line, err
 }
 
-func (r *ServerReader) readLineSlice() ([]byte, error) {
+func (r *ServerReader) readMessageSlice() ([]byte, error) {
 	line, err := r.R.ReadBytes(0xD8)
 	if err != nil {
 		return nil, err
@@ -68,7 +69,7 @@ func NewServerWriter(w *bufio.Writer) *ServerWriter {
 	}
 }
 
-func (r *ServerWriter) WriteLine(plaintext []byte) error {
+func (r *ServerWriter) WriteMessage(plaintext []byte) error {
 	buf := make([]byte, 0, len(plaintext))
 	for _, b := range plaintext {
 		buf = append(buf, (b+15)&0xFF)

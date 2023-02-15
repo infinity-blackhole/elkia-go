@@ -90,7 +90,7 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *crypto.Serve
 }
 
 func (h *Handler) readerMessage(r *crypto.ServerReader) (string, uint32, io.Reader, error) {
-	s, err := r.ReadLineBytes()
+	s, err := r.ReadMessageBytes()
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +106,7 @@ func (h *Handler) readerMessage(r *crypto.ServerReader) (string, uint32, io.Read
 }
 
 func ReadSyncMessage(r *crypto.ServerReader) (*eventingv1alpha1pb.SyncMessage, error) {
-	s, err := r.ReadLineBytes()
+	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func ReadSyncMessage(r *crypto.ServerReader) (*eventingv1alpha1pb.SyncMessage, e
 }
 
 func ReadHandoffMessage(r *crypto.ServerReader) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
-	s, err := r.ReadLineBytes()
+	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}

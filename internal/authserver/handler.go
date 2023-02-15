@@ -79,7 +79,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			)
 		}
 	}
-	if err := wc.WriteLine(protonostale.MarshallProposeHandoffMessage(
+	if err := wc.WriteMessage(protonostale.MarshallProposeHandoffMessage(
 		&eventingv1alpha1pb.ProposeHandoffMessage{
 			Key:      handoff.Key,
 			Gateways: gateways,
@@ -92,7 +92,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func ReadCredentialsMessage(
 	r *crypto.ServerReader,
 ) (*eventingv1alpha1pb.RequestHandoffMessage, error) {
-	s, err := r.ReadLineBytes()
+	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}

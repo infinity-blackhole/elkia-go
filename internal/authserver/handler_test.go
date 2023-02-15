@@ -127,7 +127,7 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 		t.Fatalf("Failed to write message: %v", err)
 	}
 	clientReader := crypto.NewServerReader(bufio.NewReader(client))
-	b, err := clientReader.ReadLineBytes()
+	b, err := clientReader.ReadMessageBytes()
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
