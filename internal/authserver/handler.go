@@ -28,7 +28,7 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	rc := crypto.NewServerReader(bufio.NewReader(c))
-	wc := crypto.NewServerWriter(c)
+	wc := crypto.NewServerWriter(bufio.NewWriter(c))
 	m, err := ReadCredentialsMessage(rc)
 	if err != nil {
 		panic(err)
@@ -79,13 +79,12 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			)
 		}
 	}
-	_, err = wc.Write(protonostale.MarshallProposeHandoffMessage(
+	if err := wc.WriteLine(protonostale.MarshallProposeHandoffMessage(
 		&eventingv1alpha1pb.ProposeHandoffMessage{
 			Key:      handoff.Key,
 			Gateways: gateways,
 		},
-	))
-	if err != nil {
+	)); err != nil {
 		panic(err)
 	}
 }
