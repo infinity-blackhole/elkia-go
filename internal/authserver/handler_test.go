@@ -97,16 +97,16 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 	wg.Go(func() error {
 		return serveFleetServer(lis, &mockFleetServer{})
 	})
-	fleetClient, err := dialFleetService(ctx, lis)
-	if err != nil {
-		t.Fatalf("Failed to dial fleet service: %v", err)
-	}
-	handler := NewHandler(HandlerConfig{
-		FleetClient: fleetClient,
-	})
 	server, client := net.Pipe()
 	defer client.Close()
 	wg.Go(func() error {
+		fleetClient, err := dialFleetService(ctx, lis)
+		if err != nil {
+			return err
+		}
+		handler := NewHandler(HandlerConfig{
+			FleetClient: fleetClient,
+		})
 		handler.ServeNosTale(server)
 		return server.Close()
 	})
@@ -126,12 +126,12 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
 	}
-	clientReader := crypto.NewServerReader(bufio.NewReader(client))
-	b, err := clientReader.ReadMessageBytes()
+	rc := crypto.NewServerReader(bufio.NewReader(client))
+	b, err := rc.ReadMessageBytes()
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
-	if 0 > len(b) {
-		t.Fatalf("Expected message length to be greater than 0")
+	if len(b) == 0 {
+		t.Fatalf("Empty message")
 	}
 }
