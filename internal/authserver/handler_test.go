@@ -1,8 +1,8 @@
 package authserver
 
 import (
-	"bufio"
 	"context"
+	"fmt"
 	"net"
 	"testing"
 
@@ -68,8 +68,7 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 		handler.ServeNosTale(server)
 		return server.Close()
 	})
-	connWrite := bufio.NewWriter(client)
-	if _, err := connWrite.Write([]byte{
+	if n, err := client.Write([]byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
 		2, 4, 5, 149, 150, 2, 3, 145, 6, 1, 9, 10, 9, 149, 6, 2, 0, 5, 144, 3,
@@ -84,9 +83,8 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 		145, 255, 4, 4, 4, 216,
 	}); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
-	}
-	if err := connWrite.Flush(); err != nil {
-		t.Fatalf("Failed to flush message: %v", err)
+	} else {
+		fmt.Print(n)
 	}
 	if err := wg.Wait(); err != nil {
 		t.Fatalf("Failed to wait group: %v", err)

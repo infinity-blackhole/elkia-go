@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/textproto"
 
 	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
@@ -87,19 +86,19 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 }
 
 type Reader struct {
-	r      *textproto.Reader
+	r      *bufio.Reader
 	crypto *crypto.SimpleSubstitution
 }
 
 func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
-		r:      textproto.NewReader(r),
+		r:      r,
 		crypto: new(crypto.SimpleSubstitution),
 	}
 }
 
 func (r *Reader) ReadLine() ([]byte, error) {
-	s, err := r.r.ReadLineBytes()
+	s, err := r.r.ReadBytes(0xD8)
 	if err != nil {
 		return nil, err
 	}
