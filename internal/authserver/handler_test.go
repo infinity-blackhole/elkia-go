@@ -1,12 +1,13 @@
 package authserver
 
 import (
+	"bufio"
 	"context"
-	"fmt"
 	"net"
 	"testing"
 
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/crypto"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -15,6 +16,47 @@ import (
 
 type mockFleetServer struct {
 	fleetv1alpha1pb.UnimplementedFleetServiceServer
+}
+
+func (n *mockFleetServer) CreateHandoff(
+	context.Context,
+	*fleetv1alpha1pb.CreateHandoffRequest,
+) (*fleetv1alpha1pb.CreateHandoffResponse, error) {
+	return &fleetv1alpha1pb.CreateHandoffResponse{
+		Key: 1,
+	}, nil
+}
+
+func (s *mockFleetServer) ListClusters(
+	ctx context.Context,
+	in *fleetv1alpha1pb.ListClusterRequest,
+) (*fleetv1alpha1pb.ListClusterResponse, error) {
+	return &fleetv1alpha1pb.ListClusterResponse{
+		Clusters: []*fleetv1alpha1pb.Cluster{
+			{
+				Id:      "1",
+				WorldId: 1,
+				Name:    "test",
+			},
+		},
+	}, nil
+}
+
+func (s *mockFleetServer) ListGateways(
+	ctx context.Context,
+	in *fleetv1alpha1pb.ListGatewayRequest,
+) (*fleetv1alpha1pb.ListGatewayResponse, error) {
+	return &fleetv1alpha1pb.ListGatewayResponse{
+		Gateways: []*fleetv1alpha1pb.Gateway{
+			{
+				Id:         "1",
+				ChannelId:  1,
+				Address:    "127.0.0.1:4321",
+				Population: 0,
+				Capacity:   1000,
+			},
+		},
+	}, nil
 }
 
 func newFleetServer(s fleetv1alpha1pb.FleetServiceServer) *grpc.Server {
@@ -68,7 +110,7 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 		handler.ServeNosTale(server)
 		return server.Close()
 	})
-	if n, err := client.Write([]byte{
+	if _, err := client.Write([]byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
 		2, 4, 5, 149, 150, 2, 3, 145, 6, 1, 9, 10, 9, 149, 6, 2, 0, 5, 144, 3,
@@ -83,10 +125,13 @@ func TestServeNosTaleCredentialMessage(t *testing.T) {
 		145, 255, 4, 4, 4, 216,
 	}); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
-	} else {
-		fmt.Print(n)
 	}
-	if err := wg.Wait(); err != nil {
-		t.Fatalf("Failed to wait group: %v", err)
+	clientReader := crypto.NewServerReader(bufio.NewReader(client))
+	b, err := clientReader.ReadLineBytes()
+	if err != nil {
+		t.Fatalf("Failed to read line bytes: %v", err)
+	}
+	if 0 > len(b) {
+		t.Fatalf("Expected message length to be greater than 0")
 	}
 }

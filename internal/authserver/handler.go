@@ -3,7 +3,6 @@ package authserver
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"net"
 
 	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -28,8 +27,9 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := NewReader(bufio.NewReader(c))
-	m, err := ReadCredentialsMessage(r)
+	rc := crypto.NewServerReader(bufio.NewReader(c))
+	wc := crypto.NewServerWriter(c)
+	m, err := ReadCredentialsMessage(rc)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	gateways := make([]*eventingv1alpha1pb.Gateway, len(listClusters.Clusters))
+	gateways := []*eventingv1alpha1pb.Gateway{}
 	for _, c := range listClusters.Clusters {
 		listGateways, err := h.fleet.
 			ListGateways(ctx, &fleetv1alpha1pb.ListGatewayRequest{
@@ -79,36 +79,21 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			)
 		}
 	}
-	fmt.Fprint(c, eventingv1alpha1pb.ProposeHandoffMessage{
-		Key:      handoff.Key,
-		Gateways: gateways,
-	})
-}
-
-type Reader struct {
-	r      *bufio.Reader
-	crypto *crypto.SimpleSubstitution
-}
-
-func NewReader(r *bufio.Reader) *Reader {
-	return &Reader{
-		r:      r,
-		crypto: new(crypto.SimpleSubstitution),
-	}
-}
-
-func (r *Reader) ReadLine() ([]byte, error) {
-	s, err := r.r.ReadBytes(0xD8)
+	_, err = wc.Write(protonostale.MarshallProposeHandoffMessage(
+		&eventingv1alpha1pb.ProposeHandoffMessage{
+			Key:      handoff.Key,
+			Gateways: gateways,
+		},
+	))
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return r.crypto.Decrypt(s), nil
 }
 
 func ReadCredentialsMessage(
-	r *Reader,
+	r *crypto.ServerReader,
 ) (*eventingv1alpha1pb.RequestHandoffMessage, error) {
-	s, err := r.ReadLine()
+	s, err := r.ReadLineBytes()
 	if err != nil {
 		return nil, err
 	}

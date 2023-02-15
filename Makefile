@@ -1,5 +1,5 @@
-.PHONY: gen
-gen:
+.PHONY: protobuf
+protobuf:
 	protoc \
 		--go_out=. \
 		--go_opt=paths=source_relative \

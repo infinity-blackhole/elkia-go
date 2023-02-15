@@ -29,17 +29,17 @@ var GatewayTerminator = "-1 -1 -1 10000 10000 1"
 
 func MarshallProposeHandoffMessage(
 	msg *eventingv1alpha1pb.ProposeHandoffMessage,
-) string {
+) []byte {
 	gateways := make([]string, len(msg.Gateways))
 	for i, g := range msg.Gateways {
 		gateways[i] = MarshallGateway(g)
 	}
 	gateways = append(gateways, GatewayTerminator)
-	return fmt.Sprintf(
+	return []byte(fmt.Sprintf(
 		"NsTeST %d %s",
 		msg.Key,
 		strings.Join(gateways, " "),
-	)
+	))
 }
 
 func MarshallGateway(

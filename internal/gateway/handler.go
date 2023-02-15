@@ -7,7 +7,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"net/textproto"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -38,7 +37,7 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := NewReader(bufio.NewReader(c))
+	r := crypto.NewServerReader(bufio.NewReader(c))
 	_, lastSeqNum, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
@@ -61,7 +60,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	}
 }
 
-func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uint32, uint32, error) {
+func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *crypto.ServerReader) (uint32, uint32, error) {
 	syncMessage, err := ReadSyncMessage(r)
 	if err != nil {
 		return 0, 0, err
@@ -90,8 +89,8 @@ func (h *Handler) handleHandoff(ctx context.Context, c net.Conn, r *Reader) (uin
 	return handoffMessage.Key, syncMessage.Sequence, nil
 }
 
-func (h *Handler) readerMessage(r *Reader) (string, uint32, io.Reader, error) {
-	s, err := r.ReadLine()
+func (h *Handler) readerMessage(r *crypto.ServerReader) (string, uint32, io.Reader, error) {
+	s, err := r.ReadLineBytes()
 	if err != nil {
 		panic(err)
 	}
@@ -106,36 +105,16 @@ func (h *Handler) readerMessage(r *Reader) (string, uint32, io.Reader, error) {
 	return string(ss[0]), sequenceNumber, bytes.NewReader(ss[1]), nil
 }
 
-type Reader struct {
-	r      *textproto.Reader
-	crypto *crypto.SimpleSubstitution
-}
-
-func NewReader(r *bufio.Reader) *Reader {
-	return &Reader{
-		r:      textproto.NewReader(r),
-		crypto: new(crypto.SimpleSubstitution),
-	}
-}
-
-func (r *Reader) ReadLine() ([]byte, error) {
-	s, err := r.r.ReadLineBytes()
-	if err != nil {
-		return nil, err
-	}
-	return r.crypto.Decrypt(s), nil
-}
-
-func ReadSyncMessage(r *Reader) (*eventingv1alpha1pb.SyncMessage, error) {
-	s, err := r.ReadLine()
+func ReadSyncMessage(r *crypto.ServerReader) (*eventingv1alpha1pb.SyncMessage, error) {
+	s, err := r.ReadLineBytes()
 	if err != nil {
 		return nil, err
 	}
 	return protonostale.ParseSyncMessage(s)
 }
 
-func ReadHandoffMessage(r *Reader) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
-	s, err := r.ReadLine()
+func ReadHandoffMessage(r *crypto.ServerReader) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
+	s, err := r.ReadLineBytes()
 	if err != nil {
 		return nil, err
 	}

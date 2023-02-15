@@ -46,12 +46,11 @@
               ];
             }
             {
-              pre-commit.hooks = {
-                gofmt.enable = true;
-              };
+              pre-commit.hooks.gofmt.enable = true;
               packages = [
                 pkgs.go
                 pkgs.gotools
+                pkgs.mockgen
                 pkgs.protobuf
                 pkgs.protoc-gen-go
                 pkgs.protoc-gen-go-grpc
