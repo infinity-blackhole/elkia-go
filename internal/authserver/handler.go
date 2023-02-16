@@ -7,7 +7,7 @@ import (
 
 	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/crypto"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
@@ -27,8 +27,8 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	rc := crypto.NewServerReader(bufio.NewReader(c))
-	wc := crypto.NewServerWriter(bufio.NewWriter(c))
+	rc := simplesubtitution.NewReader(bufio.NewReader(c))
+	wc := simplesubtitution.NewWriter(bufio.NewWriter(c))
 	m, err := ReadCredentialsMessage(rc)
 	if err != nil {
 		panic(err)
@@ -90,7 +90,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 }
 
 func ReadCredentialsMessage(
-	r *crypto.ServerReader,
+	r *simplesubtitution.Reader,
 ) (*eventingv1alpha1pb.RequestHandoffMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {

@@ -1,4 +1,4 @@
-package crypto
+package simplesubtitution
 
 import (
 	"bufio"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestServerReaderReadline(t *testing.T) {
+func TestReaderReadline(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
@@ -14,7 +14,7 @@ func TestServerReaderReadline(t *testing.T) {
 		130, 131, 25, 216,
 	}
 	var buf bytes.Buffer
-	w := NewServerWriter(bufio.NewWriter(&buf))
+	w := NewWriter(bufio.NewWriter(&buf))
 	if err := w.WriteMessage(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -24,7 +24,7 @@ func TestServerReaderReadline(t *testing.T) {
 	}
 }
 
-func TestServerWriterWrite(t *testing.T) {
+func TestWriterWrite(t *testing.T) {
 	input := []byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
@@ -43,9 +43,9 @@ func TestServerWriterWrite(t *testing.T) {
 		"NoS0575 3614038 a 5AE625665F3E0BD0A065ED07A41989E4025B79D139" +
 			"30A2A8C57D6B4325226707D956A082D1E91B4D96A793562DF98FD03C9DCF743" +
 			"C9C7B4E3055D4F9F09BA015 0039E3DC\x0B0.9.3.3071 0 C7D2503BD257F5" +
-			"BAE0870F40C2DA3666\n\n",
+			"BAE0870F40C2DA3666\\n",
 	)
-	r := NewServerReader(bufio.NewReader(bytes.NewReader(input)))
+	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
 	result, err := r.ReadMessageBytes()
 	if err != nil {
 		t.Errorf("Error reading line: %s", err)
@@ -58,11 +58,11 @@ func TestServerWriterWrite(t *testing.T) {
 func TestServerAsymmetricEncoding(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	var b bytes.Buffer
-	w := NewServerWriter(bufio.NewWriter(&b))
+	w := NewWriter(bufio.NewWriter(&b))
 	if err := w.WriteMessage(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	r := NewServerReader(bufio.NewReader(&b))
+	r := NewReader(bufio.NewReader(&b))
 	result, err := r.ReadMessageBytes()
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/crypto"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -139,7 +139,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if _, err := client.Write(input); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
 	}
-	rc := crypto.NewServerReader(bufio.NewReader(client))
+	rc := simplesubtitution.NewReader(bufio.NewReader(client))
 	result, err := rc.ReadMessageBytes()
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
