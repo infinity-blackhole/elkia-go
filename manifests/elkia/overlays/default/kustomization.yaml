@@ -5,7 +5,3 @@ resources:
   - ../../../elkia-authserver/overlays/default
   - ../../../elkia-fleet/overlays/default
   - ../../../elkia-gateway/overlays/default
-  - ../../../kratos/overlays/default
-  - ../../../etcd/overlays/default
-  - ../../../mysql/overlays/default
-  - ../../../kafka/overlays/default
