@@ -1,4 +1,4 @@
-FROM golang:1.19 as debug
+FROM golang:1.19 as base
 
 # Change path to Go source
 WORKDIR /go/src/github.com/infinity-blackhole/elkia
@@ -13,15 +13,22 @@ COPY cmd cmd
 COPY internal internal
 COPY pkg pkg
 
-FROM debug as build
+FROM base as build
 
-# Build optimized binary
+# Build binary
+ARG SKAFFOLD_GO_GCFLAGS
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=cache,target=/root/.cache/go-build/ \
     go build \
+    -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
     -o /usr/bin/elkia-fleet \
     ./cmd/elkia-fleet
+
+# HTTP Function
+EXPOSE 8080
+
+ENTRYPOINT ["elkia-fleet"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 

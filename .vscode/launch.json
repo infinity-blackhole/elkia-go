@@ -12,6 +12,15 @@
       "program": "${workspaceFolder}/cmd/elkia-authserver"
     },
     {
+      "name": "Attach Elkia Auth Server",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "127.0.0.1",
+      "port": 56268,
+      "cwd": "${workspaceFolder}/cmd/elkia-authserver"
+    },
+    {
       "name": "Launch Elkia Fleet",
       "type": "go",
       "request": "launch",
@@ -19,11 +28,29 @@
       "program": "${workspaceFolder}/cmd/elkia-fleet"
     },
     {
+      "name": "Attach Elkia Fleet",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "127.0.0.1",
+      "port": 56268,
+      "cwd": "${workspaceFolder}/cmd/elkia-fleet"
+    },
+    {
       "name": "Launch Elkia Gateway",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/elkia-gateway"
-    }
+    },
+    {
+      "name": "Attach Elkia Gateway",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "127.0.0.1",
+      "port": 56268,
+      "cwd": "${workspaceFolder}/cmd/elkia-gatwaey"
+    },
   ]
 }

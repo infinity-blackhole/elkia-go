@@ -51,7 +51,6 @@
                 pkgs.go
                 pkgs.gotools
                 pkgs.mockgen
-                pkgs.skaffold
                 pkgs.protobuf
                 pkgs.protoc-gen-go
                 pkgs.protoc-gen-go-grpc

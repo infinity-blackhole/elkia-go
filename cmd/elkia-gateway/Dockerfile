@@ -1,4 +1,4 @@
-FROM golang:1.19 as debug
+FROM golang:1.19 as base
 
 # Change path to Go source
 WORKDIR /go/src/github.com/infinity-blackhole/elkia
@@ -13,15 +13,20 @@ COPY cmd cmd
 COPY internal internal
 COPY pkg pkg
 
-FROM debug as build
+FROM base as build
 
-# Build optimized binary
+# Build binary
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=cache,target=/root/.cache/go-build/ \
     go build \
-    -ldflags "-linkmode=external" \
     -o /usr/bin/elkia-gateway \
+    -ldflags "-linkmode=external" \
     ./cmd/elkia-gateway
+
+# NosTale gateway
+EXPOSE 4124
+
+ENTRYPOINT ["elkia-gateway"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
