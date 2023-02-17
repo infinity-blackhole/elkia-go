@@ -34,8 +34,8 @@ manifests:
   kustomize:
     paths:
       - manifests/kratos/overlays/default
+      - manifests/kratos-selfservice-ui-node/overlays/default
       - manifests/etcd/overlays/default
-      - manifests/mysql/overlays/default
       - manifests/kafka/overlays/default
     buildArgs:
       - --enable-helm

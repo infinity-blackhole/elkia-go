@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elkia
+  namespace: elkia
+spec:
+  rules:
+    - host: accounts.elkia.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kratos-selfservice-ui-node
+                port:
+                  name: http
+    - host: kratos.elkia.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kratos-public
+                port:
+                  name: http

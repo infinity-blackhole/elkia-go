@@ -5,3 +5,4 @@ resources:
   - ../../../elkia-authserver/overlays/default
   - ../../../elkia-fleet/overlays/default
   - ../../../elkia-gateway/overlays/default
+  - ingress.yaml
