@@ -51,3 +51,7 @@ func (r *FieldReader) ReadPayload() ([]byte, error) {
 	}
 	return b[:len(b)-1], nil
 }
+
+func (r *FieldReader) Discard(n int) (int, error) {
+	return r.r.Discard(n)
+}

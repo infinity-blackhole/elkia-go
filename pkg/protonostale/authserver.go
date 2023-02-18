@@ -22,6 +22,10 @@ type AuthServerMessageReader struct {
 }
 
 func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandoffMessage, error) {
+	_, err := r.r.ReadString()
+	if err != nil {
+		return nil, err
+	}
 	identifier, err := r.r.ReadString()
 	if err != nil {
 		return nil, err
@@ -30,7 +34,19 @@ func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.Request
 	if err != nil {
 		return nil, err
 	}
+	_, err = r.r.ReadString()
+	if err != nil {
+		return nil, err
+	}
+	_, err = r.r.ReadString()
+	if err != nil {
+		return nil, err
+	}
 	clientVersion, err := r.r.ReadString()
+	if err != nil {
+		return nil, err
+	}
+	_, err = r.r.ReadString()
 	if err != nil {
 		return nil, err
 	}
