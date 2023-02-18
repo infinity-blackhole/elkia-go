@@ -8,6 +8,7 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
+	log "github.com/sirupsen/logrus"
 )
 
 type HandlerConfig struct {
@@ -47,6 +48,7 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
+	log.Printf("start serving %v", c.rwc.RemoteAddr())
 	r, err := c.rc.ReadMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -65,6 +67,8 @@ func (c *Conn) serve(ctx context.Context) {
 		}
 		return
 	}
+	log.Printf("read request handoff message: %v", m)
+
 	handoff, err := c.fleetClient.
 		CreateHandoff(
 			ctx,
@@ -81,6 +85,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}
 		return
 	}
+	log.Printf("create handoff: %v", handoff)
 
 	listClusters, err := c.fleetClient.
 		ListClusters(ctx, &fleet.ListClusterRequest{})
@@ -92,6 +97,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}
 		return
 	}
+	log.Printf("list clusters: %v", listClusters)
 	gateways := []*eventing.GatewayMessage{}
 	for _, cluster := range listClusters.Clusters {
 		listGateways, err := c.fleetClient.
@@ -106,6 +112,7 @@ func (c *Conn) serve(ctx context.Context) {
 			}
 			return
 		}
+		log.Printf("list gateways: %v", listGateways)
 		for _, g := range listGateways.Gateways {
 			host, port, err := net.SplitHostPort(g.Address)
 			if err != nil {

@@ -9,6 +9,7 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
+	log "github.com/sirupsen/logrus"
 )
 
 type HandlerConfig struct {
@@ -56,6 +57,7 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
+	log.Printf("start serving %v", c.rwc.RemoteAddr())
 	ack, err := c.handoff(ctx)
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -65,6 +67,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}
 		return
 	}
+	log.Printf("handoff success %v", ack)
 	if ack == nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_CANT_AUTHENTICATE,
