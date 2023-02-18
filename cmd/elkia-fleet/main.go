@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/infinity-blackhole/elkia/internal/fleet"
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/spf13/pflag"
 	etcd "go.etcd.io/etcd/client/v3"
@@ -69,7 +69,7 @@ func main() {
 		panic(err)
 	}
 	srv := grpc.NewServer()
-	fleetv1alpha1pb.RegisterFleetServiceServer(
+	fleet.RegisterFleetServiceServer(
 		srv,
 		fleet.NewFleetService(fleet.FleetServiceConfig{
 			Orchestrator:     orchestrator,

@@ -9,7 +9,7 @@ import (
 	"net"
 	"testing"
 
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -18,28 +18,28 @@ import (
 )
 
 type fleetServiceServerMock struct {
-	fleetv1alpha1pb.UnimplementedFleetServiceServer
+	fleet.UnimplementedFleetServiceServer
 }
 
 func (n *fleetServiceServerMock) CreateHandoff(
 	ctx context.Context,
-	in *fleetv1alpha1pb.CreateHandoffRequest,
-) (*fleetv1alpha1pb.CreateHandoffResponse, error) {
+	in *fleet.CreateHandoffRequest,
+) (*fleet.CreateHandoffResponse, error) {
 	h := fnv.New32a()
 	h.Write([]byte(in.Identifier))
 	h.Write([]byte(in.Token))
 	key := h.Sum32()
-	return &fleetv1alpha1pb.CreateHandoffResponse{
+	return &fleet.CreateHandoffResponse{
 		Key: key,
 	}, nil
 }
 
 func (s *fleetServiceServerMock) ListClusters(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListClusterRequest,
-) (*fleetv1alpha1pb.ListClusterResponse, error) {
-	return &fleetv1alpha1pb.ListClusterResponse{
-		Clusters: []*fleetv1alpha1pb.Cluster{
+	in *fleet.ListClusterRequest,
+) (*fleet.ListClusterResponse, error) {
+	return &fleet.ListClusterResponse{
+		Clusters: []*fleet.Cluster{
 			{
 				Id:      "foo",
 				WorldId: 1,
@@ -56,16 +56,16 @@ func (s *fleetServiceServerMock) ListClusters(
 
 func (s *fleetServiceServerMock) ListGateways(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListGatewayRequest,
-) (*fleetv1alpha1pb.ListGatewayResponse, error) {
+	in *fleet.ListGatewayRequest,
+) (*fleet.ListGatewayResponse, error) {
 	sh := sha1.New()
 	sh.Write([]byte(in.Id))
 	id := base64.URLEncoding.EncodeToString(sh.Sum(nil))
 	nh := fnv.New32a()
 	nh.Write([]byte(in.Id))
 	channelId := nh.Sum32()
-	return &fleetv1alpha1pb.ListGatewayResponse{
-		Gateways: []*fleetv1alpha1pb.Gateway{
+	return &fleet.ListGatewayResponse{
+		Gateways: []*fleet.Gateway{
 			{
 				Id:         id,
 				ChannelId:  channelId,
@@ -79,7 +79,7 @@ func (s *fleetServiceServerMock) ListGateways(
 
 func serveFleetServiceServerMock(lis net.Listener) error {
 	server := grpc.NewServer()
-	fleetv1alpha1pb.RegisterFleetServiceServer(
+	fleet.RegisterFleetServiceServer(
 		server, &fleetServiceServerMock{},
 	)
 	return server.Serve(lis)
@@ -87,7 +87,7 @@ func serveFleetServiceServerMock(lis net.Listener) error {
 
 func dialFleetServiceServerMock(
 	ctx context.Context, lis *bufconn.Listener,
-) (fleetv1alpha1pb.FleetServiceClient, error) {
+) (fleet.FleetServiceClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -99,7 +99,7 @@ func dialFleetServiceServerMock(
 	if err != nil {
 		return nil, err
 	}
-	return fleetv1alpha1pb.NewFleetServiceClient(conn), nil
+	return fleet.NewFleetServiceClient(conn), nil
 }
 
 func TestHandlerServeNosTale(t *testing.T) {

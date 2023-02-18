@@ -3,7 +3,7 @@ package fleet
 import (
 	"context"
 
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 )
 
@@ -24,7 +24,7 @@ type IdentityProvider struct {
 func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 	ctx context.Context,
 	identifier, password string,
-) (*fleetv1alpha1pb.Session, error) {
+) (*fleet.Session, error) {
 	flow, _, err := i.oryClient.FrontendApi.
 		CreateNativeLoginFlow(ctx).
 		Execute()
@@ -47,7 +47,7 @@ func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 	if err != nil {
 		return nil, err
 	}
-	return &fleetv1alpha1pb.Session{
+	return &fleet.Session{
 		Id:         ulf.Session.Id,
 		IdentityId: ulf.Session.Identity.Id,
 		Token:      *ulf.SessionToken,
@@ -56,7 +56,7 @@ func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 
 func (i *IdentityProvider) GetSession(
 	ctx context.Context, token string,
-) (*fleetv1alpha1pb.Session, error) {
+) (*fleet.Session, error) {
 	session, _, err := i.oryClient.FrontendApi.
 		ToSession(ctx).
 		XSessionToken(token).
@@ -64,7 +64,7 @@ func (i *IdentityProvider) GetSession(
 	if err != nil {
 		return nil, err
 	}
-	return &fleetv1alpha1pb.Session{
+	return &fleet.Session{
 		Id:         session.Id,
 		IdentityId: session.Identity.Id,
 		Token:      token,

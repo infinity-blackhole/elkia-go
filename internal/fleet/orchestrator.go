@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -29,8 +29,8 @@ type Orchestrator struct {
 
 func (s *Orchestrator) GetCluster(
 	ctx context.Context,
-	in *fleetv1alpha1pb.GetClusterRequest,
-) (*fleetv1alpha1pb.Cluster, error) {
+	in *fleet.GetClusterRequest,
+) (*fleet.Cluster, error) {
 	ns, err := s.kubernetesClientSet.
 		CoreV1().
 		Namespaces().
@@ -43,8 +43,8 @@ func (s *Orchestrator) GetCluster(
 
 func (s *Orchestrator) ListClusters(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListClusterRequest,
-) (*fleetv1alpha1pb.ListClusterResponse, error) {
+	in *fleet.ListClusterRequest,
+) (*fleet.ListClusterResponse, error) {
 	nss, err := s.kubernetesClientSet.
 		CoreV1().
 		Namespaces().
@@ -59,21 +59,21 @@ func (s *Orchestrator) ListClusters(
 	if err != nil {
 		return nil, err
 	}
-	clusters := make([]*fleetv1alpha1pb.Cluster, len(nss.Items))
+	clusters := make([]*fleet.Cluster, len(nss.Items))
 	for i, ns := range nss.Items {
 		clusters[i], err = s.getClusterFromNamespace(&ns)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return &fleetv1alpha1pb.ListClusterResponse{
+	return &fleet.ListClusterResponse{
 		Clusters: clusters,
 	}, nil
 }
 
 func (s *Orchestrator) getClusterFromNamespace(
 	ns *corev1.Namespace,
-) (*fleetv1alpha1pb.Cluster, error) {
+) (*fleet.Cluster, error) {
 	idUint, err := strconv.ParseUint(
 		ns.Labels["fleet.elkia.io/cluster-world"],
 		10, 32,
@@ -81,7 +81,7 @@ func (s *Orchestrator) getClusterFromNamespace(
 	if err != nil {
 		return nil, err
 	}
-	return &fleetv1alpha1pb.Cluster{
+	return &fleet.Cluster{
 		Id:      ns.Name,
 		WorldId: uint32(idUint),
 		Name:    ns.Labels["fleet.elkia.io/cluster-tenant"],
@@ -90,8 +90,8 @@ func (s *Orchestrator) getClusterFromNamespace(
 
 func (s *Orchestrator) GetGateway(
 	ctx context.Context,
-	in *fleetv1alpha1pb.GetGatewayRequest,
-) (*fleetv1alpha1pb.Gateway, error) {
+	in *fleet.GetGatewayRequest,
+) (*fleet.Gateway, error) {
 	svc, err := s.kubernetesClientSet.
 		CoreV1().
 		Services(in.Id).
@@ -104,9 +104,9 @@ func (s *Orchestrator) GetGateway(
 
 func (s *Orchestrator) ListGateways(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListGatewayRequest,
-) (*fleetv1alpha1pb.ListGatewayResponse, error) {
-	gateways := []*fleetv1alpha1pb.Gateway{}
+	in *fleet.ListGatewayRequest,
+) (*fleet.ListGatewayResponse, error) {
+	gateways := []*fleet.Gateway{}
 	svcs, err := s.kubernetesClientSet.
 		CoreV1().
 		Services(in.Id).
@@ -128,14 +128,14 @@ func (s *Orchestrator) ListGateways(
 		}
 		gateways = append(gateways, gateway)
 	}
-	return &fleetv1alpha1pb.ListGatewayResponse{
+	return &fleet.ListGatewayResponse{
 		Gateways: gateways,
 	}, nil
 }
 
 func (s *Orchestrator) getGatewayFromService(
 	svc *corev1.Service,
-) (*fleetv1alpha1pb.Gateway, error) {
+) (*fleet.Gateway, error) {
 	addr, err := s.getGatewayAddrFromService(svc)
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func (s *Orchestrator) getGatewayFromService(
 	if err != nil {
 		return nil, err
 	}
-	return &fleetv1alpha1pb.Gateway{
+	return &fleet.Gateway{
 		Id:         svc.Name,
 		ChannelId:  uint32(idUint),
 		Address:    addr,

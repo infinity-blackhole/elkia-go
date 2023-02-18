@@ -5,14 +5,14 @@ import (
 	"context"
 	"net"
 
-	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
 type HandlerConfig struct {
-	FleetClient fleetv1alpha1pb.FleetServiceClient
+	FleetClient fleet.FleetServiceClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
@@ -22,7 +22,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	fleet fleetv1alpha1pb.FleetServiceClient
+	fleet fleet.FleetServiceClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -37,7 +37,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	handoff, err := h.fleet.
 		CreateHandoff(
 			ctx,
-			&fleetv1alpha1pb.CreateHandoffRequest{
+			&fleet.CreateHandoffRequest{
 				Identifier: m.Identifier,
 				Token:      m.Password,
 			},
@@ -47,14 +47,14 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	}
 
 	listClusters, err := h.fleet.
-		ListClusters(ctx, &fleetv1alpha1pb.ListClusterRequest{})
+		ListClusters(ctx, &fleet.ListClusterRequest{})
 	if err != nil {
 		panic(err)
 	}
-	gateways := []*eventingv1alpha1pb.Gateway{}
+	gateways := []*eventing.Gateway{}
 	for _, c := range listClusters.Clusters {
 		listGateways, err := h.fleet.
-			ListGateways(ctx, &fleetv1alpha1pb.ListGatewayRequest{
+			ListGateways(ctx, &fleet.ListGatewayRequest{
 				Id: c.Id,
 			})
 		if err != nil {
@@ -67,7 +67,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			}
 			gateways = append(
 				gateways,
-				&eventingv1alpha1pb.Gateway{
+				&eventing.Gateway{
 					Host:       host,
 					Port:       port,
 					Population: g.Population,
@@ -80,7 +80,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		}
 	}
 	if err := wc.WriteMessage(protonostale.MarshallProposeHandoffMessage(
-		&eventingv1alpha1pb.ProposeHandoffMessage{
+		&eventing.ProposeHandoffMessage{
 			Key:      handoff.Key,
 			Gateways: gateways,
 		},
@@ -91,7 +91,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 
 func ReadCredentialsMessage(
 	r *simplesubtitution.Reader,
-) (*eventingv1alpha1pb.RequestHandoffMessage, error) {
+) (*eventing.RequestHandoffMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err

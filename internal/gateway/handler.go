@@ -9,14 +9,14 @@ import (
 	"net"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
 type HandlerConfig struct {
-	FleetClient   fleetv1alpha1pb.FleetServiceClient
+	FleetClient   fleet.FleetServiceClient
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
 }
@@ -30,7 +30,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	fleet         fleetv1alpha1pb.FleetServiceClient
+	fleet         fleet.FleetServiceClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
 }
@@ -83,7 +83,7 @@ func (h *Handler) handleHandoff(
 		panic(err)
 	}
 	_, err = h.fleet.
-		PerformHandoff(ctx, &fleetv1alpha1pb.PerformHandoffRequest{
+		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
 			Key:   handoffMessage.Key,
 			Token: handoffMessage.Password,
 		})
@@ -113,7 +113,7 @@ func (h *Handler) readerMessage(
 
 func ReadSyncMessage(
 	r *simplesubtitution.Reader,
-) (*eventingv1alpha1pb.SyncMessage, error) {
+) (*eventing.SyncMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func ReadSyncMessage(
 
 func ReadHandoffMessage(
 	r *simplesubtitution.Reader,
-) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
+) (*eventing.PerformHandoffMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err

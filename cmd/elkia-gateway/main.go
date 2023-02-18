@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/internal/gateway"
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -72,7 +72,7 @@ func main() {
 	s := nostale.NewServer(nostale.ServerConfig{
 		Addr: address,
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
-			FleetClient:   fleetv1alpha1pb.NewFleetServiceClient(conn),
+			FleetClient:   fleet.NewFleetServiceClient(conn),
 			KafkaProducer: kp,
 			KafkaConsumer: kc,
 		}),

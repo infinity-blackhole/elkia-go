@@ -6,7 +6,7 @@ import (
 	"errors"
 	"hash/fnv"
 
-	fleetv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -25,7 +25,7 @@ func NewFleetService(config FleetServiceConfig) *FleetService {
 }
 
 type FleetService struct {
-	fleetv1alpha1pb.UnimplementedFleetServiceServer
+	fleet.UnimplementedFleetServiceServer
 	orchestrator     *Orchestrator
 	sessionStore     *SessionStore
 	identityProvider *IdentityProvider
@@ -33,36 +33,36 @@ type FleetService struct {
 
 func (s *FleetService) GetCluster(
 	ctx context.Context,
-	in *fleetv1alpha1pb.GetClusterRequest,
-) (*fleetv1alpha1pb.Cluster, error) {
+	in *fleet.GetClusterRequest,
+) (*fleet.Cluster, error) {
 	return s.orchestrator.GetCluster(ctx, in)
 }
 
 func (s *FleetService) ListClusters(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListClusterRequest,
-) (*fleetv1alpha1pb.ListClusterResponse, error) {
+	in *fleet.ListClusterRequest,
+) (*fleet.ListClusterResponse, error) {
 	return s.orchestrator.ListClusters(ctx, in)
 }
 
 func (s *FleetService) GetGateway(
 	ctx context.Context,
-	in *fleetv1alpha1pb.GetGatewayRequest,
-) (*fleetv1alpha1pb.Gateway, error) {
+	in *fleet.GetGatewayRequest,
+) (*fleet.Gateway, error) {
 	return s.orchestrator.GetGateway(ctx, in)
 }
 
 func (s *FleetService) ListGateways(
 	ctx context.Context,
-	in *fleetv1alpha1pb.ListGatewayRequest,
-) (*fleetv1alpha1pb.ListGatewayResponse, error) {
+	in *fleet.ListGatewayRequest,
+) (*fleet.ListGatewayResponse, error) {
 	return s.orchestrator.ListGateways(ctx, in)
 }
 
 func (s *FleetService) CreateHandoff(
 	ctx context.Context,
-	in *fleetv1alpha1pb.CreateHandoffRequest,
-) (*fleetv1alpha1pb.CreateHandoffResponse, error) {
+	in *fleet.CreateHandoffRequest,
+) (*fleet.CreateHandoffResponse, error) {
 	session, err := s.identityProvider.
 		PerformLoginFlowWithPasswordMethod(
 			ctx,
@@ -82,7 +82,7 @@ func (s *FleetService) CreateHandoff(
 	if err := s.sessionStore.SetHandoffSession(
 		ctx,
 		key,
-		&fleetv1alpha1pb.Handoff{
+		&fleet.Handoff{
 			Id:         session.Id,
 			Identifier: in.Identifier,
 			Token:      session.Token,
@@ -90,14 +90,14 @@ func (s *FleetService) CreateHandoff(
 	); err != nil {
 		return nil, err
 	}
-	return &fleetv1alpha1pb.CreateHandoffResponse{
+	return &fleet.CreateHandoffResponse{
 		Key: key,
 	}, nil
 }
 
 func (s *FleetService) PerformHandoff(
 	ctx context.Context,
-	in *fleetv1alpha1pb.PerformHandoffRequest,
+	in *fleet.PerformHandoffRequest,
 ) (*emptypb.Empty, error) {
 	handoff, err := s.sessionStore.GetHandoffSession(ctx, in.Key)
 	if err != nil {

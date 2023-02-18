@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strconv"
 
-	eventingv1alpha1pb "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func ParseSyncMessage(msg []byte) (*eventingv1alpha1pb.SyncMessage, error) {
+func ParseSyncMessage(msg []byte) (*eventing.SyncMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 1 {
 		return nil, errors.New("invalid auth message")
@@ -17,14 +17,14 @@ func ParseSyncMessage(msg []byte) (*eventingv1alpha1pb.SyncMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &eventingv1alpha1pb.SyncMessage{
+	return &eventing.SyncMessage{
 		Sequence: sn,
 	}, nil
 }
 
 func ParsePerformHandoffMessage(
 	msg []byte,
-) (*eventingv1alpha1pb.PerformHandoffMessage, error) {
+) (*eventing.PerformHandoffMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
 	if len(ss) != 4 {
 		return nil, errors.New("invalid auth message")
@@ -41,7 +41,7 @@ func ParsePerformHandoffMessage(
 	if err != nil {
 		return nil, err
 	}
-	return &eventingv1alpha1pb.PerformHandoffMessage{
+	return &eventing.PerformHandoffMessage{
 		KeySequence:      snp,
 		Key:              key,
 		PasswordSequence: sni,
