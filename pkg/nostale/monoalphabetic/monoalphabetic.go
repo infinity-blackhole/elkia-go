@@ -22,6 +22,11 @@ func NewReader(r *bufio.Reader) *Reader {
 	}
 }
 
+// SetKey sets the key for the reader.
+func (r *Reader) SetKey(key uint32) {
+	r.key = key
+}
+
 // ReadMessage reads a single message from r,
 // eliding the final \n or \r\n from the returned string.
 func (r *Reader) ReadMessage() ([]string, error) {

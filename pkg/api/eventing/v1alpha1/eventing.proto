@@ -42,3 +42,8 @@ message AcknowledgeHandoffMessage {
   uint32 key = 1;
   uint32 sequence = 2;
 }
+
+message PerformHandoffMessage {
+  KeyMessage key_message = 1;
+  PasswordMessage password_message = 2;
+}

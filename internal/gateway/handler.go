@@ -65,18 +65,18 @@ func (h *Handler) handleHandoff(
 	c net.Conn,
 	r *monoalphabetic.Reader,
 ) (*eventing.AcknowledgeHandoffMessage, error) {
-	syncMessage, err := ReadSyncMessage(r)
+	syncMsg, err := ReadSyncMessage(r)
 	if err != nil {
 		return nil, err
 	}
-	keyMsg, pwdMsg, err := ReadHandoffMessage(r)
+	handoffMsg, err := ReadHandoffMessage(r)
 	if err != nil {
 		return nil, err
 	}
-	if syncMessage.Sequence != keyMsg.Sequence+1 {
+	if syncMsg.Sequence != handoffMsg.KeyMessage.Sequence+1 {
 		return nil, errors.New("corrupted sync message")
 	}
-	if keyMsg.Sequence != pwdMsg.Sequence+1 {
+	if handoffMsg.KeyMessage.Sequence != handoffMsg.PasswordMessage.Sequence+1 {
 		return nil, errors.New("corrupted handoff message")
 	}
 	if err != nil {
@@ -84,15 +84,15 @@ func (h *Handler) handleHandoff(
 	}
 	_, err = h.fleet.
 		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
-			Key:   keyMsg.Key,
-			Token: pwdMsg.Password,
+			Key:   handoffMsg.KeyMessage.Key,
+			Token: handoffMsg.PasswordMessage.Password,
 		})
 	if err != nil {
 		return nil, err
 	}
 	return &eventing.AcknowledgeHandoffMessage{
-		Key:      keyMsg.Key,
-		Sequence: syncMessage.Sequence,
+		Key:      handoffMsg.KeyMessage.Key,
+		Sequence: syncMsg.Sequence,
 	}, nil
 }
 
@@ -129,18 +129,21 @@ func ReadSyncMessage(
 
 func ReadHandoffMessage(
 	r *monoalphabetic.Reader,
-) (*eventing.KeyMessage, *eventing.PasswordMessage, error) {
+) (*eventing.PerformHandoffMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	key, err := protonostale.ParseKeyMessage(s[0])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	pwd, err := protonostale.ParsePasswordMessage(s[1])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return key, pwd, nil
+	return &eventing.PerformHandoffMessage{
+		KeyMessage:      key,
+		PasswordMessage: pwd,
+	}, nil
 }
