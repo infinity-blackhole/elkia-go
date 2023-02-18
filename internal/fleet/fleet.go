@@ -10,56 +10,56 @@ import (
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
-type FleetConfig struct {
+type FleetServerConfig struct {
 	Orchestrator     *Orchestrator
 	SessionStore     *SessionStore
 	IdentityProvider *IdentityProvider
 }
 
-func NewFleet(config FleetConfig) *Fleet {
-	return &Fleet{
+func NewFleetServer(config FleetServerConfig) *FleetServer {
+	return &FleetServer{
 		orchestrator:     config.Orchestrator,
 		sessionStore:     config.SessionStore,
 		identityProvider: config.IdentityProvider,
 	}
 }
 
-type Fleet struct {
+type FleetServer struct {
 	fleet.UnimplementedFleetServer
 	orchestrator     *Orchestrator
 	sessionStore     *SessionStore
 	identityProvider *IdentityProvider
 }
 
-func (s *Fleet) GetCluster(
+func (s *FleetServer) GetCluster(
 	ctx context.Context,
 	in *fleet.GetClusterRequest,
 ) (*fleet.Cluster, error) {
 	return s.orchestrator.GetCluster(ctx, in)
 }
 
-func (s *Fleet) ListClusters(
+func (s *FleetServer) ListClusters(
 	ctx context.Context,
 	in *fleet.ListClusterRequest,
 ) (*fleet.ListClusterResponse, error) {
 	return s.orchestrator.ListClusters(ctx, in)
 }
 
-func (s *Fleet) GetGateway(
+func (s *FleetServer) GetGateway(
 	ctx context.Context,
 	in *fleet.GetGatewayRequest,
 ) (*fleet.Gateway, error) {
 	return s.orchestrator.GetGateway(ctx, in)
 }
 
-func (s *Fleet) ListGateways(
+func (s *FleetServer) ListGateways(
 	ctx context.Context,
 	in *fleet.ListGatewayRequest,
 ) (*fleet.ListGatewayResponse, error) {
 	return s.orchestrator.ListGateways(ctx, in)
 }
 
-func (s *Fleet) CreateHandoff(
+func (s *FleetServer) CreateHandoff(
 	ctx context.Context,
 	in *fleet.CreateHandoffRequest,
 ) (*fleet.CreateHandoffResponse, error) {
@@ -95,7 +95,7 @@ func (s *Fleet) CreateHandoff(
 	}, nil
 }
 
-func (s *Fleet) PerformHandoff(
+func (s *FleetServer) PerformHandoff(
 	ctx context.Context,
 	in *fleet.PerformHandoffRequest,
 ) (*emptypb.Empty, error) {

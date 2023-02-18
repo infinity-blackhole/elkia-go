@@ -3,7 +3,7 @@ package main
 import (
 	"net"
 
-	"github.com/infinity-blackhole/elkia/internal/fleet"
+	fleetserver "github.com/infinity-blackhole/elkia/internal/fleet"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/spf13/pflag"
@@ -71,7 +71,7 @@ func main() {
 	srv := grpc.NewServer()
 	fleet.RegisterFleetServer(
 		srv,
-		fleet.NewFleet(fleet.FleetConfig{
+		fleetserver.NewFleetServer(fleetserver.FleetServerConfig{
 			Orchestrator:     orchestrator,
 			IdentityProvider: NewIdentityProvider(),
 			SessionStore:     sessionStore,
@@ -82,18 +82,18 @@ func main() {
 	}
 }
 
-func NewOrchestrator() (*fleet.Orchestrator, error) {
+func NewOrchestrator() (*fleetserver.Orchestrator, error) {
 	clientset, err := NewKubernetesClientSet()
 	if err != nil {
 		return nil, err
 	}
-	return fleet.NewOrchestrator(fleet.OrchestratorConfig{
+	return fleetserver.NewOrchestrator(fleetserver.OrchestratorConfig{
 		KubernetesClientSet: clientset,
 	}), nil
 }
 
-func NewIdentityProvider() *fleet.IdentityProvider {
-	return fleet.NewIdentityProvider(&fleet.IdentityProviderServiceConfig{
+func NewIdentityProvider() *fleetserver.IdentityProvider {
+	return fleetserver.NewIdentityProvider(&fleetserver.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(&ory.Configuration{
 			DefaultHeader: make(map[string]string),
 			UserAgent:     "OpenAPI-Generator/1.0.0/go",
@@ -113,12 +113,12 @@ func NewEtcd() (*etcd.Client, error) {
 	})
 }
 
-func NewSessionStore() (*fleet.SessionStore, error) {
+func NewSessionStore() (*fleetserver.SessionStore, error) {
 	etcd, err := NewEtcd()
 	if err != nil {
 		return nil, err
 	}
-	return fleet.NewSessionStoreClient(fleet.SessionStoreConfig{
+	return fleetserver.NewSessionStoreClient(fleetserver.SessionStoreConfig{
 		Etcd: etcd,
 	}), nil
 }
