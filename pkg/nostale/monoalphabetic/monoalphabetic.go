@@ -153,7 +153,7 @@ func NewMonoAlphabeticWriter(r *bufio.Writer) *MonoAlphabeticWriter {
 }
 
 // WriteMessage writes the formatted message.
-func (r *MonoAlphabeticWriter) WriteMessage(msg []byte) error {
+func (w *MonoAlphabeticWriter) WriteMessage(msg []byte) error {
 	var result []byte
 	for i, b := range msg {
 		if i%0x7e != 0 {
@@ -168,8 +168,8 @@ func (r *MonoAlphabeticWriter) WriteMessage(msg []byte) error {
 			result = append(result, []byte{byte(rest), b}...)
 		}
 	}
-	if _, err := r.W.Write(append(result, 0xff)); err != nil {
+	if _, err := w.W.Write(append(result, 0xff)); err != nil {
 		return err
 	}
-	return r.W.Flush()
+	return w.W.Flush()
 }
