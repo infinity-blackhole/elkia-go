@@ -165,7 +165,7 @@ func (r *Reader) decodeChunk(chunk []byte) []byte {
 // A Writer implements convenience methods for reading messages
 // from a NosTale protocol network connection.
 type Writer struct {
-	W *bufio.Writer
+	w *bufio.Writer
 }
 
 // NewWriter returns a new Writer reading from r.
@@ -173,28 +173,39 @@ type Writer struct {
 // To avoid denial of service attacks, the provided bufio.Writer
 // should be reading from an io.LimitWriter or similar Writer to bound
 // the size of responses.
-func NewWriter(r *bufio.Writer) *Writer {
-	return &Writer{}
+func NewWriter(w *bufio.Writer) *Writer {
+	return &Writer{
+		w: w,
+	}
 }
 
 // WriteMessage writes the formatted message.
-func (w *Writer) WriteMessage(msg []byte) error {
-	var result []byte
+func (w *Writer) Write(msg []byte) (nn int, err error) {
 	for i, b := range msg {
 		if i%0x7e != 0 {
-			result = append(result, b)
+			w.w.WriteByte(b)
+			nn++
 		} else {
-			var rest int
 			if len(msg)-i > 0x7e {
-				rest = 0x7e
+				if err := w.w.WriteByte(0x7e); err != nil {
+					return nn, err
+				}
+				nn++
 			} else {
-				rest = len(msg) - i
+				if err := w.w.WriteByte(byte(len(msg) - i)); err != nil {
+					return nn, err
+				}
+				nn++
 			}
-			result = append(result, []byte{byte(rest), b}...)
+			if err := w.w.WriteByte(b); err != nil {
+				return nn, err
+			}
+			nn++
 		}
 	}
-	if _, err := w.W.Write(append(result, 0xff)); err != nil {
-		return err
+	if err := w.w.WriteByte(0xff); err != nil {
+		return nn, err
 	}
-	return w.W.Flush()
+	nn++
+	return nn, w.w.Flush()
 }

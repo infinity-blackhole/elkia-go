@@ -49,11 +49,19 @@ type Conn struct {
 func (c *Conn) serve(ctx context.Context) {
 	r, err := c.rc.ReadMessage()
 	if err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		}); err != nil {
+			panic(err)
+		}
 	}
 	m, err := r.ReadRequestHandoffMessage()
 	if err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			panic(err)
+		}
 	}
 	handoff, err := c.fleetClient.
 		CreateHandoff(
@@ -64,13 +72,21 @@ func (c *Conn) serve(ctx context.Context) {
 			},
 		)
 	if err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		}); err != nil {
+			panic(err)
+		}
 	}
 
 	listClusters, err := c.fleetClient.
 		ListClusters(ctx, &fleet.ListClusterRequest{})
 	if err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		}); err != nil {
+			panic(err)
+		}
 	}
 	gateways := []*eventing.GatewayMessage{}
 	for _, cluster := range listClusters.Clusters {
@@ -79,12 +95,20 @@ func (c *Conn) serve(ctx context.Context) {
 				Id: cluster.Id,
 			})
 		if err != nil {
-			panic(err)
+			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+				Code: eventing.FailureCode_UNEXPECTED_ERROR,
+			}); err != nil {
+				panic(err)
+			}
 		}
 		for _, g := range listGateways.Gateways {
 			host, port, err := net.SplitHostPort(g.Address)
 			if err != nil {
-				panic(err)
+				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+					Code: eventing.FailureCode_UNEXPECTED_ERROR,
+				}); err != nil {
+					panic(err)
+				}
 			}
 			gateways = append(
 				gateways,
@@ -106,6 +130,10 @@ func (c *Conn) serve(ctx context.Context) {
 			Gateways: gateways,
 		},
 	); err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		}); err != nil {
+			panic(err)
+		}
 	}
 }

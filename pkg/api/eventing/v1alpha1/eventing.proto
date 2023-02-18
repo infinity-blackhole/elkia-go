@@ -61,3 +61,17 @@ message AcknowledgeHandoffMessage {
   uint32 key = 1;
   uint32 sequence = 2;
 }
+
+enum FailureCode {
+  OUTDATED_CLIENT = 0;
+  UNEXPECTED_ERROR = 1;
+  MAINTENANCE = 2;
+  SESSION_ALREADY_USED = 3;
+  UNVALID_CREDENTIALS = 4;
+  CANT_AUTHENTICATE = 5;
+  USER_BLOCKLISTED = 6;
+  COUNTRY_BLACKLISTED = 7;
+  BAD_CASE = 8;
+}
+
+message FailureMessage { FailureCode code = 1; }

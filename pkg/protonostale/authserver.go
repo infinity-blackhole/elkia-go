@@ -66,12 +66,14 @@ func (r *AuthServerReader) ReadMessage() (*AuthServerMessageReader, error) {
 
 func NewAuthServerWriter(w *bufio.Writer) *AuthServerWriter {
 	return &AuthServerWriter{
-		w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
+		ClientWriter: ClientWriter{
+			w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
+		},
 	}
 }
 
 type AuthServerWriter struct {
-	w *bufio.Writer
+	ClientWriter
 }
 
 func (w *AuthServerWriter) WriteProposeHandoffMessage(

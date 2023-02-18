@@ -20,6 +20,73 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type FailureCode int32
+
+const (
+	FailureCode_OUTDATED_CLIENT      FailureCode = 0
+	FailureCode_UNEXPECTED_ERROR     FailureCode = 1
+	FailureCode_MAINTENANCE          FailureCode = 2
+	FailureCode_SESSION_ALREADY_USED FailureCode = 3
+	FailureCode_UNVALID_CREDENTIALS  FailureCode = 4
+	FailureCode_CANT_AUTHENTICATE    FailureCode = 5
+	FailureCode_USER_BLOCKLISTED     FailureCode = 6
+	FailureCode_COUNTRY_BLACKLISTED  FailureCode = 7
+	FailureCode_BAD_CASE             FailureCode = 8
+)
+
+// Enum value maps for FailureCode.
+var (
+	FailureCode_name = map[int32]string{
+		0: "OUTDATED_CLIENT",
+		1: "UNEXPECTED_ERROR",
+		2: "MAINTENANCE",
+		3: "SESSION_ALREADY_USED",
+		4: "UNVALID_CREDENTIALS",
+		5: "CANT_AUTHENTICATE",
+		6: "USER_BLOCKLISTED",
+		7: "COUNTRY_BLACKLISTED",
+		8: "BAD_CASE",
+	}
+	FailureCode_value = map[string]int32{
+		"OUTDATED_CLIENT":      0,
+		"UNEXPECTED_ERROR":     1,
+		"MAINTENANCE":          2,
+		"SESSION_ALREADY_USED": 3,
+		"UNVALID_CREDENTIALS":  4,
+		"CANT_AUTHENTICATE":    5,
+		"USER_BLOCKLISTED":     6,
+		"COUNTRY_BLACKLISTED":  7,
+		"BAD_CASE":             8,
+	}
+)
+
+func (x FailureCode) Enum() *FailureCode {
+	p := new(FailureCode)
+	*p = x
+	return p
+}
+
+func (x FailureCode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FailureCode) Descriptor() protoreflect.EnumDescriptor {
+	return file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes[0].Descriptor()
+}
+
+func (FailureCode) Type() protoreflect.EnumType {
+	return &file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes[0]
+}
+
+func (x FailureCode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FailureCode.Descriptor instead.
+func (FailureCode) EnumDescriptor() ([]byte, []int) {
+	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{0}
+}
+
 type RequestHandoffMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -677,6 +744,53 @@ func (x *AcknowledgeHandoffMessage) GetSequence() uint32 {
 	return 0
 }
 
+type FailureMessage struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code FailureCode `protobuf:"varint,1,opt,name=code,proto3,enum=io.elkia.eventing.v1alpha1.FailureCode" json:"code,omitempty"`
+}
+
+func (x *FailureMessage) Reset() {
+	*x = FailureMessage{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FailureMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FailureMessage) ProtoMessage() {}
+
+func (x *FailureMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FailureMessage.ProtoReflect.Descriptor instead.
+func (*FailureMessage) Descriptor() ([]byte, []int) {
+	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *FailureMessage) GetCode() FailureCode {
+	if x != nil {
+		return x.Code
+	}
+	return FailureCode_OUTDATED_CLIENT
+}
+
 var File_pkg_api_eventing_v1alpha1_eventing_proto protoreflect.FileDescriptor
 
 var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
@@ -766,10 +880,28 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x65, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
 	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65,
 	0x79, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x42, 0x1b, 0x5a,
-	0x19, 0x70, 0x6b, 0x67, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e,
-	0x67, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x4d, 0x0a,
+	0x0e, 0x46, 0x61, 0x69, 0x6c, 0x75, 0x72, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
+	0x3b, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x27, 0x2e,
+	0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e,
+	0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x46, 0x61, 0x69, 0x6c, 0x75,
+	0x72, 0x65, 0x43, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x2a, 0xd0, 0x01, 0x0a,
+	0x0b, 0x46, 0x61, 0x69, 0x6c, 0x75, 0x72, 0x65, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x13, 0x0a, 0x0f,
+	0x4f, 0x55, 0x54, 0x44, 0x41, 0x54, 0x45, 0x44, 0x5f, 0x43, 0x4c, 0x49, 0x45, 0x4e, 0x54, 0x10,
+	0x00, 0x12, 0x14, 0x0a, 0x10, 0x55, 0x4e, 0x45, 0x58, 0x50, 0x45, 0x43, 0x54, 0x45, 0x44, 0x5f,
+	0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x01, 0x12, 0x0f, 0x0a, 0x0b, 0x4d, 0x41, 0x49, 0x4e, 0x54,
+	0x45, 0x4e, 0x41, 0x4e, 0x43, 0x45, 0x10, 0x02, 0x12, 0x18, 0x0a, 0x14, 0x53, 0x45, 0x53, 0x53,
+	0x49, 0x4f, 0x4e, 0x5f, 0x41, 0x4c, 0x52, 0x45, 0x41, 0x44, 0x59, 0x5f, 0x55, 0x53, 0x45, 0x44,
+	0x10, 0x03, 0x12, 0x17, 0x0a, 0x13, 0x55, 0x4e, 0x56, 0x41, 0x4c, 0x49, 0x44, 0x5f, 0x43, 0x52,
+	0x45, 0x44, 0x45, 0x4e, 0x54, 0x49, 0x41, 0x4c, 0x53, 0x10, 0x04, 0x12, 0x15, 0x0a, 0x11, 0x43,
+	0x41, 0x4e, 0x54, 0x5f, 0x41, 0x55, 0x54, 0x48, 0x45, 0x4e, 0x54, 0x49, 0x43, 0x41, 0x54, 0x45,
+	0x10, 0x05, 0x12, 0x14, 0x0a, 0x10, 0x55, 0x53, 0x45, 0x52, 0x5f, 0x42, 0x4c, 0x4f, 0x43, 0x4b,
+	0x4c, 0x49, 0x53, 0x54, 0x45, 0x44, 0x10, 0x06, 0x12, 0x17, 0x0a, 0x13, 0x43, 0x4f, 0x55, 0x4e,
+	0x54, 0x52, 0x59, 0x5f, 0x42, 0x4c, 0x41, 0x43, 0x4b, 0x4c, 0x49, 0x53, 0x54, 0x45, 0x44, 0x10,
+	0x07, 0x12, 0x0c, 0x0a, 0x08, 0x42, 0x41, 0x44, 0x5f, 0x43, 0x41, 0x53, 0x45, 0x10, 0x08, 0x42,
+	0x1b, 0x5a, 0x19, 0x70, 0x6b, 0x67, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x65, 0x76, 0x65, 0x6e, 0x74,
+	0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -784,30 +916,34 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP() []byte {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescData
 }
 
-var file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_pkg_api_eventing_v1alpha1_eventing_proto_goTypes = []interface{}{
-	(*RequestHandoffMessage)(nil),         // 0: io.elkia.eventing.v1alpha1.RequestHandoffMessage
-	(*GatewayMessage)(nil),                // 1: io.elkia.eventing.v1alpha1.GatewayMessage
-	(*ProposeHandoffMessage)(nil),         // 2: io.elkia.eventing.v1alpha1.ProposeHandoffMessage
-	(*PerformHandoffMessage)(nil),         // 3: io.elkia.eventing.v1alpha1.PerformHandoffMessage
-	(*PerformHandoffKeyMessage)(nil),      // 4: io.elkia.eventing.v1alpha1.PerformHandoffKeyMessage
-	(*PerformHandoffPasswordMessage)(nil), // 5: io.elkia.eventing.v1alpha1.PerformHandoffPasswordMessage
-	(*ChannelMessage)(nil),                // 6: io.elkia.eventing.v1alpha1.ChannelMessage
-	(*SyncMessage)(nil),                   // 7: io.elkia.eventing.v1alpha1.SyncMessage
-	(*CommandMessage)(nil),                // 8: io.elkia.eventing.v1alpha1.CommandMessage
-	(*AcknowledgeHandoffMessage)(nil),     // 9: io.elkia.eventing.v1alpha1.AcknowledgeHandoffMessage
+	(FailureCode)(0),                      // 0: io.elkia.eventing.v1alpha1.FailureCode
+	(*RequestHandoffMessage)(nil),         // 1: io.elkia.eventing.v1alpha1.RequestHandoffMessage
+	(*GatewayMessage)(nil),                // 2: io.elkia.eventing.v1alpha1.GatewayMessage
+	(*ProposeHandoffMessage)(nil),         // 3: io.elkia.eventing.v1alpha1.ProposeHandoffMessage
+	(*PerformHandoffMessage)(nil),         // 4: io.elkia.eventing.v1alpha1.PerformHandoffMessage
+	(*PerformHandoffKeyMessage)(nil),      // 5: io.elkia.eventing.v1alpha1.PerformHandoffKeyMessage
+	(*PerformHandoffPasswordMessage)(nil), // 6: io.elkia.eventing.v1alpha1.PerformHandoffPasswordMessage
+	(*ChannelMessage)(nil),                // 7: io.elkia.eventing.v1alpha1.ChannelMessage
+	(*SyncMessage)(nil),                   // 8: io.elkia.eventing.v1alpha1.SyncMessage
+	(*CommandMessage)(nil),                // 9: io.elkia.eventing.v1alpha1.CommandMessage
+	(*AcknowledgeHandoffMessage)(nil),     // 10: io.elkia.eventing.v1alpha1.AcknowledgeHandoffMessage
+	(*FailureMessage)(nil),                // 11: io.elkia.eventing.v1alpha1.FailureMessage
 }
 var file_pkg_api_eventing_v1alpha1_eventing_proto_depIdxs = []int32{
-	1, // 0: io.elkia.eventing.v1alpha1.ProposeHandoffMessage.gateways:type_name -> io.elkia.eventing.v1alpha1.GatewayMessage
-	4, // 1: io.elkia.eventing.v1alpha1.PerformHandoffMessage.key_message:type_name -> io.elkia.eventing.v1alpha1.PerformHandoffKeyMessage
-	5, // 2: io.elkia.eventing.v1alpha1.PerformHandoffMessage.password_message:type_name -> io.elkia.eventing.v1alpha1.PerformHandoffPasswordMessage
-	7, // 3: io.elkia.eventing.v1alpha1.ChannelMessage.sync_message:type_name -> io.elkia.eventing.v1alpha1.SyncMessage
-	8, // 4: io.elkia.eventing.v1alpha1.ChannelMessage.command_message:type_name -> io.elkia.eventing.v1alpha1.CommandMessage
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	2, // 0: io.elkia.eventing.v1alpha1.ProposeHandoffMessage.gateways:type_name -> io.elkia.eventing.v1alpha1.GatewayMessage
+	5, // 1: io.elkia.eventing.v1alpha1.PerformHandoffMessage.key_message:type_name -> io.elkia.eventing.v1alpha1.PerformHandoffKeyMessage
+	6, // 2: io.elkia.eventing.v1alpha1.PerformHandoffMessage.password_message:type_name -> io.elkia.eventing.v1alpha1.PerformHandoffPasswordMessage
+	8, // 3: io.elkia.eventing.v1alpha1.ChannelMessage.sync_message:type_name -> io.elkia.eventing.v1alpha1.SyncMessage
+	9, // 4: io.elkia.eventing.v1alpha1.ChannelMessage.command_message:type_name -> io.elkia.eventing.v1alpha1.CommandMessage
+	0, // 5: io.elkia.eventing.v1alpha1.FailureMessage.code:type_name -> io.elkia.eventing.v1alpha1.FailureCode
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_pkg_api_eventing_v1alpha1_eventing_proto_init() }
@@ -936,6 +1072,18 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 				return nil
 			}
 		}
+		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FailureMessage); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6].OneofWrappers = []interface{}{
 		(*ChannelMessage_UnknownMessage)(nil),
@@ -950,13 +1098,14 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   10,
+			NumEnums:      1,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_pkg_api_eventing_v1alpha1_eventing_proto_goTypes,
 		DependencyIndexes: file_pkg_api_eventing_v1alpha1_eventing_proto_depIdxs,
+		EnumInfos:         file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes,
 		MessageInfos:      file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes,
 	}.Build()
 	File_pkg_api_eventing_v1alpha1_eventing_proto = out.File

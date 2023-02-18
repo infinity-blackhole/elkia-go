@@ -92,12 +92,14 @@ func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.PerformHandoffPa
 
 func NewGatewayWriter(w *bufio.Writer) *GatewayWriter {
 	return &GatewayWriter{
-		w: monoalphabetic.NewWriter(w),
+		ClientWriter: ClientWriter{
+			w: bufio.NewWriter(monoalphabetic.NewWriter(w)),
+		},
 	}
 }
 
 type GatewayWriter struct {
-	w *monoalphabetic.Writer
+	ClientWriter
 }
 
 func NewGatewayReader(r *bufio.Reader) *GatewayReader {

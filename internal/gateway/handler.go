@@ -3,7 +3,6 @@ package gateway
 import (
 	"bufio"
 	"context"
-	"errors"
 	"net"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -59,20 +58,44 @@ type Conn struct {
 func (c *Conn) serve(ctx context.Context) {
 	ack, err := c.handoff(ctx)
 	if err != nil {
-		panic(err)
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		}); err != nil {
+			panic(err)
+		}
+	}
+	if ack == nil {
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_CANT_AUTHENTICATE,
+		}); err != nil {
+			panic(err)
+		}
+		return
 	}
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
-			panic(err)
+			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+				Code: eventing.FailureCode_UNEXPECTED_ERROR,
+			}); err != nil {
+				panic(err)
+			}
 		}
 		for _, r := range rs {
 			msg, err := r.ReadChannelMessage()
 			if err != nil {
-				panic(err)
+				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+					Code: eventing.FailureCode_UNEXPECTED_ERROR,
+				}); err != nil {
+					panic(err)
+				}
 			}
 			if msg.Sequence != ack.Sequence+1 {
-				panic(errors.New("invalid sequence number"))
+				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+					Code: eventing.FailureCode_BAD_CASE,
+				}); err != nil {
+					panic(err)
+				}
 			} else {
 				ack.Sequence = msg.Sequence
 			}
@@ -93,21 +116,46 @@ func (c *Conn) handoff(
 		return nil, err
 	}
 	if len(rs) != 2 {
-		return nil, errors.New("invalid handoff message")
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	syncMsg, err := rs[0].ReadSyncMessage()
 	if err != nil {
-		return nil, err
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	handoffMsg, err := rs[1].ReadPerformHandoffMessage()
 	if err != nil {
-		return nil, err
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	if syncMsg.Sequence != handoffMsg.KeyMessage.Sequence+1 {
-		return nil, errors.New("corrupted sync message")
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	if handoffMsg.KeyMessage.Sequence != handoffMsg.PasswordMessage.Sequence+1 {
-		return nil, errors.New("corrupted handoff message")
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	c.rc.SetKey(handoffMsg.KeyMessage.Key)
 	_, err = c.fleetClient.
@@ -116,7 +164,7 @@ func (c *Conn) handoff(
 			Token: handoffMsg.PasswordMessage.Password,
 		})
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 	return &eventing.AcknowledgeHandoffMessage{
 		Key:      handoffMsg.KeyMessage.Key,
