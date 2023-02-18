@@ -69,9 +69,9 @@ func main() {
 		panic(err)
 	}
 	srv := grpc.NewServer()
-	fleet.RegisterFleetServiceServer(
+	fleet.RegisterFleetServer(
 		srv,
-		fleet.NewFleetService(fleet.FleetServiceConfig{
+		fleet.NewFleet(fleet.FleetConfig{
 			Orchestrator:     orchestrator,
 			IdentityProvider: NewIdentityProvider(),
 			SessionStore:     sessionStore,

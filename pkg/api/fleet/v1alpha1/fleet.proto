@@ -49,16 +49,14 @@ message CreateHandoffRequest {
   string token = 2;
 }
 
-message CreateHandoffResponse {
-  uint32 key = 1;
-}
+message CreateHandoffResponse { uint32 key = 1; }
 
 message PerformHandoffRequest {
   uint32 key = 1;
   string token = 2;
 }
 
-service FleetService {
+service Fleet {
   rpc ListClusters(ListClusterRequest) returns (ListClusterResponse);
   rpc GetCluster(GetClusterRequest) returns (Cluster);
   rpc ListGateways(ListGatewayRequest) returns (ListGatewayResponse);

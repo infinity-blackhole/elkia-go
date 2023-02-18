@@ -72,7 +72,7 @@ func main() {
 	s := nostale.NewServer(nostale.ServerConfig{
 		Addr: address,
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
-			FleetClient:   fleet.NewFleetServiceClient(conn),
+			FleetClient:   fleet.NewFleetClient(conn),
 			KafkaProducer: kp,
 			KafkaConsumer: kc,
 		}),

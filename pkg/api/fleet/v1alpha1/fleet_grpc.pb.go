@@ -19,10 +19,10 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// FleetServiceClient is the client API for FleetService service.
+// FleetClient is the client API for Fleet service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type FleetServiceClient interface {
+type FleetClient interface {
 	ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error)
 	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error)
 	ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error)
@@ -31,254 +31,254 @@ type FleetServiceClient interface {
 	PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
-type fleetServiceClient struct {
+type fleetClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewFleetServiceClient(cc grpc.ClientConnInterface) FleetServiceClient {
-	return &fleetServiceClient{cc}
+func NewFleetClient(cc grpc.ClientConnInterface) FleetClient {
+	return &fleetClient{cc}
 }
 
-func (c *fleetServiceClient) ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error) {
+func (c *fleetClient) ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error) {
 	out := new(ListClusterResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListClusters", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/ListClusters", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error) {
+func (c *fleetClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetCluster", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/GetCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error) {
+func (c *fleetClient) ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error) {
 	out := new(ListGatewayResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/ListGateways", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/ListGateways", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error) {
+func (c *fleetClient) GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error) {
 	out := new(Gateway)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/GetGateway", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/GetGateway", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error) {
+func (c *fleetClient) CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error) {
 	out := new(CreateHandoffResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/CreateHandoff", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/CreateHandoff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetServiceClient) PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *fleetClient) PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.FleetService/PerformHandoff", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/PerformHandoff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// FleetServiceServer is the server API for FleetService service.
-// All implementations must embed UnimplementedFleetServiceServer
+// FleetServer is the server API for Fleet service.
+// All implementations must embed UnimplementedFleetServer
 // for forward compatibility
-type FleetServiceServer interface {
+type FleetServer interface {
 	ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error)
 	GetCluster(context.Context, *GetClusterRequest) (*Cluster, error)
 	ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error)
 	GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error)
 	CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error)
 	PerformHandoff(context.Context, *PerformHandoffRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedFleetServiceServer()
+	mustEmbedUnimplementedFleetServer()
 }
 
-// UnimplementedFleetServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedFleetServiceServer struct {
+// UnimplementedFleetServer must be embedded to have forward compatible implementations.
+type UnimplementedFleetServer struct {
 }
 
-func (UnimplementedFleetServiceServer) ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error) {
+func (UnimplementedFleetServer) ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClusters not implemented")
 }
-func (UnimplementedFleetServiceServer) GetCluster(context.Context, *GetClusterRequest) (*Cluster, error) {
+func (UnimplementedFleetServer) GetCluster(context.Context, *GetClusterRequest) (*Cluster, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCluster not implemented")
 }
-func (UnimplementedFleetServiceServer) ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error) {
+func (UnimplementedFleetServer) ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGateways not implemented")
 }
-func (UnimplementedFleetServiceServer) GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error) {
+func (UnimplementedFleetServer) GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGateway not implemented")
 }
-func (UnimplementedFleetServiceServer) CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error) {
+func (UnimplementedFleetServer) CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHandoff not implemented")
 }
-func (UnimplementedFleetServiceServer) PerformHandoff(context.Context, *PerformHandoffRequest) (*emptypb.Empty, error) {
+func (UnimplementedFleetServer) PerformHandoff(context.Context, *PerformHandoffRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PerformHandoff not implemented")
 }
-func (UnimplementedFleetServiceServer) mustEmbedUnimplementedFleetServiceServer() {}
+func (UnimplementedFleetServer) mustEmbedUnimplementedFleetServer() {}
 
-// UnsafeFleetServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to FleetServiceServer will
+// UnsafeFleetServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to FleetServer will
 // result in compilation errors.
-type UnsafeFleetServiceServer interface {
-	mustEmbedUnimplementedFleetServiceServer()
+type UnsafeFleetServer interface {
+	mustEmbedUnimplementedFleetServer()
 }
 
-func RegisterFleetServiceServer(s grpc.ServiceRegistrar, srv FleetServiceServer) {
-	s.RegisterService(&FleetService_ServiceDesc, srv)
+func RegisterFleetServer(s grpc.ServiceRegistrar, srv FleetServer) {
+	s.RegisterService(&Fleet_ServiceDesc, srv)
 }
 
-func _FleetService_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).ListClusters(ctx, in)
+		return srv.(FleetServer).ListClusters(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListClusters",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/ListClusters",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).ListClusters(ctx, req.(*ListClusterRequest))
+		return srv.(FleetServer).ListClusters(ctx, req.(*ListClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetClusterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).GetCluster(ctx, in)
+		return srv.(FleetServer).GetCluster(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetCluster",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/GetCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).GetCluster(ctx, req.(*GetClusterRequest))
+		return srv.(FleetServer).GetCluster(ctx, req.(*GetClusterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_ListGateways_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_ListGateways_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListGatewayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).ListGateways(ctx, in)
+		return srv.(FleetServer).ListGateways(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/ListGateways",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/ListGateways",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).ListGateways(ctx, req.(*ListGatewayRequest))
+		return srv.(FleetServer).ListGateways(ctx, req.(*ListGatewayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_GetGateway_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_GetGateway_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetGatewayRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).GetGateway(ctx, in)
+		return srv.(FleetServer).GetGateway(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/GetGateway",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/GetGateway",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).GetGateway(ctx, req.(*GetGatewayRequest))
+		return srv.(FleetServer).GetGateway(ctx, req.(*GetGatewayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_CreateHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_CreateHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateHandoffRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).CreateHandoff(ctx, in)
+		return srv.(FleetServer).CreateHandoff(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/CreateHandoff",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/CreateHandoff",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).CreateHandoff(ctx, req.(*CreateHandoffRequest))
+		return srv.(FleetServer).CreateHandoff(ctx, req.(*CreateHandoffRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FleetService_PerformHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Fleet_PerformHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PerformHandoffRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServiceServer).PerformHandoff(ctx, in)
+		return srv.(FleetServer).PerformHandoff(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.FleetService/PerformHandoff",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/PerformHandoff",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServiceServer).PerformHandoff(ctx, req.(*PerformHandoffRequest))
+		return srv.(FleetServer).PerformHandoff(ctx, req.(*PerformHandoffRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// FleetService_ServiceDesc is the grpc.ServiceDesc for FleetService service.
+// Fleet_ServiceDesc is the grpc.ServiceDesc for Fleet service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var FleetService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.fleet.v1alpha1.FleetService",
-	HandlerType: (*FleetServiceServer)(nil),
+var Fleet_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.fleet.v1alpha1.Fleet",
+	HandlerType: (*FleetServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ListClusters",
-			Handler:    _FleetService_ListClusters_Handler,
+			Handler:    _Fleet_ListClusters_Handler,
 		},
 		{
 			MethodName: "GetCluster",
-			Handler:    _FleetService_GetCluster_Handler,
+			Handler:    _Fleet_GetCluster_Handler,
 		},
 		{
 			MethodName: "ListGateways",
-			Handler:    _FleetService_ListGateways_Handler,
+			Handler:    _Fleet_ListGateways_Handler,
 		},
 		{
 			MethodName: "GetGateway",
-			Handler:    _FleetService_GetGateway_Handler,
+			Handler:    _Fleet_GetGateway_Handler,
 		},
 		{
 			MethodName: "CreateHandoff",
-			Handler:    _FleetService_CreateHandoff_Handler,
+			Handler:    _Fleet_CreateHandoff_Handler,
 		},
 		{
 			MethodName: "PerformHandoff",
-			Handler:    _FleetService_PerformHandoff_Handler,
+			Handler:    _Fleet_PerformHandoff_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

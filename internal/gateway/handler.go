@@ -16,7 +16,7 @@ import (
 )
 
 type HandlerConfig struct {
-	FleetClient   fleet.FleetServiceClient
+	FleetClient   fleet.FleetClient
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
 }
@@ -30,7 +30,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	fleet         fleet.FleetServiceClient
+	fleet         fleet.FleetClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
 }

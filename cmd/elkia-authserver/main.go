@@ -39,7 +39,7 @@ func main() {
 	srv := nostale.NewServer(nostale.ServerConfig{
 		Addr: address,
 		Handler: authserver.NewHandler(authserver.HandlerConfig{
-			FleetClient: fleet.NewFleetServiceClient(conn),
+			FleetClient: fleet.NewFleetClient(conn),
 		}),
 	})
 	if err != nil {

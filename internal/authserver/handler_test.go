@@ -18,7 +18,7 @@ import (
 )
 
 type fleetServiceServerMock struct {
-	fleet.UnimplementedFleetServiceServer
+	fleet.UnimplementedFleetServer
 }
 
 func (n *fleetServiceServerMock) CreateHandoff(
@@ -77,17 +77,17 @@ func (s *fleetServiceServerMock) ListGateways(
 	}, nil
 }
 
-func serveFleetServiceServerMock(lis net.Listener) error {
+func serveFleetServerMock(lis net.Listener) error {
 	server := grpc.NewServer()
-	fleet.RegisterFleetServiceServer(
+	fleet.RegisterFleetServer(
 		server, &fleetServiceServerMock{},
 	)
 	return server.Serve(lis)
 }
 
-func dialFleetServiceServerMock(
+func dialFleetServerMock(
 	ctx context.Context, lis *bufconn.Listener,
-) (fleet.FleetServiceClient, error) {
+) (fleet.FleetClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -99,7 +99,7 @@ func dialFleetServiceServerMock(
 	if err != nil {
 		return nil, err
 	}
-	return fleet.NewFleetServiceClient(conn), nil
+	return fleet.NewFleetClient(conn), nil
 }
 
 func TestHandlerServeNosTale(t *testing.T) {
@@ -107,12 +107,12 @@ func TestHandlerServeNosTale(t *testing.T) {
 	wg := errgroup.Group{}
 	lis := bufconn.Listen(1024 * 1024)
 	wg.Go(func() error {
-		return serveFleetServiceServerMock(lis)
+		return serveFleetServerMock(lis)
 	})
 	server, client := net.Pipe()
 	defer client.Close()
 	wg.Go(func() error {
-		fleetClient, err := dialFleetServiceServerMock(ctx, lis)
+		fleetClient, err := dialFleetServerMock(ctx, lis)
 		if err != nil {
 			return err
 		}

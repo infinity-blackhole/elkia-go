@@ -12,7 +12,7 @@ import (
 )
 
 type HandlerConfig struct {
-	FleetClient fleet.FleetServiceClient
+	FleetClient fleet.FleetClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
@@ -22,7 +22,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	fleet fleet.FleetServiceClient
+	fleet fleet.FleetClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
