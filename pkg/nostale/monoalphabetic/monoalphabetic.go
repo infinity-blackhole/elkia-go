@@ -1,4 +1,4 @@
-package crypto
+package monoalphabetic
 
 import (
 	"bufio"
@@ -11,26 +11,51 @@ var charLookup = []string{
 	"5", "6", "7", "8", "9", "\n", "\x00",
 }
 
-type ServerReader struct {
+type Reader struct {
 	R   *bufio.Reader
 	key uint32
 }
 
-func NewServerReader(r *bufio.Reader, key uint32) *ServerReader {
-	return &ServerReader{
-		R:   r,
-		key: key,
+func NewReader(r *bufio.Reader) *Reader {
+	return &Reader{
+		R: r,
 	}
 }
 
-func (r *ServerReader) ReadMessage() ([][]byte, error) {
+// ReadMessage reads a single message from r,
+// eliding the final \n or \r\n from the returned string.
+func (r *Reader) ReadMessage() ([]string, error) {
+	msgs, err := r.readMessageSlice()
+	results := make([]string, len(msgs))
+	for _, msg := range msgs {
+		results = append(results, string(msg))
+	}
+	return results, err
+}
+
+// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
+// string.
+func (r *Reader) ReadMessageBytes() ([][]byte, error) {
+	msgs, err := r.readMessageSlice()
+	results := make([][]byte, len(msgs))
+	for _, msg := range msgs {
+		if msg != nil {
+			buf := make([]byte, len(msg))
+			copy(buf, msg)
+			results = append(results, buf)
+		}
+	}
+	return results, err
+}
+
+func (r *Reader) readMessageSlice() ([][]byte, error) {
 	if r.key == 0 {
-		return r.ReadSessionMessage()
+		return r.readSessionMessage()
 	}
-	return r.ReadChannelMessage()
+	return r.readChannelMessage()
 }
 
-func (r *ServerReader) ReadSessionMessage() ([][]byte, error) {
+func (r *Reader) readSessionMessage() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err
@@ -38,7 +63,7 @@ func (r *ServerReader) ReadSessionMessage() ([][]byte, error) {
 	return r.unpack(r.decryptMessage(binary)), nil
 }
 
-func (r *ServerReader) ReadChannelMessage() ([][]byte, error) {
+func (r *Reader) readChannelMessage() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err
@@ -46,7 +71,7 @@ func (r *ServerReader) ReadChannelMessage() ([][]byte, error) {
 	return r.unpack(r.decryptMessage(binary)), nil
 }
 
-func (r *ServerReader) decryptMessage(msg []byte) []byte {
+func (r *Reader) decryptMessage(msg []byte) []byte {
 	result := make([]byte, 0)
 	for _, c := range msg {
 		result = append(result, r.decryptByte(c))
@@ -54,7 +79,7 @@ func (r *ServerReader) decryptMessage(msg []byte) []byte {
 	return result
 }
 
-func (r *ServerReader) decryptByte(c byte) byte {
+func (r *Reader) decryptByte(c byte) byte {
 	mode := r.key & 0xFF
 	offset := (r.key >> 6) & 3
 	switch mode {
@@ -71,7 +96,7 @@ func (r *ServerReader) decryptByte(c byte) byte {
 	}
 }
 
-func (r *ServerReader) unpack(data []byte) [][]byte {
+func (r *Reader) unpack(data []byte) [][]byte {
 	packets := make([][]byte, 0)
 	parts := bytes.Split(data, []byte{0xFF})
 	for _, part := range parts {
@@ -81,7 +106,7 @@ func (r *ServerReader) unpack(data []byte) [][]byte {
 	return packets
 }
 
-func (r *ServerReader) unpackPart(part []byte) [][]byte {
+func (r *Reader) unpackPart(part []byte) [][]byte {
 	result := make([][]byte, 0)
 	for len(part) != 0 {
 		byteVal := part[0]
@@ -107,7 +132,7 @@ func (r *ServerReader) unpackPart(part []byte) [][]byte {
 	return result
 }
 
-func (r *ServerReader) decodePackedChunk(chunk []byte) []byte {
+func (r *Reader) decodePackedChunk(chunk []byte) []byte {
 	result := make([]byte, 0)
 	for i := 0; i < len(chunk); i += 2 {
 		h := int(chunk[i] >> 4)
@@ -124,7 +149,7 @@ func (r *ServerReader) decodePackedChunk(chunk []byte) []byte {
 	return result
 }
 
-func (r *ServerReader) decodeChunk(chunk []byte) []byte {
+func (r *Reader) decodeChunk(chunk []byte) []byte {
 	result := make([]byte, 0)
 	for _, c := range chunk {
 		result = append(result, c^0xFF)

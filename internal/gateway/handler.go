@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/monoalphabetic"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
@@ -37,7 +37,7 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := simplesubtitution.NewReader(bufio.NewReader(c))
+	r := monoalphabetic.NewReader(bufio.NewReader(c))
 	ack, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
@@ -63,20 +63,20 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) handleHandoff(
 	ctx context.Context,
 	c net.Conn,
-	r *simplesubtitution.Reader,
+	r *monoalphabetic.Reader,
 ) (*eventing.AcknowledgeHandoffMessage, error) {
 	syncMessage, err := ReadSyncMessage(r)
 	if err != nil {
 		return nil, err
 	}
-	handoffMessage, err := ReadHandoffMessage(r)
+	keyMsg, pwdMsg, err := ReadHandoffMessage(r)
 	if err != nil {
 		return nil, err
 	}
-	if syncMessage.Sequence != handoffMessage.KeySequence+1 {
+	if syncMessage.Sequence != keyMsg.Sequence+1 {
 		return nil, errors.New("corrupted sync message")
 	}
-	if handoffMessage.KeySequence != handoffMessage.PasswordSequence+1 {
+	if keyMsg.Sequence != pwdMsg.Sequence+1 {
 		return nil, errors.New("corrupted handoff message")
 	}
 	if err != nil {
@@ -84,52 +84,63 @@ func (h *Handler) handleHandoff(
 	}
 	_, err = h.fleet.
 		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
-			Key:   handoffMessage.Key,
-			Token: handoffMessage.Password,
+			Key:   keyMsg.Key,
+			Token: pwdMsg.Password,
 		})
 	if err != nil {
 		return nil, err
 	}
 	return &eventing.AcknowledgeHandoffMessage{
-		Key:      handoffMessage.Key,
+		Key:      keyMsg.Key,
 		Sequence: syncMessage.Sequence,
 	}, nil
 }
 
 func (h *Handler) readerMessage(
-	r *simplesubtitution.Reader,
+	r *monoalphabetic.Reader,
 ) (string, uint32, io.Reader, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
 		panic(err)
 	}
-	ss := bytes.Split(s, []byte{' '})
+	ss := bytes.Split(s[0], []byte{' '})
 	if len(ss) == 0 {
 		panic(errors.New("invalid message"))
 	}
-	sequenceNumber, err := protonostale.ParseUint32(ss[0])
+	sn, err := protonostale.ParseUint32(ss[1])
 	if err != nil {
 		panic(err)
 	}
-	return string(ss[0]), sequenceNumber, bytes.NewReader(ss[1]), nil
+	return string(ss[0]), sn, bytes.NewReader(ss[2]), nil
 }
 
 func ReadSyncMessage(
-	r *simplesubtitution.Reader,
+	r *monoalphabetic.Reader,
 ) (*eventing.SyncMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
-	return protonostale.ParseSyncMessage(s)
+	if len(s) != 1 {
+		return nil, errors.New("invalid sync message")
+	}
+	return protonostale.ParseSyncMessage(s[0])
 }
 
 func ReadHandoffMessage(
-	r *simplesubtitution.Reader,
-) (*eventing.PerformHandoffMessage, error) {
+	r *monoalphabetic.Reader,
+) (*eventing.KeyMessage, *eventing.PasswordMessage, error) {
 	s, err := r.ReadMessageBytes()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return protonostale.ParsePerformHandoffMessage(s)
+	key, err := protonostale.ParseKeyMessage(s[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	pwd, err := protonostale.ParsePasswordMessage(s[1])
+	if err != nil {
+		return nil, nil, err
+	}
+	return key, pwd, nil
 }

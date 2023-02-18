@@ -22,14 +22,14 @@ func ParseSyncMessage(msg []byte) (*eventing.SyncMessage, error) {
 	}, nil
 }
 
-func ParsePerformHandoffMessage(
+func ParseKeyMessage(
 	msg []byte,
-) (*eventing.PerformHandoffMessage, error) {
+) (*eventing.KeyMessage, error) {
 	ss := bytes.Split(msg, []byte(" "))
-	if len(ss) != 4 {
+	if len(ss) != 2 {
 		return nil, errors.New("invalid auth message")
 	}
-	sni, err := ParseUint32(ss[0])
+	sn, err := ParseUint32(ss[0])
 	if err != nil {
 		return nil, err
 	}
@@ -37,15 +37,26 @@ func ParsePerformHandoffMessage(
 	if err != nil {
 		return nil, err
 	}
-	snp, err := ParseUint32(ss[2])
+	return &eventing.KeyMessage{
+		Sequence: sn,
+		Key:      key,
+	}, nil
+}
+
+func ParsePasswordMessage(
+	msg []byte,
+) (*eventing.PasswordMessage, error) {
+	ss := bytes.Split(msg, []byte(" "))
+	if len(ss) != 2 {
+		return nil, errors.New("invalid auth message")
+	}
+	sn, err := ParseUint32(ss[0])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.PerformHandoffMessage{
-		KeySequence:      snp,
-		Key:              key,
-		PasswordSequence: sni,
-		Password:         string(ss[3]),
+	return &eventing.PasswordMessage{
+		Sequence: sn,
+		Password: string(ss[1]),
 	}, nil
 }
 
