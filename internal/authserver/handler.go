@@ -2,13 +2,11 @@ package authserver
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
@@ -18,12 +16,12 @@ type HandlerConfig struct {
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		fleet: cfg.FleetClient,
+		fleetClient: cfg.FleetClient,
 	}
 }
 
 type Handler struct {
-	fleet fleet.FleetClient
+	fleetClient fleet.FleetClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -34,20 +32,22 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 
 func (h *Handler) newConn(c net.Conn) *Conn {
 	return &Conn{
-		conn: c,
-		rc:   simplesubtitution.NewReader(bufio.NewReader(c)),
+		rwc:         c,
+		rc:          protonostale.NewAuthServerReader(bufio.NewReader(c)),
+		wc:          protonostale.NewAuthServerWriter(bufio.NewWriter(c)),
+		fleetClient: h.fleetClient,
 	}
 }
 
 type Conn struct {
-	conn        net.Conn
-	wc          *simplesubtitution.Writer
-	rc          *simplesubtitution.Reader
+	rwc         net.Conn
+	rc          *protonostale.AuthServerReader
+	wc          *protonostale.AuthServerWriter
 	fleetClient fleet.FleetClient
 }
 
 func (c *Conn) serve(ctx context.Context) {
-	r, err := c.newMessageReader()
+	r, err := c.rc.ReadMessage()
 	if err != nil {
 		panic(err)
 	}
@@ -100,20 +100,12 @@ func (c *Conn) serve(ctx context.Context) {
 			)
 		}
 	}
-	if err := c.wc.WriteMessage(protonostale.MarshallProposeHandoffMessage(
+	if err := c.wc.WriteProposeHandoffMessage(
 		&eventing.ProposeHandoffMessage{
 			Key:      handoff.Key,
 			Gateways: gateways,
 		},
-	)); err != nil {
+	); err != nil {
 		panic(err)
 	}
-}
-
-func (c *Conn) newMessageReader() (*protonostale.AuthServerMessageReader, error) {
-	buff, err := c.rc.ReadMessageBytes()
-	if err != nil {
-		return nil, err
-	}
-	return protonostale.NewAuthServerMessageReader(bytes.NewReader(buff)), nil
 }

@@ -27,9 +27,9 @@ func (r *Reader) SetKey(key uint32) {
 	r.key = key
 }
 
-// ReadMessage reads a single message from r,
+// ReadMessageSlice reads a single message from r,
 // eliding the final \n or \r\n from the returned string.
-func (r *Reader) ReadMessage() ([]string, error) {
+func (r *Reader) ReadMessageSlice() ([]string, error) {
 	msgs, err := r.readMessageSlice()
 	results := make([]string, len(msgs))
 	for _, msg := range msgs {
@@ -38,9 +38,9 @@ func (r *Reader) ReadMessage() ([]string, error) {
 	return results, err
 }
 
-// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
-// string.
-func (r *Reader) ReadMessageBytes() ([][]byte, error) {
+// ReadMessageSliceBytes is like ReadMessageSlice but returns a [][]byte instead
+// of a string.
+func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
 	msgs, err := r.readMessageSlice()
 	results := make([][]byte, len(msgs))
 	for _, msg := range msgs {
@@ -164,7 +164,7 @@ func (r *Reader) decodeChunk(chunk []byte) []byte {
 
 // A Writer implements convenience methods for reading messages
 // from a NosTale protocol network connection.
-type MonoAlphabeticWriter struct {
+type Writer struct {
 	W *bufio.Writer
 }
 
@@ -173,12 +173,12 @@ type MonoAlphabeticWriter struct {
 // To avoid denial of service attacks, the provided bufio.Writer
 // should be reading from an io.LimitWriter or similar Writer to bound
 // the size of responses.
-func NewMonoAlphabeticWriter(r *bufio.Writer) *MonoAlphabeticWriter {
-	return &MonoAlphabeticWriter{}
+func NewWriter(r *bufio.Writer) *Writer {
+	return &Writer{}
 }
 
 // WriteMessage writes the formatted message.
-func (w *MonoAlphabeticWriter) WriteMessage(msg []byte) error {
+func (w *Writer) WriteMessage(msg []byte) error {
 	var result []byte
 	for i, b := range msg {
 		if i%0x7e != 0 {

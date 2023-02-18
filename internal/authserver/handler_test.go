@@ -111,17 +111,15 @@ func TestHandlerServeNosTale(t *testing.T) {
 	})
 	server, client := net.Pipe()
 	defer client.Close()
-	wg.Go(func() error {
-		fleetClient, err := dialFleetServerMock(ctx, lis)
-		if err != nil {
-			return err
-		}
-		handler := NewHandler(HandlerConfig{
-			FleetClient: fleetClient,
-		})
-		handler.ServeNosTale(server)
-		return server.Close()
+	defer server.Close()
+	fleetClient, err := dialFleetServerMock(ctx, lis)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := NewHandler(HandlerConfig{
+		FleetClient: fleetClient,
 	})
+	handler.ServeNosTale(server)
 	input := []byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,

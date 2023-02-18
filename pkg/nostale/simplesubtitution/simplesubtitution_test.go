@@ -15,7 +15,7 @@ func TestReaderReadline(t *testing.T) {
 	}
 	var buf bytes.Buffer
 	w := NewWriter(bufio.NewWriter(&buf))
-	if err := w.WriteMessage(input); err != nil {
+	if _, err := w.Write(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := buf.Bytes()
@@ -59,7 +59,7 @@ func TestServerAsymmetricEncoding(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	var b bytes.Buffer
 	w := NewWriter(bufio.NewWriter(&b))
-	if err := w.WriteMessage(input); err != nil {
+	if _, err := w.Write(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	r := NewReader(bufio.NewReader(&b))

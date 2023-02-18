@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"net"
@@ -10,7 +9,6 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/monoalphabetic"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
@@ -42,27 +40,29 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 
 func (h *Handler) newConn(c net.Conn) *Conn {
 	return &Conn{
-		conn:          c,
-		rc:            monoalphabetic.NewReader(bufio.NewReader(c)),
+		rwc:           c,
+		rc:            protonostale.NewGatewayReader(bufio.NewReader(c)),
+		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(c)),
 		fleetClient:   h.fleetClient,
 		kafkaProducer: h.kafkaProducer,
 	}
 }
 
 type Conn struct {
-	conn          net.Conn
-	rc            *monoalphabetic.Reader
+	rwc           net.Conn
+	rc            *protonostale.GatewayReader
+	wc            *protonostale.GatewayWriter
 	fleetClient   fleet.FleetClient
 	kafkaProducer *kafka.Producer
 }
 
 func (c *Conn) serve(ctx context.Context) {
-	ack, err := c.handleHandoff(ctx)
+	ack, err := c.handoff(ctx)
 	if err != nil {
 		panic(err)
 	}
 	for {
-		rs, err := c.newMessageReaders()
+		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
 			panic(err)
 		}
@@ -85,12 +85,15 @@ func (c *Conn) serve(ctx context.Context) {
 	}
 }
 
-func (c *Conn) handleHandoff(
+func (c *Conn) handoff(
 	ctx context.Context,
 ) (*eventing.AcknowledgeHandoffMessage, error) {
-	rs, err := c.newMessageReaders()
+	rs, err := c.rc.ReadMessageSlice()
 	if err != nil {
 		return nil, err
+	}
+	if len(rs) != 2 {
+		return nil, errors.New("invalid handoff message")
 	}
 	syncMsg, err := rs[0].ReadSyncMessage()
 	if err != nil {
@@ -106,9 +109,7 @@ func (c *Conn) handleHandoff(
 	if handoffMsg.KeyMessage.Sequence != handoffMsg.PasswordMessage.Sequence+1 {
 		return nil, errors.New("corrupted handoff message")
 	}
-	if err != nil {
-		panic(err)
-	}
+	c.rc.SetKey(handoffMsg.KeyMessage.Key)
 	_, err = c.fleetClient.
 		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
 			Key:   handoffMsg.KeyMessage.Key,
@@ -121,16 +122,4 @@ func (c *Conn) handleHandoff(
 		Key:      handoffMsg.KeyMessage.Key,
 		Sequence: syncMsg.Sequence,
 	}, nil
-}
-
-func (c *Conn) newMessageReaders() ([]*protonostale.GatewayMessageReader, error) {
-	buff, err := c.rc.ReadMessageBytes()
-	if err != nil {
-		return nil, err
-	}
-	readers := make([]*protonostale.GatewayMessageReader, len(buff))
-	for i, b := range buff {
-		readers[i] = protonostale.NewGatewayMessageReader(bytes.NewReader(b))
-	}
-	return readers, nil
 }
