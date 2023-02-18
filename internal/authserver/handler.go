@@ -2,6 +2,7 @@ package authserver
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"net"
 
@@ -27,14 +28,34 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	rc := simplesubtitution.NewReader(bufio.NewReader(c))
-	wc := simplesubtitution.NewWriter(bufio.NewWriter(c))
-	m, err := ReadCredentialsMessage(rc)
+	conn := h.newConn(c)
+	go conn.serve(ctx)
+}
+
+func (h *Handler) newConn(c net.Conn) *Conn {
+	return &Conn{
+		conn: c,
+		rc:   simplesubtitution.NewReader(bufio.NewReader(c)),
+	}
+}
+
+type Conn struct {
+	conn        net.Conn
+	wc          *simplesubtitution.Writer
+	rc          *simplesubtitution.Reader
+	fleetClient fleet.FleetClient
+}
+
+func (c *Conn) serve(ctx context.Context) {
+	r, err := c.newMessageReader()
 	if err != nil {
 		panic(err)
 	}
-
-	handoff, err := h.fleet.
+	m, err := r.ReadRequestHandoffMessage()
+	if err != nil {
+		panic(err)
+	}
+	handoff, err := c.fleetClient.
 		CreateHandoff(
 			ctx,
 			&fleet.CreateHandoffRequest{
@@ -46,16 +67,16 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		panic(err)
 	}
 
-	listClusters, err := h.fleet.
+	listClusters, err := c.fleetClient.
 		ListClusters(ctx, &fleet.ListClusterRequest{})
 	if err != nil {
 		panic(err)
 	}
 	gateways := []*eventing.GatewayMessage{}
-	for _, c := range listClusters.Clusters {
-		listGateways, err := h.fleet.
+	for _, cluster := range listClusters.Clusters {
+		listGateways, err := c.fleetClient.
 			ListGateways(ctx, &fleet.ListGatewayRequest{
-				Id: c.Id,
+				Id: cluster.Id,
 			})
 		if err != nil {
 			panic(err)
@@ -72,14 +93,14 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 					Port:       port,
 					Population: g.Population,
 					Capacity:   g.Capacity,
-					WorldId:    c.WorldId,
+					WorldId:    cluster.WorldId,
 					ChannelId:  g.ChannelId,
-					WorldName:  c.Name,
+					WorldName:  cluster.Name,
 				},
 			)
 		}
 	}
-	if err := wc.WriteMessage(protonostale.MarshallProposeHandoffMessage(
+	if err := c.wc.WriteMessage(protonostale.MarshallProposeHandoffMessage(
 		&eventing.ProposeHandoffMessage{
 			Key:      handoff.Key,
 			Gateways: gateways,
@@ -89,12 +110,10 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	}
 }
 
-func ReadCredentialsMessage(
-	r *simplesubtitution.Reader,
-) (*eventing.RequestHandoffMessage, error) {
-	s, err := r.ReadMessageBytes()
+func (c *Conn) newMessageReader() (*protonostale.AuthServerMessageReader, error) {
+	buff, err := c.rc.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
-	return protonostale.ParseRequestHandoffMessage(s)
+	return protonostale.NewAuthServerMessageReader(bytes.NewReader(buff)), nil
 }

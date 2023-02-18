@@ -22,37 +22,61 @@ type HandlerConfig struct {
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		fleet:         cfg.FleetClient,
+		fleetClient:   cfg.FleetClient,
 		kafkaProducer: cfg.KafkaProducer,
 		kafkaConsumer: cfg.KafkaConsumer,
 	}
 }
 
 type Handler struct {
-	fleet         fleet.FleetClient
+	fleetClient   fleet.FleetClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := NewMessageReader(monoalphabetic.NewReader(bufio.NewReader(c)))
-	ack, err := h.handleHandoff(ctx, c, r)
+	conn := h.newConn(c)
+	go conn.serve(ctx)
+}
+
+func (h *Handler) newConn(c net.Conn) *Conn {
+	return &Conn{
+		conn:          c,
+		rc:            monoalphabetic.NewReader(bufio.NewReader(c)),
+		fleetClient:   h.fleetClient,
+		kafkaProducer: h.kafkaProducer,
+	}
+}
+
+type Conn struct {
+	conn          net.Conn
+	rc            *monoalphabetic.Reader
+	fleetClient   fleet.FleetClient
+	kafkaProducer *kafka.Producer
+}
+
+func (c *Conn) serve(ctx context.Context) {
+	ack, err := c.handleHandoff(ctx)
 	if err != nil {
 		panic(err)
 	}
 	for {
-		msgs, err := r.ReaderMessage()
+		rs, err := c.newMessageReaders()
 		if err != nil {
 			panic(err)
 		}
-		for _, msg := range msgs {
+		for _, r := range rs {
+			msg, err := r.ReadChannelMessage()
+			if err != nil {
+				panic(err)
+			}
 			if msg.Sequence != ack.Sequence+1 {
 				panic(errors.New("invalid sequence number"))
 			} else {
 				ack.Sequence = msg.Sequence
 			}
-			h.kafkaProducer.Produce(&kafka.Message{
+			c.kafkaProducer.Produce(&kafka.Message{
 				TopicPartition: kafka.TopicPartition{
 					Partition: kafka.PartitionAny,
 				},
@@ -61,16 +85,18 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	}
 }
 
-func (h *Handler) handleHandoff(
+func (c *Conn) handleHandoff(
 	ctx context.Context,
-	c net.Conn,
-	r *MessageReader,
 ) (*eventing.AcknowledgeHandoffMessage, error) {
-	syncMsg, err := r.ReadSyncMessage()
+	rs, err := c.newMessageReaders()
 	if err != nil {
 		return nil, err
 	}
-	handoffMsg, err := r.ReadHandoffMessage()
+	syncMsg, err := rs[0].ReadSyncMessage()
+	if err != nil {
+		return nil, err
+	}
+	handoffMsg, err := rs[1].ReadPerformHandoffMessage()
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +109,7 @@ func (h *Handler) handleHandoff(
 	if err != nil {
 		panic(err)
 	}
-	_, err = h.fleet.
+	_, err = c.fleetClient.
 		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
 			Key:   handoffMsg.KeyMessage.Key,
 			Token: handoffMsg.PasswordMessage.Password,
@@ -97,63 +123,14 @@ func (h *Handler) handleHandoff(
 	}, nil
 }
 
-type MessageReader struct {
-	R *monoalphabetic.Reader
-}
-
-func NewMessageReader(r *monoalphabetic.Reader) *MessageReader {
-	return &MessageReader{
-		R: r,
-	}
-}
-
-func (r *MessageReader) ReadSyncMessage() (*eventing.SyncMessage, error) {
-	s, err := r.R.ReadMessageBytes()
+func (c *Conn) newMessageReaders() ([]*protonostale.GatewayMessageReader, error) {
+	buff, err := c.rc.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
-	if len(s) != 1 {
-		return nil, errors.New("invalid sync message")
+	readers := make([]*protonostale.GatewayMessageReader, len(buff))
+	for i, b := range buff {
+		readers[i] = protonostale.NewGatewayMessageReader(bytes.NewReader(b))
 	}
-	return protonostale.ParseSyncMessage(s[0])
-}
-
-func (r *MessageReader) ReadHandoffMessage() (*eventing.PerformHandoffMessage, error) {
-	s, err := r.R.ReadMessageBytes()
-	if err != nil {
-		return nil, err
-	}
-	key, err := protonostale.ParseKeyMessage(s[0])
-	if err != nil {
-		return nil, err
-	}
-	pwd, err := protonostale.ParsePasswordMessage(s[1])
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.PerformHandoffMessage{
-		KeyMessage:      key,
-		PasswordMessage: pwd,
-	}, nil
-}
-
-func (r *MessageReader) ReaderMessage() ([]*eventing.GenericMessage, error) {
-	ss, err := r.R.ReadMessageBytes()
-	if err != nil {
-		return nil, err
-	}
-	var msgs []*eventing.GenericMessage
-	for _, s := range ss {
-		s := bytes.Split(s, []byte{' '})
-		sn, err := protonostale.ParseUint32(ss[0])
-		if err != nil {
-			return nil, err
-		}
-		msgs = append(msgs, &eventing.GenericMessage{
-			Sequence: sn,
-			Opcode:   string(s[1]),
-			Payload:  s[:2],
-		})
-	}
-	return msgs, nil
+	return readers, nil
 }

@@ -26,30 +26,38 @@ message ProposeHandoffMessage {
   repeated GatewayMessage gateways = 2;
 }
 
-message SyncMessage { uint32 sequence = 1; }
+message PerformHandoffMessage {
+  PerformHandoffKeyMessage key_message = 1;
+  PerformHandoffPasswordMessage password_message = 2;
+}
 
-message KeyMessage {
+message PerformHandoffKeyMessage {
   uint32 sequence = 1;
   uint32 key = 2;
 }
 
-message PasswordMessage {
+message PerformHandoffPasswordMessage {
   uint32 sequence = 1;
   string password = 2;
+}
+
+message ChannelMessage {
+  uint32 sequence = 1;
+  oneof payload {
+    bytes unknown_message = 2;
+    SyncMessage sync_message = 3;
+    CommandMessage command_message = 5;
+  }
+}
+
+message SyncMessage {}
+
+message CommandMessage {
+  string opcode = 1;
+  oneof payload { bytes unknown_payload = 2; }
 }
 
 message AcknowledgeHandoffMessage {
   uint32 key = 1;
   uint32 sequence = 2;
-}
-
-message PerformHandoffMessage {
-  KeyMessage key_message = 1;
-  PasswordMessage password_message = 2;
-}
-
-message GenericMessage {
-  uint32 sequence = 1;
-  string opcode = 2;
-  repeated bytes payload = 3;
 }
