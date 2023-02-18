@@ -11,7 +11,7 @@ import (
 
 func NewGatewayMessageReader(r io.Reader) *GatewayMessageReader {
 	return &GatewayMessageReader{
-		r: NewFieldReader(bufio.NewReader(r)),
+		r: NewFieldReader(r),
 	}
 }
 

@@ -2,12 +2,13 @@ package protonostale
 
 import (
 	"bufio"
+	"io"
 	"strconv"
 )
 
-func NewFieldReader(r *bufio.Reader) *FieldReader {
+func NewFieldReader(r io.Reader) *FieldReader {
 	return &FieldReader{
-		r: r,
+		r: bufio.NewReader(r),
 	}
 }
 

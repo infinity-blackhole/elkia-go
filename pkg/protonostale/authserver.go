@@ -13,7 +13,7 @@ import (
 
 func NewAuthServerMessageReader(r io.Reader) *AuthServerMessageReader {
 	return &AuthServerMessageReader{
-		r: NewFieldReader(bufio.NewReader(r)),
+		r: NewFieldReader(r),
 	}
 }
 
