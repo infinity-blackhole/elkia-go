@@ -75,66 +75,61 @@ func (r *ServerReader) unpack(data []byte) [][]byte {
 	packets := make([][]byte, 0)
 	parts := bytes.Split(data, []byte{0xFF})
 	for _, part := range parts {
-		packet := r.doUnpack(part, make([][]byte, 0))
-		packets = append(packets, packet)
+		result := r.unpackPart(part)
+		packets = append(packets, bytes.Join(result, []byte{}))
 	}
 	return packets
 }
 
-func (r *ServerReader) doUnpack(data []byte, result [][]byte) []byte {
-	if len(data) == 0 {
-		r.reverseBytes(result)
-		return bytes.Join(result, []byte{})
+func (r *ServerReader) unpackPart(part []byte) [][]byte {
+	result := make([][]byte, 0)
+	for len(part) != 0 {
+		byteVal := part[0]
+		rest := part[1:]
+		isPacked := (byteVal & 0x80) > 0
+		tmpLen := byteVal & 0x7F
+		var length int
+		if isPacked {
+			length = int(math.Ceil(float64(tmpLen) / 2))
+		} else {
+			length = int(tmpLen)
+		}
+		chunk := rest[:length]
+		part = rest[length:]
+		var decodedChunk []byte
+		if isPacked {
+			decodedChunk = r.decodePackedChunk(chunk)
+		} else {
+			decodedChunk = r.decodeChunk(chunk)
+		}
+		result = append(result, decodedChunk)
 	}
-
-	byteVal := data[0]
-	rest := data[1:]
-
-	isPacked := (byteVal & 0x80) > 0
-	tmpLen := byteVal & 0x7F
-	var length int
-	if isPacked {
-		length = int(math.Ceil(float64(tmpLen) / 2))
-	} else {
-		length = int(tmpLen)
-	}
-
-	chunk := rest[:length]
-	next := rest[length:]
-
-	decodedChunk := r.decodeChunk(chunk, isPacked)
-	result = append(result, decodedChunk)
-
-	return r.doUnpack(next, result)
+	return result
 }
 
-func (r *ServerReader) decodeChunk(chunk []byte, isPacked bool) []byte {
-	decodedChunk := make([]byte, 0)
-	if !isPacked {
-		for _, c := range chunk {
-			decodedChunk = append(decodedChunk, c^0xFF)
-		}
-	} else {
-		for i := 0; i < len(chunk); i += 2 {
-			h := int(chunk[i] >> 4)
-			l := int(chunk[i] & 0x0F)
-			leftByte := charLookup[h]
-			rightByte := charLookup[l]
-			if l != 0 {
-				decodedChunk = append(decodedChunk, leftByte...)
-				decodedChunk = append(decodedChunk, rightByte...)
-			} else {
-				decodedChunk = append(decodedChunk, leftByte...)
-			}
+func (r *ServerReader) decodePackedChunk(chunk []byte) []byte {
+	result := make([]byte, 0)
+	for i := 0; i < len(chunk); i += 2 {
+		h := int(chunk[i] >> 4)
+		l := int(chunk[i] & 0x0F)
+		leftByte := charLookup[h]
+		rightByte := charLookup[l]
+		if l != 0 {
+			result = append(result, leftByte...)
+			result = append(result, rightByte...)
+		} else {
+			result = append(result, leftByte...)
 		}
 	}
-	return decodedChunk
+	return result
 }
 
-func (r *ServerReader) reverseBytes(data [][]byte) {
-	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
-		data[i], data[j] = data[j], data[i]
+func (r *ServerReader) decodeChunk(chunk []byte) []byte {
+	result := make([]byte, 0)
+	for _, c := range chunk {
+		result = append(result, c^0xFF)
 	}
+	return result
 }
 
 // A Writer implements convenience methods for reading messages
