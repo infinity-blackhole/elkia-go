@@ -2,114 +2,140 @@ package crypto
 
 import (
 	"bufio"
+	"bytes"
+	"math"
 )
 
-// var permutationMatrix = []string{
-// 	"\x00", " ", "-", ".", "0", "1", "2", "3", "4",
-// 	"5", "6", "7", "8", "9", "\n", "\x00",
-// }
+var charLookup = []string{
+	"\x00", " ", "-", ".", "0", "1", "2", "3", "4",
+	"5", "6", "7", "8", "9", "\n", "\x00",
+}
 
-type Reader struct {
+type ServerReader struct {
 	R   *bufio.Reader
 	key uint32
 }
 
-func NewReader(r *bufio.Reader, key uint32) *Reader {
-	return &Reader{
+func NewServerReader(r *bufio.Reader, key uint32) *ServerReader {
+	return &ServerReader{
 		R:   r,
 		key: key,
 	}
 }
 
-// func (c *Reader) ReadMessage(msg []byte) []byte {
-// 	return []byte(c.unpack(c.decryptBytes(msg, -1, -1)))
-// }
+func (r *ServerReader) ReadMessage() ([][]byte, error) {
+	if r.key == 0 {
+		return r.ReadSessionMessage()
+	}
+	return r.ReadChannelMessage()
+}
 
-// func (c *Reader) ReadMessageWithKey(msg []byte, sessionKey uint32) []byte {
-// 	decryptionType := (sessionKey >> 6) & 3
-// 	offset := sessionKey & 0xff
-// 	return []byte(c.unpack(c.decryptBytes(msg, offset, decryptionType)))
-// }
+func (r *ServerReader) ReadSessionMessage() ([][]byte, error) {
+	binary, err := r.R.ReadBytes(0xFF)
+	if err != nil {
+		return nil, err
+	}
+	return r.unpack(r.decryptMessage(binary)), nil
+}
 
-// func (c Reader) decryptBytes(plaintext []byte, offset byte, decryptionType int) []byte {
-// 	var result []byte
-// 	for _, c := range plaintext {
-// 		switch decryptionType {
-// 		case 0:
-// 			result = append(result, (c-offsetByte-0x40)&0xff)
-// 		case 1:
-// 			result = append(result, (c+offsetByte+0x40)&0xff)
-// 		case 2:
-// 			result = append(result, (c-offsetByte-0x40)^0xc3&0xff)
-// 		case 3:
-// 			result = append(result, (c+offsetByte+0x40)^0xc3&0xff)
-// 		default:
-// 			result = append(result, (c-0x0f)&0xff)
-// 		}
-// 	}
-// 	return result
-// }
+func (r *ServerReader) ReadChannelMessage() ([][]byte, error) {
+	binary, err := r.R.ReadBytes(0xFF)
+	if err != nil {
+		return nil, err
+	}
+	return r.unpack(r.decryptMessage(binary)), nil
+}
 
-// func (c Reader) unpack(binaryData []byte) []byte {
-// 	var result []byte
-// 	for _, data := range bytes.Split(binaryData, []byte{0xff}) {
-// 		result = append(result, c.unpackBytes(data, result)...)
-// 	}
-// 	return result
-// }
+func (r *ServerReader) decryptMessage(msg []byte) []byte {
+	result := make([]byte, 0)
+	for _, c := range msg {
+		result = append(result, r.decryptByte(c))
+	}
+	return result
+}
 
-// func (c Reader) unpackBytes(data []byte, result []byte) []byte {
-// 	if data == "" {
-// 		result = reverse(result)
-// 		return result
-// 	}
-// 	byte := data[0]
-// 	rest := data[1:]
+func (r *ServerReader) decryptByte(c byte) byte {
+	mode := r.key & 0xFF
+	offset := (r.key >> 6) & 3
+	switch mode {
+	case 0:
+		return (c - byte(offset) - 0x40) & 0xFF
+	case 1:
+		return (c + byte(offset) + 0x40) & 0xFF
+	case 2:
+		return ((c - byte(offset) - 0x40) ^ 0xC3) & 0xFF
+	case 3:
+		return ((c + byte(offset) + 0x40) ^ 0xC3) & 0xFF
+	default:
+		return (c - 0x0F) & 0xFF
+	}
+}
 
-// 	packed := byte&0x80 > 0
-// 	len := byte & 0x7F
+func (r *ServerReader) unpack(data []byte) [][]byte {
+	packets := make([][]byte, 0)
+	parts := bytes.Split(data, []byte{0xFF})
+	for _, part := range parts {
+		packet := r.doUnpack(part, make([][]byte, 0))
+		packets = append(packets, packet)
+	}
+	return packets
+}
 
-// 	if packed {
-// 		len = int(math.Ceil(float64(len) / 2))
-// 	}
+func (r *ServerReader) doUnpack(data []byte, result [][]byte) []byte {
+	if len(data) == 0 {
+		r.reverseBytes(result)
+		return bytes.Join(result, []byte{})
+	}
 
-// 	pack := rest[:len]
-// 	rest = rest[len:]
+	byteVal := data[0]
+	rest := data[1:]
 
-// 	if packed {
-// 		temp := ""
-// 		for i := 0; i < len; i += 4 {
-// 			h := pack[i]
-// 			l := pack[i+1]
+	isPacked := (byteVal & 0x80) > 0
+	tmpLen := byteVal & 0x7F
+	var length int
+	if isPacked {
+		length = int(math.Ceil(float64(tmpLen) / 2))
+	} else {
+		length = int(tmpLen)
+	}
 
-// 			leftByte := permutationMatrix[h]
-// 			rightByte := permutationMatrix[l]
+	chunk := rest[:length]
+	next := rest[length:]
 
-// 			if l != 0 {
-// 				temp += string(leftByte) + string(rightByte)
-// 			} else {
-// 				temp += string(leftByte)
-// 			}
-// 		}
-// 		pack = temp
-// 	} else {
-// 		temp := ""
-// 		for i := 0; i < len; i++ {
-// 			c := pack[i]
-// 			temp += string(c ^ 0xFF)
-// 		}
-// 		pack = temp
-// 	}
+	decodedChunk := r.decodeChunk(chunk, isPacked)
+	result = append(result, decodedChunk)
 
-// 	return c.unpackBytes(rest, append(result, pack))
-// }
+	return r.doUnpack(next, result)
+}
 
-// func reverse(result []byte) []byte {
-// 	for i := 0; i < len(result)/2; i++ {
-// 		result[i], result[len(result)-i-1] = result[len(result)-i-1], result[i]
-// 	}
-// 	return result
-// }
+func (r *ServerReader) decodeChunk(chunk []byte, isPacked bool) []byte {
+	decodedChunk := make([]byte, 0)
+	if !isPacked {
+		for _, c := range chunk {
+			decodedChunk = append(decodedChunk, c^0xFF)
+		}
+	} else {
+		for i := 0; i < len(chunk); i += 2 {
+			h := int(chunk[i] >> 4)
+			l := int(chunk[i] & 0x0F)
+			leftByte := charLookup[h]
+			rightByte := charLookup[l]
+			if l != 0 {
+				decodedChunk = append(decodedChunk, leftByte...)
+				decodedChunk = append(decodedChunk, rightByte...)
+			} else {
+				decodedChunk = append(decodedChunk, leftByte...)
+			}
+		}
+	}
+	return decodedChunk
+}
+
+func (r *ServerReader) reverseBytes(data [][]byte) {
+	for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
+		data[i], data[j] = data[j], data[i]
+	}
+}
 
 // A Writer implements convenience methods for reading messages
 // from a NosTale protocol network connection.
