@@ -47,3 +47,9 @@ message PerformHandoffMessage {
   KeyMessage key_message = 1;
   PasswordMessage password_message = 2;
 }
+
+message GenericMessage {
+  uint32 sequence = 1;
+  string opcode = 2;
+  repeated bytes payload = 3;
+}

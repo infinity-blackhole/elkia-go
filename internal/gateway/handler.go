@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io"
 	"net"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -37,39 +36,41 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	r := monoalphabetic.NewReader(bufio.NewReader(c))
+	r := NewMessageReader(monoalphabetic.NewReader(bufio.NewReader(c)))
 	ack, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
 	}
 	for {
-		_, seqNum, _, err := h.readerMessage(r)
+		msgs, err := r.ReaderMessage()
 		if err != nil {
 			panic(err)
 		}
-		if seqNum != ack.Sequence+1 {
-			panic(errors.New("invalid sequence number"))
-		} else {
-			ack.Sequence = seqNum
+		for _, msg := range msgs {
+			if msg.Sequence != ack.Sequence+1 {
+				panic(errors.New("invalid sequence number"))
+			} else {
+				ack.Sequence = msg.Sequence
+			}
+			h.kafkaProducer.Produce(&kafka.Message{
+				TopicPartition: kafka.TopicPartition{
+					Partition: kafka.PartitionAny,
+				},
+			}, nil)
 		}
-		h.kafkaProducer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{
-				Partition: kafka.PartitionAny,
-			},
-		}, nil)
 	}
 }
 
 func (h *Handler) handleHandoff(
 	ctx context.Context,
 	c net.Conn,
-	r *monoalphabetic.Reader,
+	r *MessageReader,
 ) (*eventing.AcknowledgeHandoffMessage, error) {
-	syncMsg, err := ReadSyncMessage(r)
+	syncMsg, err := r.ReadSyncMessage()
 	if err != nil {
 		return nil, err
 	}
-	handoffMsg, err := ReadHandoffMessage(r)
+	handoffMsg, err := r.ReadHandoffMessage()
 	if err != nil {
 		return nil, err
 	}
@@ -96,28 +97,18 @@ func (h *Handler) handleHandoff(
 	}, nil
 }
 
-func (h *Handler) readerMessage(
-	r *monoalphabetic.Reader,
-) (string, uint32, io.Reader, error) {
-	s, err := r.ReadMessageBytes()
-	if err != nil {
-		panic(err)
-	}
-	ss := bytes.Split(s[0], []byte{' '})
-	if len(ss) == 0 {
-		panic(errors.New("invalid message"))
-	}
-	sn, err := protonostale.ParseUint32(ss[1])
-	if err != nil {
-		panic(err)
-	}
-	return string(ss[0]), sn, bytes.NewReader(ss[2]), nil
+type MessageReader struct {
+	R *monoalphabetic.Reader
 }
 
-func ReadSyncMessage(
-	r *monoalphabetic.Reader,
-) (*eventing.SyncMessage, error) {
-	s, err := r.ReadMessageBytes()
+func NewMessageReader(r *monoalphabetic.Reader) *MessageReader {
+	return &MessageReader{
+		R: r,
+	}
+}
+
+func (r *MessageReader) ReadSyncMessage() (*eventing.SyncMessage, error) {
+	s, err := r.R.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -127,10 +118,8 @@ func ReadSyncMessage(
 	return protonostale.ParseSyncMessage(s[0])
 }
 
-func ReadHandoffMessage(
-	r *monoalphabetic.Reader,
-) (*eventing.PerformHandoffMessage, error) {
-	s, err := r.ReadMessageBytes()
+func (r *MessageReader) ReadHandoffMessage() (*eventing.PerformHandoffMessage, error) {
+	s, err := r.R.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -146,4 +135,25 @@ func ReadHandoffMessage(
 		KeyMessage:      key,
 		PasswordMessage: pwd,
 	}, nil
+}
+
+func (r *MessageReader) ReaderMessage() ([]*eventing.GenericMessage, error) {
+	ss, err := r.R.ReadMessageBytes()
+	if err != nil {
+		return nil, err
+	}
+	var msgs []*eventing.GenericMessage
+	for _, s := range ss {
+		s := bytes.Split(s, []byte{' '})
+		sn, err := protonostale.ParseUint32(ss[0])
+		if err != nil {
+			return nil, err
+		}
+		msgs = append(msgs, &eventing.GenericMessage{
+			Sequence: sn,
+			Opcode:   string(s[1]),
+			Payload:  s[:2],
+		})
+	}
+	return msgs, nil
 }
