@@ -8,6 +8,4 @@ helmCharts:
     version: "0.28.0"
     releaseName: kratos-selfservice-ui-node
     valuesInline:
-      kratosBrowserUrl: http://kratos.elkia.localhost/
-      kratosPublicUrl: http://kratos-public/
-      kratosAdminUrl: http://kratos-admin/
+      kratosBrowserUrl: http://accounts.elkia.localhost/.ory/kratos/public

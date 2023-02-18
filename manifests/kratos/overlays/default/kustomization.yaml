@@ -13,7 +13,7 @@ helmCharts:
 
           serve:
             public:
-              base_url: http://kratos.elkia.localhost/
+              base_url: http://accounts.elkia.localhost/.ory/kratos/public/
               cors:
                 enabled: true
             admin:

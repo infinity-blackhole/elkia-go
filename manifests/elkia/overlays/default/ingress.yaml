@@ -3,25 +3,24 @@ kind: Ingress
 metadata:
   name: elkia
   namespace: elkia
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: elkia-strip-prefix@kubernetescrd
 spec:
   rules:
     - host: accounts.elkia.localhost
       http:
         paths:
+          - path: /.ory/kratos/public
+            pathType: Prefix
+            backend:
+              service:
+                name: kratos-public
+                port:
+                  name: http
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: kratos-selfservice-ui-node
-                port:
-                  name: http
-    - host: kratos.elkia.localhost
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: kratos-public
                 port:
                   name: http

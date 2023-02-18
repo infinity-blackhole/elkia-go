@@ -6,3 +6,4 @@ resources:
   - ../../../elkia-fleet/overlays/default
   - ../../../elkia-gateway/overlays/default
   - ingress.yaml
+  - middleware.yaml
