@@ -11,7 +11,7 @@ message RequestHandoffMessage {
   string client_checksum = 7;
 }
 
-message Gateway {
+message GatewayMessage {
   string host = 1;
   string port = 2;
   uint32 population = 3;
@@ -23,7 +23,7 @@ message Gateway {
 
 message ProposeHandoffMessage {
   uint32 key = 1;
-  repeated Gateway gateways = 2;
+  repeated GatewayMessage gateways = 2;
 }
 
 message SyncMessage { uint32 sequence = 1; }

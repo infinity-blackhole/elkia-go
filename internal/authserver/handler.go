@@ -51,7 +51,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
-	gateways := []*eventing.Gateway{}
+	gateways := []*eventing.GatewayMessage{}
 	for _, c := range listClusters.Clusters {
 		listGateways, err := h.fleet.
 			ListGateways(ctx, &fleet.ListGatewayRequest{
@@ -67,7 +67,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 			}
 			gateways = append(
 				gateways,
-				&eventing.Gateway{
+				&eventing.GatewayMessage{
 					Host:       host,
 					Port:       port,
 					Population: g.Population,

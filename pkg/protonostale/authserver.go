@@ -25,16 +25,16 @@ func ParseRequestHandoffMessage(
 	}, nil
 }
 
-var GatewayTerminator = "-1 -1 -1 10000 10000 1"
+var GatewayMessageTerminator = "-1 -1 -1 10000 10000 1"
 
 func MarshallProposeHandoffMessage(
 	msg *eventing.ProposeHandoffMessage,
 ) []byte {
 	gateways := make([]string, len(msg.Gateways))
 	for i, g := range msg.Gateways {
-		gateways[i] = MarshallGateway(g)
+		gateways[i] = MarshallGatewayMessage(g)
 	}
-	gateways = append(gateways, GatewayTerminator)
+	gateways = append(gateways, GatewayMessageTerminator)
 	return []byte(fmt.Sprintf(
 		"NsTeST %d %s",
 		msg.Key,
@@ -42,8 +42,8 @@ func MarshallProposeHandoffMessage(
 	))
 }
 
-func MarshallGateway(
-	msg *eventing.Gateway,
+func MarshallGatewayMessage(
+	msg *eventing.GatewayMessage,
 ) string {
 	return fmt.Sprintf(
 		"%s %s %d %.f %d %d %s",
