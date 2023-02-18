@@ -25,3 +25,12 @@ func (w *ClientWriter) WriteFailCodeMessage(msg *eventing.FailureMessage) error 
 	_, err = fmt.Fprint(w.w, "\n")
 	return err
 }
+
+func (w *ClientWriter) WriteInfoMessage(msg *eventing.InfoMessage) error {
+	_, err := fmt.Fprintf(w.w, "info %s", msg.Content)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprint(w.w, "\n")
+	return err
+}

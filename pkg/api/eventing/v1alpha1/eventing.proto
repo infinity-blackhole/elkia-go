@@ -75,3 +75,5 @@ enum FailureCode {
 }
 
 message FailureMessage { FailureCode code = 1; }
+
+message InfoMessage { string content = 1; }
