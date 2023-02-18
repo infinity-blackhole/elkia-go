@@ -54,6 +54,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 	m, err := r.ReadRequestHandoffMessage()
 	if err != nil {
@@ -62,6 +63,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 	handoff, err := c.fleetClient.
 		CreateHandoff(
@@ -77,6 +79,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 
 	listClusters, err := c.fleetClient.
@@ -87,6 +90,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 	gateways := []*eventing.GatewayMessage{}
 	for _, cluster := range listClusters.Clusters {
@@ -100,6 +104,7 @@ func (c *Conn) serve(ctx context.Context) {
 			}); err != nil {
 				panic(err)
 			}
+			return
 		}
 		for _, g := range listGateways.Gateways {
 			host, port, err := net.SplitHostPort(g.Address)
@@ -109,6 +114,7 @@ func (c *Conn) serve(ctx context.Context) {
 				}); err != nil {
 					panic(err)
 				}
+				return
 			}
 			gateways = append(
 				gateways,
@@ -135,5 +141,6 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 }

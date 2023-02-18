@@ -36,9 +36,17 @@ func (r *FieldReader) ReadUint32() (uint32, error) {
 }
 
 func (r *FieldReader) ReadField() ([]byte, error) {
-	return r.r.ReadBytes(' ')
+	b, err := r.r.ReadBytes(' ')
+	if err != nil {
+		return nil, err
+	}
+	return b[:len(b)-1], nil
 }
 
 func (r *FieldReader) ReadPayload() ([]byte, error) {
-	return r.r.ReadBytes('\n')
+	b, err := r.r.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+	return b[:len(b)-1], nil
 }

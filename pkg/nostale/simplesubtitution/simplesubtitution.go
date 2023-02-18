@@ -72,7 +72,9 @@ func NewWriter(w *bufio.Writer) *Writer {
 // WriteMessage writes the formatted message.
 func (w *Writer) Write(msg []byte) (nn int, err error) {
 	for _, b := range msg {
-		w.W.WriteByte((b + 15) & 0xFF)
+		if err := w.W.WriteByte((b + 15) & 0xFF); err != nil {
+			return nn, err
+		}
 		nn++
 	}
 	if err := w.W.WriteByte(0x19); err != nil {

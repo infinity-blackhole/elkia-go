@@ -183,7 +183,9 @@ func NewWriter(w *bufio.Writer) *Writer {
 func (w *Writer) Write(msg []byte) (nn int, err error) {
 	for i, b := range msg {
 		if i%0x7e != 0 {
-			w.w.WriteByte(b)
+			if err := w.w.WriteByte(b); err != nil {
+				return nn, err
+			}
 			nn++
 		} else {
 			if len(msg)-i > 0x7e {

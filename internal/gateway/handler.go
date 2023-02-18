@@ -63,6 +63,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			panic(err)
 		}
+		return
 	}
 	if ack == nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -80,6 +81,7 @@ func (c *Conn) serve(ctx context.Context) {
 			}); err != nil {
 				panic(err)
 			}
+			return
 		}
 		for _, r := range rs {
 			msg, err := r.ReadChannelMessage()
@@ -89,6 +91,7 @@ func (c *Conn) serve(ctx context.Context) {
 				}); err != nil {
 					panic(err)
 				}
+				return
 			}
 			if msg.Sequence != ack.Sequence+1 {
 				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -96,6 +99,7 @@ func (c *Conn) serve(ctx context.Context) {
 				}); err != nil {
 					panic(err)
 				}
+				return
 			} else {
 				ack.Sequence = msg.Sequence
 			}

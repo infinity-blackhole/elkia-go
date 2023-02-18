@@ -91,11 +91,7 @@ func (w *AuthServerWriter) WriteProposeHandoffMessage(
 			return err
 		}
 	}
-	if _, err = fmt.Fprintf(
-		w.w,
-		"%s",
-		"-1 -1 -1 10000 10000 1",
-	); err != nil {
+	if _, err = w.w.WriteString("-1 -1 -1 10000 10000 1"); err != nil {
 		return err
 	}
 	return w.w.Flush()

@@ -16,7 +16,7 @@
       "type": "go",
       "request": "attach",
       "mode": "remote",
-      "host": "127.0.0.1",
+      "host": "localhost",
       "port": 56268,
       "cwd": "${workspaceFolder}/cmd/elkia-authserver"
     },
@@ -32,7 +32,7 @@
       "type": "go",
       "request": "attach",
       "mode": "remote",
-      "host": "127.0.0.1",
+      "host": "localhost",
       "port": 56268,
       "cwd": "${workspaceFolder}/cmd/elkia-fleet"
     },
@@ -48,7 +48,7 @@
       "type": "go",
       "request": "attach",
       "mode": "remote",
-      "host": "127.0.0.1",
+      "host": "localhost",
       "port": 56268,
       "cwd": "${workspaceFolder}/cmd/elkia-gatwaey"
     },
