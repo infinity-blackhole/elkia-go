@@ -38,7 +38,7 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	r := simplesubtitution.NewReader(bufio.NewReader(c))
-	_, lastSeqNum, err := h.handleHandoff(ctx, c, r)
+	ack, err := h.handleHandoff(ctx, c, r)
 	if err != nil {
 		panic(err)
 	}
@@ -47,10 +47,10 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		if err != nil {
 			panic(err)
 		}
-		if seqNum != lastSeqNum+1 {
+		if seqNum != ack.Sequence+1 {
 			panic(errors.New("invalid sequence number"))
 		} else {
-			lastSeqNum = seqNum
+			ack.Sequence = seqNum
 		}
 		h.kafkaProducer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
@@ -64,20 +64,20 @@ func (h *Handler) handleHandoff(
 	ctx context.Context,
 	c net.Conn,
 	r *simplesubtitution.Reader,
-) (uint32, uint32, error) {
+) (*eventing.AcknowledgeHandoffMessage, error) {
 	syncMessage, err := ReadSyncMessage(r)
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
 	handoffMessage, err := ReadHandoffMessage(r)
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
 	if syncMessage.Sequence != handoffMessage.KeySequence+1 {
-		return 0, 0, errors.New("corrupted sync message")
+		return nil, errors.New("corrupted sync message")
 	}
 	if handoffMessage.KeySequence != handoffMessage.PasswordSequence+1 {
-		return 0, 0, errors.New("corrupted handoff message")
+		return nil, errors.New("corrupted handoff message")
 	}
 	if err != nil {
 		panic(err)
@@ -88,9 +88,12 @@ func (h *Handler) handleHandoff(
 			Token: handoffMessage.Password,
 		})
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
-	return handoffMessage.Key, syncMessage.Sequence, nil
+	return &eventing.AcknowledgeHandoffMessage{
+		Key:      handoffMessage.Key,
+		Sequence: syncMessage.Sequence,
+	}, nil
 }
 
 func (h *Handler) readerMessage(

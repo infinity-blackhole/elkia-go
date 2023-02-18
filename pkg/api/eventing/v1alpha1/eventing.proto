@@ -34,3 +34,8 @@ message PerformHandoffMessage {
   uint32 password_sequence = 3;
   string password = 4;
 }
+
+message AcknowledgeHandoffMessage {
+  uint32 key = 1;
+  uint32 sequence = 2;
+}
