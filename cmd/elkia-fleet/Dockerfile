@@ -15,6 +15,9 @@ COPY pkg pkg
 
 FROM base as build
 
+# Enable all tracing
+ENV GOTRACEBACK=all
+
 # Build binary
 ARG SKAFFOLD_GO_GCFLAGS
 RUN --mount=type=cache,target=/go/pkg/mod/ \
@@ -22,18 +25,15 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build \
     -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
-    -o /usr/bin/elkia-fleet \
+    -o /usr/local/bin/elkia-fleet \
     ./cmd/elkia-fleet
 
-# HTTP Function
-EXPOSE 8080
-
-ENTRYPOINT ["elkia-fleet"]
+CMD ["/usr/local/bin/elkia-fleet"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/bin/elkia-fleet /usr/bin
+COPY --from=build /usr/local/bin/elkia-fleet /usr/local/bin/elkia-fleet
 
 # HTTP Function
 EXPOSE 8080

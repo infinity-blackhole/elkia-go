@@ -1,62 +1,31 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net"
+	"os"
+	"strings"
 
 	fleetserver "github.com/infinity-blackhole/elkia/internal/fleet"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
-	"github.com/spf13/pflag"
 	etcd "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-var (
-	address        string
-	etcdEndpoints  []string
-	etchUsername   string
-	etchPassword   string
-	kratosEndpoint string
-)
-
-func init() {
-	pflag.StringVar(
-		&address,
-		"address",
-		":8080",
-		"Address",
-	)
-	pflag.StringSliceVar(
-		&etcdEndpoints,
-		"etcd-endpoints",
-		[]string{"http://localhost:2379"},
-		"Etcd endpoints",
-	)
-	pflag.StringVar(
-		&etchUsername,
-		"etcd-username",
-		"",
-		"Etcd username",
-	)
-	pflag.StringVar(
-		&etchPassword,
-		"etcd-password",
-		"",
-		"Etcd password",
-	)
-	pflag.StringVar(
-		&kratosEndpoint,
-		"kratos-endpoint",
-		"http://localhost:4433",
-		"Kratos endpoint",
-	)
-}
-
 func main() {
-	pflag.Parse()
-	lis, err := net.Listen("tcp", address)
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
 	if err != nil {
 		panic(err)
 	}
@@ -93,6 +62,10 @@ func NewOrchestrator() (*fleetserver.Orchestrator, error) {
 }
 
 func NewIdentityProvider() *fleetserver.IdentityProvider {
+	kratosEndpoint := os.Getenv("ELKIA_FLEET_KRATOS_ENDPOINT")
+	if kratosEndpoint == "" {
+		kratosEndpoint = "http://localhost:4433"
+	}
 	return fleetserver.NewIdentityProvider(&fleetserver.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(&ory.Configuration{
 			DefaultHeader: make(map[string]string),
@@ -106,10 +79,25 @@ func NewIdentityProvider() *fleetserver.IdentityProvider {
 }
 
 func NewEtcd() (*etcd.Client, error) {
+	etcdEndpointsStr := os.Getenv("ETCD_ENDPOINTS")
+	var etcdEndpoints []string
+	if etcdEndpointsStr == "" {
+		etcdEndpoints = []string{"http://localhost:2379"}
+	} else {
+		etcdEndpoints = strings.Split(etcdEndpointsStr, ",")
+	}
+	etcdUsername := os.Getenv("ETCD_USERNAME")
+	if etcdUsername == "" {
+		etcdUsername = "root"
+	}
+	etcdPassword := os.Getenv("ETCD_PASSWORD")
+	if etcdPassword == "" {
+		return nil, errors.New("etcd password is required")
+	}
 	return etcd.New(etcd.Config{
 		Endpoints: etcdEndpoints,
-		Username:  etchUsername,
-		Password:  etchPassword,
+		Username:  etcdUsername,
+		Password:  etcdPassword,
 	})
 }
 

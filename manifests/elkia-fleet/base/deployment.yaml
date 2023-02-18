@@ -16,29 +16,16 @@ spec:
       containers:
         - name: elkia-fleet
           image: gcr.io/infinity-blackhole/elkia-fleet
-          args:
-            - --kratos-endpoint=http://kratos:4433
-            - --etcd-endpoints=http://etcd:2379
-            - --etcd-username=$(ETCD_USERNAME)
-            - --etcd-password=$(ETCD_PASSWORD)
           env:
-            - name: ETCD_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: etcd
-                  key: username
-            - name: ETCD_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: etcd
-                  key: password
+            - name: HOST
+              value: "0.0.0.0"
           ports:
             - containerPort: 8080
               name: http
           resources:
             requests:
               cpu: 10m
-              memory: 16Mi
+              memory: 32Mi
             limits:
               cpu: 100m
               memory: 128Mi

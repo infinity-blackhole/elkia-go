@@ -15,23 +15,25 @@ COPY pkg pkg
 
 FROM base as build
 
+# Enable all tracing
+ENV GOTRACEBACK=all
+
 # Build binary
+ARG SKAFFOLD_GO_GCFLAGS
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=cache,target=/root/.cache/go-build/ \
     go build \
-    -o /usr/bin/elkia-gateway \
+    -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
+    -o /usr/local/bin/elkia-gateway \
     ./cmd/elkia-gateway
 
-# NosTale gateway
-EXPOSE 4124
-
-ENTRYPOINT ["elkia-gateway"]
+CMD ["/usr/local/bin/elkia-gateway"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/bin/elkia-gateway /usr/bin
+COPY --from=build /usr/local/bin/elkia-gateway /usr/local/bin/elkia-gateway
 
 # NosTale gateway
 EXPOSE 4124

@@ -6,16 +6,19 @@ build:
   artifacts:
     - image: gcr.io/infinity-blackhole/elkia-authserver
       context: .
+      runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-authserver/Dockerfile
     - image: gcr.io/infinity-blackhole/elkia-fleet
       context: .
+      runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-fleet/Dockerfile
     - image: gcr.io/infinity-blackhole/elkia-gateway
       context: .
+      runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-gateway/Dockerfile
@@ -39,3 +42,6 @@ manifests:
       - manifests/kafka/overlays/default
     buildArgs:
       - --enable-helm
+deploy:
+  statusCheckDeadlineSeconds: 600
+  tolerateFailuresUntilDeadline: true

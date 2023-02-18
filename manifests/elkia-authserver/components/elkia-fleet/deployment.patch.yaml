@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-authserver
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-authserver
+          env:
+            - name: ELKIA_FLEET_ENDPOINT
+              value: http://elkia-fleet:8080

@@ -16,8 +16,9 @@ spec:
       containers:
         - name: elkia-authserver
           image: gcr.io/infinity-blackhole/elkia-authserver
-          args:
-            - --elkia-fleet-endpoint=http://elkia-fleet:8080
+          env:
+            - name: HOST
+              value: "0.0.0.0"
           ports:
             - containerPort: 4123
               name: elkia

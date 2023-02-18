@@ -19,9 +19,9 @@ spec:
       containers:
         - name: elkia-gateway
           image: gcr.io/infinity-blackhole/elkia-gateway
-          args:
-            - --kafka-endpoints=kafka:9092
-            - --elkia-fleet-endpoint=http://elkia-fleet:8080
+          env:
+            - name: HOST
+              value: "0.0.0.0"
           ports:
             - containerPort: 4124
               name: elkia

@@ -1,43 +1,40 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/infinity-blackhole/elkia/internal/authserver"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
-	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-var (
-	address            string
-	elkiaFleetEndpoint string
-)
-
-func init() {
-	pflag.StringVar(
-		&address,
-		"address",
-		":4123",
-		"Address",
-	)
-	pflag.StringVar(
-		&elkiaFleetEndpoint,
-		"elkia-fleet-endpoint",
-		"localhost:8080",
-		"Elkia Fleet endpoint",
-	)
-}
-
 func main() {
-	pflag.Parse()
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
+	if elkiaFleetEndpoint == "" {
+		elkiaFleetEndpoint = "localhost:8080"
+	}
+	conn, err := grpc.Dial(
+		elkiaFleetEndpoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		panic(err)
 	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4123"
+	}
 	srv := nostale.NewServer(nostale.ServerConfig{
-		Addr: address,
+		Addr: fmt.Sprintf("%s:%s", host, port),
 		Handler: authserver.NewHandler(authserver.HandlerConfig{
 			FleetClient: fleet.NewFleetClient(conn),
 		}),

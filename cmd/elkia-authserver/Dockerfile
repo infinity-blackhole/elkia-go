@@ -15,6 +15,9 @@ COPY pkg pkg
 
 FROM base as build
 
+# Enable all tracing
+ENV GOTRACEBACK=all
+
 # Build binary
 ARG SKAFFOLD_GO_GCFLAGS
 RUN --mount=type=cache,target=/go/pkg/mod/ \
@@ -22,18 +25,15 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build \
     -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
-    -o /usr/bin/elkia-authserver \
+    -o /usr/local/bin/elkia-authserver \
     ./cmd/elkia-authserver
 
-# NosTale auth server
-EXPOSE 4123
-
-ENTRYPOINT ["elkia-authserver"]
+CMD ["/usr/local/bin/elkia-authserver"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/bin/elkia-authserver /usr/bin
+COPY --from=build /usr/local/bin/elkia-authserver /usr/local/bin/elkia-authserver
 
 # NosTale auth server
 EXPOSE 4123

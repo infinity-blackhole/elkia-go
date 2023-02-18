@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-fleet
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-fleet
+          env:
+            - name: ETCD_ENDPOINTS
+              value: http://etcd:2379
+            - name: ETCD_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: etcd
+                  key: username
+            - name: ETCD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: etcd
+                  key: password

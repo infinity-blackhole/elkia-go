@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-gateway
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-gateway
+          env:
+            - name: KAFKA_ENDPOINTS
+              value: kafka:9092
+            - name: KAFKA_TOPICS
+              value: elkia-mainnet
+            - name: KAFKA_GROUP_ID
+              value: elkia-gateway

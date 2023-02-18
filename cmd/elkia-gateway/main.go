@@ -1,60 +1,27 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
-	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
-
-var (
-	address            string
-	elkiaFleetEndpoint string
-	kafkaEndpoints     []string
-	kafkaTopics        []string
-	kafkaGroupID       string
-)
-
-func init() {
-	pflag.StringVar(
-		&address,
-		"address",
-		":4124",
-		"Address",
-	)
-	pflag.StringVar(
-		&elkiaFleetEndpoint,
-		"elkia-fleet-endpoint",
-		"localhost:8080",
-		"Elkia Fleet endpoint",
-	)
-	pflag.StringSliceVar(
-		&kafkaEndpoints,
-		"kafka-endpoints",
-		[]string{"localhost:9092"},
-		"Kafka endpoints",
-	)
-	pflag.StringSliceVar(
-		&kafkaTopics,
-		"kafka-topics",
-		[]string{"identity"},
-		"Kafka topics",
-	)
-	pflag.StringVar(
-		&kafkaGroupID,
-		"kafka-group-id",
-		"elkia-gateway",
-		"Kafka group ID",
-	)
-}
 
 func main() {
-	pflag.Parse()
-	conn, err := grpc.Dial(elkiaFleetEndpoint, grpc.WithInsecure())
+	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
+	if elkiaFleetEndpoint == "" {
+		elkiaFleetEndpoint = "localhost:8080"
+	}
+	conn, err := grpc.Dial(
+		elkiaFleetEndpoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -68,9 +35,24 @@ func main() {
 		panic(err)
 	}
 	defer kc.Close()
+	kafkaTopicsStr := os.Getenv("KAFKA_TOPICS")
+	var kafkaTopics []string
+	if kafkaTopicsStr != "" {
+		kafkaTopics = strings.Split(kafkaTopicsStr, ",")
+	} else {
+		kafkaTopics = []string{"identity"}
+	}
 	kc.SubscribeTopics(kafkaTopics, nil)
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4123"
+	}
 	s := nostale.NewServer(nostale.ServerConfig{
-		Addr: address,
+		Addr: fmt.Sprintf("%s:%s", host, port),
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
 			FleetClient:   fleet.NewFleetClient(conn),
 			KafkaProducer: kp,
@@ -83,14 +65,26 @@ func main() {
 }
 
 func NewKafkaProducer() (*kafka.Producer, error) {
+	kafkaEndpoints := os.Getenv("KAFKA_ENDPOINTS")
+	if kafkaEndpoints == "" {
+		kafkaEndpoints = "localhost:9092"
+	}
 	return kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": strings.Join(kafkaEndpoints, ","),
+		"bootstrap.servers": kafkaEndpoints,
 	})
 }
 
 func NewKafkaConsumer() (*kafka.Consumer, error) {
+	kafkaEndpoints := os.Getenv("KAFKA_ENDPOINTS")
+	if kafkaEndpoints == "" {
+		kafkaEndpoints = "localhost:9092"
+	}
+	kafkaGroupID := os.Getenv("KAFKA_GROUP_ID")
+	if kafkaGroupID == "" {
+		kafkaGroupID = "elkia-gateway"
+	}
 	return kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": strings.Join(kafkaEndpoints, ","),
+		"bootstrap.servers": kafkaEndpoints,
 		"group.id":          kafkaGroupID,
 		"auto.offset.reset": "earliest",
 	})
