@@ -10,11 +10,16 @@ import (
 	fleetserver "github.com/infinity-blackhole/elkia/internal/fleet"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
+	"github.com/sirupsen/logrus"
 	etcd "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	host := os.Getenv("HOST")
@@ -27,15 +32,15 @@ func main() {
 	}
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	sessionStore, err := NewSessionStore()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	orchestrator, err := NewOrchestrator()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	srv := grpc.NewServer()
 	fleet.RegisterFleetServer(
@@ -47,7 +52,7 @@ func main() {
 		}),
 	)
 	if err := srv.Serve(lis); err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 }
 

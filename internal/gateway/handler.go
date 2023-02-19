@@ -9,7 +9,7 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type HandlerConfig struct {
@@ -57,23 +57,25 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
-	log.Printf("start serving %v", c.rwc.RemoteAddr())
+	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	ack, err := c.handoff(ctx)
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
-	log.Printf("handoff success %v", ack)
+	logrus.Debugf("handoff success %v", ack)
 	if ack == nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_CANT_AUTHENTICATE,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
 	for {
@@ -82,35 +84,52 @@ func (c *Conn) serve(ctx context.Context) {
 			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 				Code: eventing.FailureCode_UNEXPECTED_ERROR,
 			}); err != nil {
-				panic(err)
+				logrus.Fatal(err)
 			}
+			logrus.Debug(err)
 			return
 		}
 		for _, r := range rs {
-			msg, err := r.ReadChannelMessage()
+			opcode, err := r.ReadOpcode()
 			if err != nil {
-				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-					Code: eventing.FailureCode_UNEXPECTED_ERROR,
-				}); err != nil {
-					panic(err)
-				}
-				return
-			}
-			if msg.Sequence != ack.Sequence+1 {
 				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 					Code: eventing.FailureCode_BAD_CASE,
 				}); err != nil {
-					panic(err)
+					logrus.Fatal(err)
 				}
+				logrus.Debug(err)
 				return
-			} else {
-				ack.Sequence = msg.Sequence
 			}
-			c.kafkaProducer.Produce(&kafka.Message{
-				TopicPartition: kafka.TopicPartition{
-					Partition: kafka.PartitionAny,
-				},
-			}, nil)
+			logrus.Debugf("read opcode: %s", opcode)
+			switch opcode {
+			default:
+				msg, err := r.ReadChannelMessage()
+				if err != nil {
+					if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+						Code: eventing.FailureCode_UNEXPECTED_ERROR,
+					}); err != nil {
+						logrus.Fatal(err)
+					}
+					logrus.Debug(err)
+					return
+				}
+				if msg.Sequence != ack.Sequence+1 {
+					if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+						Code: eventing.FailureCode_BAD_CASE,
+					}); err != nil {
+						logrus.Fatal(err)
+					}
+					logrus.Debug(err)
+					return
+				} else {
+					ack.Sequence = msg.Sequence
+				}
+				c.kafkaProducer.Produce(&kafka.Message{
+					TopicPartition: kafka.TopicPartition{
+						Partition: kafka.PartitionAny,
+					},
+				}, nil)
+			}
 		}
 	}
 }

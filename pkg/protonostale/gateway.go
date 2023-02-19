@@ -7,16 +7,19 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/monoalphabetic"
+	"github.com/sirupsen/logrus"
 )
 
 func NewGatewayMessageReader(r io.Reader) *GatewayMessageReader {
 	return &GatewayMessageReader{
-		r: NewFieldReader(r),
+		MessageReader{
+			r: NewFieldReader(r),
+		},
 	}
 }
 
 type GatewayMessageReader struct {
-	r *FieldReader
+	MessageReader
 }
 
 func (r *GatewayMessageReader) ReadSyncMessage() (*eventing.ChannelMessage, error) {
@@ -92,14 +95,14 @@ func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.PerformHandoffPa
 
 func NewGatewayWriter(w *bufio.Writer) *GatewayWriter {
 	return &GatewayWriter{
-		ClientWriter: ClientWriter{
+		Writer: Writer{
 			w: bufio.NewWriter(monoalphabetic.NewWriter(w)),
 		},
 	}
 }
 
 type GatewayWriter struct {
-	ClientWriter
+	Writer
 }
 
 func NewGatewayReader(r *bufio.Reader) *GatewayReader {
@@ -123,6 +126,7 @@ func (r *GatewayReader) ReadMessageSlice() ([]*GatewayMessageReader, error) {
 	}
 	readers := make([]*GatewayMessageReader, len(buff))
 	for i, b := range buff {
+		logrus.Debugf("gateway: read %v message", string(b))
 		readers[i] = NewGatewayMessageReader(bytes.NewReader(b))
 	}
 	return readers, nil

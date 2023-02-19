@@ -7,11 +7,16 @@ import (
 	"github.com/infinity-blackhole/elkia/internal/authserver"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
@@ -23,7 +28,7 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	host := os.Getenv("HOST")
 	if host == "" {
@@ -40,9 +45,9 @@ func main() {
 		}),
 	})
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	if err := srv.ListenAndServe(); err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"hash/fnv"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/sirupsen/logrus"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -76,7 +77,7 @@ func (s *FleetServer) CreateHandoff(
 	if err := gob.
 		NewEncoder(h).
 		Encode(session.Id); err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	key := h.Sum32()
 	if err := s.sessionStore.SetHandoffSession(

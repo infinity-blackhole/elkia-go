@@ -8,7 +8,7 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type HandlerConfig struct {
@@ -48,26 +48,49 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
-	log.Printf("start serving %v", c.rwc.RemoteAddr())
+	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	r, err := c.rc.ReadMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
+	opcode, err := r.ReadOpcode()
+	if err != nil {
+		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+			Code: eventing.FailureCode_BAD_CASE,
+		}); err != nil {
+			logrus.Fatal(err)
+		}
+		logrus.Debug(err)
+		return
+	}
+	logrus.Debugf("read opcode: %s", opcode)
+	switch opcode {
+	case protonostale.HandoffOpCode:
+		c.handleHandoff(ctx, r)
+	default:
+		c.handleFallback(opcode)
+	}
+}
+
+func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMessageReader) {
+	logrus.Debug("handle handoff")
 	m, err := r.ReadRequestHandoffMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_BAD_CASE,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
-	log.Printf("read request handoff message: %v", m)
+	logrus.Debugf("read request handoff message: %v", m)
 
 	handoff, err := c.fleetClient.
 		CreateHandoff(
@@ -81,11 +104,12 @@ func (c *Conn) serve(ctx context.Context) {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
-	log.Printf("create handoff: %v", handoff)
+	logrus.Debugf("create handoff: %v", handoff)
 
 	listClusters, err := c.fleetClient.
 		ListClusters(ctx, &fleet.ListClusterRequest{})
@@ -93,11 +117,12 @@ func (c *Conn) serve(ctx context.Context) {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
-	log.Printf("list clusters: %v", listClusters)
+	logrus.Debugf("list clusters: %v", listClusters)
 	gateways := []*eventing.GatewayMessage{}
 	for _, cluster := range listClusters.Clusters {
 		listGateways, err := c.fleetClient.
@@ -108,19 +133,21 @@ func (c *Conn) serve(ctx context.Context) {
 			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 				Code: eventing.FailureCode_UNEXPECTED_ERROR,
 			}); err != nil {
-				panic(err)
+				logrus.Fatal(err)
 			}
+			logrus.Debug(err)
 			return
 		}
-		log.Printf("list gateways: %v", listGateways)
+		logrus.Debugf("list gateways: %v", listGateways)
 		for _, g := range listGateways.Gateways {
 			host, port, err := net.SplitHostPort(g.Address)
 			if err != nil {
 				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 					Code: eventing.FailureCode_UNEXPECTED_ERROR,
 				}); err != nil {
-					panic(err)
+					logrus.Fatal(err)
 				}
+				logrus.Debug(err)
 				return
 			}
 			gateways = append(
@@ -146,8 +173,18 @@ func (c *Conn) serve(ctx context.Context) {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
 		}); err != nil {
-			panic(err)
+			logrus.Fatal(err)
 		}
+		logrus.Debug(err)
 		return
 	}
+}
+
+func (c *Conn) handleFallback(opcode string) {
+	if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
+		Code: eventing.FailureCode_BAD_CASE,
+	}); err != nil {
+		logrus.Fatal(err)
+	}
+	logrus.Debugf("unknown opcode: %s", opcode)
 }

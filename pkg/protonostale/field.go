@@ -39,6 +39,9 @@ func (r *FieldReader) ReadUint32() (uint32, error) {
 func (r *FieldReader) ReadField() ([]byte, error) {
 	b, err := r.r.ReadBytes(' ')
 	if err != nil {
+		if err == io.EOF {
+			return b, nil
+		}
 		return nil, err
 	}
 	return b[:len(b)-1], nil

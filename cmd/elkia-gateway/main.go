@@ -9,9 +9,14 @@ import (
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
@@ -23,16 +28,16 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	kp, err := NewKafkaProducer()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	defer kp.Close()
 	kc, err := NewKafkaConsumer()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 	defer kc.Close()
 	kafkaTopicsStr := os.Getenv("KAFKA_TOPICS")
@@ -60,7 +65,7 @@ func main() {
 		}),
 	})
 	if err := s.ListenAndServe(); err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 }
 

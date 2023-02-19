@@ -6,60 +6,106 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"regexp"
+	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	HandoffOpCode = "NoS0575"
 )
 
 func NewAuthServerMessageReader(r io.Reader) *AuthServerMessageReader {
 	return &AuthServerMessageReader{
-		r: NewFieldReader(r),
+		MessageReader: MessageReader{
+			r: NewFieldReader(r),
+		},
 	}
 }
 
 type AuthServerMessageReader struct {
-	r *FieldReader
+	MessageReader
 }
 
 func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandoffMessage, error) {
+	logrus.Debugf("reading request handoff message")
 	_, err := r.r.ReadString()
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("reading identifier")
 	identifier, err := r.r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	pwd, err := r.r.ReadString()
+	logrus.Debugf("reading password")
+	pwd, err := r.readPassword()
 	if err != nil {
 		return nil, err
 	}
-	_, err = r.r.ReadString()
+	logrus.Debugf("reading client version")
+	clientVersion, err := r.readVersion()
 	if err != nil {
+		logrus.Debug(err)
 		return nil, err
 	}
-	_, err = r.r.ReadString()
-	if err != nil {
-		return nil, err
-	}
-	clientVersion, err := r.r.ReadString()
-	if err != nil {
-		return nil, err
-	}
-	_, err = r.r.ReadString()
-	if err != nil {
-		return nil, err
-	}
-	clientChecksum, err := r.r.ReadString()
-	if err != nil {
-		return nil, err
-	}
+	logrus.Debugf("reading op code")
 	return &eventing.RequestHandoffMessage{
-		Identifier:     identifier,
-		Password:       pwd,
-		ClientVersion:  clientVersion,
-		ClientChecksum: clientChecksum,
+		Identifier:    identifier,
+		Password:      pwd,
+		ClientVersion: clientVersion,
 	}, nil
+}
+
+func (r *AuthServerMessageReader) readPassword() (string, error) {
+	pwd, err := r.r.ReadField()
+	if err != nil {
+		return "", err
+	}
+	if len(pwd)%2 == 0 {
+		pwd = pwd[3:]
+	} else {
+		pwd = pwd[4:]
+	}
+	chunks := bytesChunkEvery(pwd, 2)
+	pwd = make([]byte, 0, len(chunks))
+	for i := 0; i < len(chunks); i++ {
+		pwd = append(pwd, chunks[i][0])
+	}
+	chunks = bytesChunkEvery(pwd, 2)
+	var result []byte
+	for _, chunk := range chunks {
+		value, err := strconv.ParseInt(string(chunk), 16, 64)
+		if err != nil {
+			return "", err
+		}
+		result = append(result, byte(value))
+	}
+
+	return string(result), nil
+}
+
+var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)\n`)
+
+func (r *AuthServerMessageReader) readVersion() (string, error) {
+	version, err := r.r.ReadField()
+	if err != nil {
+		return "", err
+	}
+	logrus.Debugf("version: %v", version)
+	matches := versionRegex.FindAllSubmatch(version, 1)
+	logrus.Debugf("version matches: %v", matches)
+	if len(matches) != 1 || len(matches[0]) != 5 {
+		return "", fmt.Errorf("invalid version format: %s", string(version))
+	}
+	major := matches[0][1]
+	minor := matches[0][2]
+	patch := matches[0][3]
+	build := matches[0][4]
+	return fmt.Sprintf("%s.%s.%s+%s", major, minor, patch, build), nil
 }
 
 func NewAuthServerReader(r *bufio.Reader) *AuthServerReader {
@@ -77,19 +123,20 @@ func (r *AuthServerReader) ReadMessage() (*AuthServerMessageReader, error) {
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("authserver: read %s messages", string(buff))
 	return NewAuthServerMessageReader(bytes.NewReader(buff)), nil
 }
 
 func NewAuthServerWriter(w *bufio.Writer) *AuthServerWriter {
 	return &AuthServerWriter{
-		ClientWriter: ClientWriter{
+		Writer: Writer{
 			w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
 		},
 	}
 }
 
 type AuthServerWriter struct {
-	ClientWriter
+	Writer
 }
 
 func (w *AuthServerWriter) WriteProposeHandoffMessage(

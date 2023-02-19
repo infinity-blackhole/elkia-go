@@ -7,17 +7,19 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func NewClientWriter(w *bufio.Writer) *ClientWriter {
-	return &ClientWriter{
-		w: w,
-	}
+type MessageReader struct {
+	r *FieldReader
 }
 
-type ClientWriter struct {
+func (r *MessageReader) ReadOpcode() (string, error) {
+	return r.r.ReadString()
+}
+
+type Writer struct {
 	w *bufio.Writer
 }
 
-func (w *ClientWriter) WriteFailCodeMessage(msg *eventing.FailureMessage) error {
+func (w *Writer) WriteFailCodeMessage(msg *eventing.FailureMessage) error {
 	_, err := fmt.Fprintf(w.w, "failc %d", msg.Code)
 	if err != nil {
 		return err
@@ -26,7 +28,7 @@ func (w *ClientWriter) WriteFailCodeMessage(msg *eventing.FailureMessage) error 
 	return err
 }
 
-func (w *ClientWriter) WriteInfoMessage(msg *eventing.InfoMessage) error {
+func (w *Writer) WriteInfoMessage(msg *eventing.InfoMessage) error {
 	_, err := fmt.Fprintf(w.w, "info %s", msg.Content)
 	if err != nil {
 		return err
