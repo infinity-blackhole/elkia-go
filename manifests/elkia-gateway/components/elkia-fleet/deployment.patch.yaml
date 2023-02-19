@@ -10,4 +10,4 @@ spec:
         - name: elkia-gateway
           env:
             - name: ELKIA_FLEET_ENDPOINT
-              value: http://elkia-fleet:8080
+              value: elkia-fleet:8080
