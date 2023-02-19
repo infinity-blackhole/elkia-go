@@ -67,29 +67,34 @@ func NewOrchestrator() (*fleetserver.Orchestrator, error) {
 }
 
 func NewIdentityProvider() *fleetserver.IdentityProvider {
-	kratosEndpoint := os.Getenv("ELKIA_FLEET_KRATOS_ENDPOINT")
-	if kratosEndpoint == "" {
-		kratosEndpoint = "http://localhost:4433"
+	kratosUrlStr := os.Getenv("KRATOS_URIS")
+	var kratosUrls []string
+	if kratosUrlStr != "" {
+		kratosUrls = strings.Split(kratosUrlStr, ",")
+	} else {
+		kratosUrls = []string{"http://localhost:4433"}
+	}
+	var oryServerConfigs []ory.ServerConfiguration
+	for _, url := range kratosUrls {
+		oryServerConfigs = append(oryServerConfigs, ory.ServerConfiguration{URL: url})
 	}
 	return fleetserver.NewIdentityProvider(&fleetserver.IdentityProviderServiceConfig{
 		OryClient: ory.NewAPIClient(&ory.Configuration{
 			DefaultHeader: make(map[string]string),
 			UserAgent:     "OpenAPI-Generator/1.0.0/go",
 			Debug:         false,
-			Servers: ory.ServerConfigurations{
-				{URL: kratosEndpoint},
-			},
+			Servers:       oryServerConfigs,
 		}),
 	})
 }
 
 func NewEtcd() (*etcd.Client, error) {
-	etcdEndpointsStr := os.Getenv("ETCD_ENDPOINTS")
-	var etcdEndpoints []string
-	if etcdEndpointsStr == "" {
-		etcdEndpoints = []string{"http://localhost:2379"}
+	etcdUrisStr := os.Getenv("ETCD_URIS")
+	var etcdUris []string
+	if etcdUrisStr == "" {
+		etcdUris = []string{"http://localhost:2379"}
 	} else {
-		etcdEndpoints = strings.Split(etcdEndpointsStr, ",")
+		etcdUris = strings.Split(etcdUrisStr, ",")
 	}
 	etcdUsername := os.Getenv("ETCD_USERNAME")
 	if etcdUsername == "" {
@@ -100,7 +105,7 @@ func NewEtcd() (*etcd.Client, error) {
 		return nil, errors.New("etcd password is required")
 	}
 	return etcd.New(etcd.Config{
-		Endpoints: etcdEndpoints,
+		Endpoints: etcdUris,
 		Username:  etcdUsername,
 		Password:  etcdPassword,
 	})

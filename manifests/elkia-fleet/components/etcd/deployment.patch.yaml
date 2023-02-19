@@ -9,7 +9,7 @@ spec:
       containers:
         - name: elkia-fleet
           env:
-            - name: ETCD_ENDPOINTS
+            - name: ETCD_URISS
               value: http://etcd:2379
             - name: ETCD_USERNAME
               valueFrom:
