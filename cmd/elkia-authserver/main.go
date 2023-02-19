@@ -14,8 +14,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-const name = "github.com/infinity-blackhole/elkia/cmd/elkia-authserver"
-
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 }
@@ -25,6 +23,7 @@ func main() {
 	if elkiaFleetEndpoint == "" {
 		elkiaFleetEndpoint = "localhost:8080"
 	}
+	logrus.Debugf("authserver: connecting to fleet at %s", elkiaFleetEndpoint)
 	conn, err := grpc.Dial(
 		elkiaFleetEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -32,6 +31,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	logrus.Debugf("authserver: connected to fleet at %s", elkiaFleetEndpoint)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
@@ -49,6 +49,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	logrus.Debugf("authserver: listening on %s:%s", host, port)
 	if err := srv.ListenAndServe(); err != nil {
 		logrus.Fatal(err)
 	}

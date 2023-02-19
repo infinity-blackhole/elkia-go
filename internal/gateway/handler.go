@@ -39,6 +39,7 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	conn := h.newConn(c)
+	logrus.Debugf("gateway: new connection from %s", c.RemoteAddr().String())
 	go conn.serve(ctx)
 }
 
@@ -63,7 +64,6 @@ type Conn struct {
 func (c *Conn) serve(ctx context.Context) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
-	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	ack, err := c.handoff(ctx)
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -76,18 +76,16 @@ func (c *Conn) serve(ctx context.Context) {
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("handoff success %v", ack)
 	if ack == nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_CANT_AUTHENTICATE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
-		logrus.Debug(err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		logrus.Debugf("gateway: handoff failed: %v", ack)
 		return
 	}
+	logrus.Debugf("gateway: handoff acknowledged: %v", ack)
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
@@ -114,7 +112,7 @@ func (c *Conn) serve(ctx context.Context) {
 				span.SetStatus(codes.Error, err.Error())
 				return
 			}
-			logrus.Debugf("read opcode: %s", opcode)
+			logrus.Debugf("gateway: received opcode: %v", opcode)
 			switch opcode {
 			default:
 				msg, err := r.ReadChannelMessage()
@@ -129,15 +127,14 @@ func (c *Conn) serve(ctx context.Context) {
 					span.SetStatus(codes.Error, err.Error())
 					return
 				}
+				logrus.Debugf("gateway: received message: %v", msg)
 				if msg.Sequence != ack.Sequence+1 {
 					if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 						Code: eventing.FailureCode_BAD_CASE,
 					}); err != nil {
 						logrus.Fatal(err)
 					}
-					logrus.Debug(err)
-					span.RecordError(err)
-					span.SetStatus(codes.Error, err.Error())
+					logrus.Debugf("gateway: sequence mismatch: %v", msg)
 					return
 				} else {
 					ack.Sequence = msg.Sequence

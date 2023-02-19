@@ -73,6 +73,7 @@ func (s *FleetServer) CreateHandoff(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: created session: %v", session)
 	h := fnv.New32a()
 	if err := gob.
 		NewEncoder(h).
@@ -80,6 +81,7 @@ func (s *FleetServer) CreateHandoff(
 		logrus.Fatal(err)
 	}
 	key := h.Sum32()
+	logrus.Debugf("fleet: created key: %v", key)
 	if err := s.sessionStore.SetHandoffSession(
 		ctx,
 		key,
@@ -91,6 +93,7 @@ func (s *FleetServer) CreateHandoff(
 	); err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: created handoff: %v", key)
 	return &fleet.CreateHandoffResponse{
 		Key: key,
 	}, nil
@@ -104,16 +107,12 @@ func (s *FleetServer) PerformHandoff(
 	if err != nil {
 		return nil, err
 	}
-	if err := s.sessionStore.DeleteHandoffSession(ctx, in.Key); err != nil {
-		return nil, err
-	}
+	logrus.Debugf("fleet: got handoff: %v", handoff)
 	keySession, err := s.identityProvider.GetSession(ctx, handoff.Token)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.identityProvider.Logout(ctx, handoff.Token); err != nil {
-		return nil, err
-	}
+	logrus.Debugf("fleet: got session from key: %v", keySession)
 	credentialsSession, err := s.identityProvider.
 		PerformLoginFlowWithPasswordMethod(
 			ctx,
@@ -123,6 +122,7 @@ func (s *FleetServer) PerformHandoff(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: got session from credentials: %v", credentialsSession)
 	if keySession.IdentityId != credentialsSession.IdentityId {
 		return nil, errors.New("invalid credentials")
 	}

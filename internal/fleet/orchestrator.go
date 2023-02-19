@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -59,6 +60,7 @@ func (s *Orchestrator) ListClusters(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: found %d clusters", len(nss.Items))
 	clusters := make([]*fleet.Cluster, len(nss.Items))
 	for i, ns := range nss.Items {
 		clusters[i], err = s.getClusterFromNamespace(&ns)
@@ -99,6 +101,7 @@ func (s *Orchestrator) GetGateway(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: found gateway %s", svc.Name)
 	return s.getGatewayFromService(svc)
 }
 
@@ -121,6 +124,7 @@ func (s *Orchestrator) ListGateways(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: found %d gateways", len(svcs.Items))
 	for _, svc := range svcs.Items {
 		gateway, err := s.getGatewayFromService(&svc)
 		if err != nil {

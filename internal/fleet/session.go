@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	fleetv1alpha1 "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/sirupsen/logrus"
 	etcd "go.etcd.io/etcd/client/v3"
 	"google.golang.org/protobuf/proto"
 )
@@ -32,6 +33,7 @@ func (s *SessionStore) GetHandoffSession(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: got %d handoff sessions", len(res.Kvs))
 	if len(res.Kvs) == 1 {
 		return nil, errors.New("invalid key")
 	}
@@ -51,13 +53,21 @@ func (s *SessionStore) SetHandoffSession(
 	if err != nil {
 		return err
 	}
-	_, err = s.etcd.Put(ctx, fmt.Sprintf("handoff_sessions:%d", key), string(d))
-	return err
+	res, err := s.etcd.Put(ctx, fmt.Sprintf("handoff_sessions:%d", key), string(d))
+	if err != nil {
+		return err
+	}
+	logrus.Debugf("fleet: set handoff session: %v", res)
+	return nil
 }
 
 func (s *SessionStore) DeleteHandoffSession(ctx context.Context, key uint32) error {
-	_, err := s.etcd.Delete(ctx, fmt.Sprintf("handoff_sessions:%d", key))
-	return err
+	res, err := s.etcd.Delete(ctx, fmt.Sprintf("handoff_sessions:%d", key))
+	if err != nil {
+		return err
+	}
+	logrus.Debugf("fleet: deleted handoff session: %v", res)
+	return nil
 }
 
 type HandoffSession struct {

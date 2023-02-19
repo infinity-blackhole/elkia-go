@@ -5,6 +5,7 @@ import (
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
+	"github.com/sirupsen/logrus"
 )
 
 type IdentityProviderServiceConfig struct {
@@ -31,7 +32,8 @@ func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 	if err != nil {
 		return nil, err
 	}
-	ulf, _, err := i.oryClient.FrontendApi.
+	logrus.Debugf("fleet: created native login flow: %v", flow)
+	successLogin, _, err := i.oryClient.FrontendApi.
 		UpdateLoginFlow(ctx).
 		Flow(flow.Id).
 		UpdateLoginFlowBody(
@@ -47,10 +49,11 @@ func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: updated login flow: %v", successLogin)
 	return &fleet.Session{
-		Id:         ulf.Session.Id,
-		IdentityId: ulf.Session.Identity.Id,
-		Token:      *ulf.SessionToken,
+		Id:         successLogin.Session.Id,
+		IdentityId: successLogin.Session.Identity.Id,
+		Token:      *successLogin.SessionToken,
 	}, nil
 }
 
@@ -64,6 +67,7 @@ func (i *IdentityProvider) GetSession(
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("fleet: got session: %v", session)
 	return &fleet.Session{
 		Id:         session.Id,
 		IdentityId: session.Identity.Id,
@@ -72,10 +76,14 @@ func (i *IdentityProvider) GetSession(
 }
 
 func (i *IdentityProvider) Logout(ctx context.Context, sessionToken string) error {
-	_, err := i.oryClient.FrontendApi.PerformNativeLogout(ctx).
+	logout, err := i.oryClient.FrontendApi.PerformNativeLogout(ctx).
 		PerformNativeLogoutBody(
 			*ory.NewPerformNativeLogoutBody(sessionToken),
 		).
 		Execute()
-	return err
+	if err != nil {
+		return err
+	}
+	logrus.Debugf("fleet: logout: %v", logout)
+	return nil
 }

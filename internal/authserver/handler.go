@@ -32,6 +32,7 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	conn := h.newConn(c)
+	logrus.Debugf("authserver: new connection from %s", c.RemoteAddr().String())
 	go conn.serve(ctx)
 }
 
@@ -54,7 +55,6 @@ type Conn struct {
 func (c *Conn) serve(ctx context.Context) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
-	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	r, err := c.rc.ReadMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -79,9 +79,10 @@ func (c *Conn) serve(ctx context.Context) {
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("read opcode: %s", opcode)
+	logrus.Debugf("authserver: read opcode: %v", opcode)
 	switch opcode {
 	case protonostale.HandoffOpCode:
+		logrus.Debugf("authserver: handle handoff")
 		c.handleHandoff(ctx, r)
 	default:
 		c.handleFallback(opcode)
@@ -91,7 +92,6 @@ func (c *Conn) serve(ctx context.Context) {
 func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMessageReader) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	logrus.Debug("handle handoff")
 	m, err := r.ReadRequestHandoffMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
@@ -104,7 +104,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("read request handoff message: %v", m)
+	logrus.Debugf("authserver: read handoff: %v", m)
 
 	handoff, err := c.fleetClient.
 		CreateHandoff(
@@ -125,7 +125,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("create handoff: %v", handoff)
+	logrus.Debugf("authserver: create handoff: %v", handoff)
 
 	listClusters, err := c.fleetClient.
 		ListClusters(ctx, &fleet.ListClusterRequest{})
@@ -140,7 +140,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("list clusters: %v", listClusters)
+	logrus.Debugf("authserver: list clusters: %v", listClusters)
 	gateways := []*eventing.GatewayMessage{}
 	for _, cluster := range listClusters.Clusters {
 		listGateways, err := c.fleetClient.
@@ -158,7 +158,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 			span.SetStatus(codes.Error, err.Error())
 			return
 		}
-		logrus.Debugf("list gateways: %v", listGateways)
+		logrus.Debugf("authserver: list gateways: %v", listGateways)
 		for _, g := range listGateways.Gateways {
 			host, port, err := net.SplitHostPort(g.Address)
 			if err != nil {
