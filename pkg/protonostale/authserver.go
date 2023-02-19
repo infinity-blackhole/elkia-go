@@ -49,7 +49,6 @@ func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.Request
 	logrus.Debugf("reading client version")
 	clientVersion, err := r.readVersion()
 	if err != nil {
-		logrus.Debug(err)
 		return nil, err
 	}
 	logrus.Debugf("reading op code")

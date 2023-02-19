@@ -9,7 +9,11 @@ import (
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
+
+const name = "github.com/infinity-blackhole/elkia/internal/authserver"
 
 type HandlerConfig struct {
 	FleetClient fleet.FleetClient
@@ -48,6 +52,8 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
+	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
+	defer span.End()
 	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	r, err := c.rc.ReadMessage()
 	if err != nil {
@@ -57,6 +63,8 @@ func (c *Conn) serve(ctx context.Context) {
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	opcode, err := r.ReadOpcode()
@@ -67,6 +75,8 @@ func (c *Conn) serve(ctx context.Context) {
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	logrus.Debugf("read opcode: %s", opcode)
@@ -79,6 +89,8 @@ func (c *Conn) serve(ctx context.Context) {
 }
 
 func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMessageReader) {
+	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
+	defer span.End()
 	logrus.Debug("handle handoff")
 	m, err := r.ReadRequestHandoffMessage()
 	if err != nil {
@@ -88,6 +100,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	logrus.Debugf("read request handoff message: %v", m)
@@ -107,6 +121,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	logrus.Debugf("create handoff: %v", handoff)
@@ -120,6 +136,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	logrus.Debugf("list clusters: %v", listClusters)
@@ -136,6 +154,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 				logrus.Fatal(err)
 			}
 			logrus.Debug(err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return
 		}
 		logrus.Debugf("list gateways: %v", listGateways)
@@ -148,6 +168,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 					logrus.Fatal(err)
 				}
 				logrus.Debug(err)
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
 				return
 			}
 			gateways = append(
@@ -176,6 +198,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthServerMess
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 }

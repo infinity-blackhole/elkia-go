@@ -14,6 +14,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
+const name = "github.com/infinity-blackhole/elkia/cmd/elkia-authserver"
+
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 }

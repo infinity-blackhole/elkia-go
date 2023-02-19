@@ -10,7 +10,11 @@ import (
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
+
+var name = "github.com/infinity-blackhole/elkia/internal/gateway"
 
 type HandlerConfig struct {
 	FleetClient   fleet.FleetClient
@@ -57,6 +61,8 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
+	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
+	defer span.End()
 	logrus.Debugf("start serving %v", c.rwc.RemoteAddr())
 	ack, err := c.handoff(ctx)
 	if err != nil {
@@ -66,6 +72,8 @@ func (c *Conn) serve(ctx context.Context) {
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	logrus.Debugf("handoff success %v", ack)
@@ -76,6 +84,8 @@ func (c *Conn) serve(ctx context.Context) {
 			logrus.Fatal(err)
 		}
 		logrus.Debug(err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return
 	}
 	for {
@@ -87,6 +97,8 @@ func (c *Conn) serve(ctx context.Context) {
 				logrus.Fatal(err)
 			}
 			logrus.Debug(err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return
 		}
 		for _, r := range rs {
@@ -98,6 +110,8 @@ func (c *Conn) serve(ctx context.Context) {
 					logrus.Fatal(err)
 				}
 				logrus.Debug(err)
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
 				return
 			}
 			logrus.Debugf("read opcode: %s", opcode)
@@ -111,6 +125,8 @@ func (c *Conn) serve(ctx context.Context) {
 						logrus.Fatal(err)
 					}
 					logrus.Debug(err)
+					span.RecordError(err)
+					span.SetStatus(codes.Error, err.Error())
 					return
 				}
 				if msg.Sequence != ack.Sequence+1 {
@@ -120,6 +136,8 @@ func (c *Conn) serve(ctx context.Context) {
 						logrus.Fatal(err)
 					}
 					logrus.Debug(err)
+					span.RecordError(err)
+					span.SetStatus(codes.Error, err.Error())
 					return
 				} else {
 					ack.Sequence = msg.Sequence
