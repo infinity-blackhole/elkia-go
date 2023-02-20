@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: elkia-authserver
   namespace: elkia
+  labels:
+    app: elkia-authserver
 spec:
   replicas: 1
   selector:

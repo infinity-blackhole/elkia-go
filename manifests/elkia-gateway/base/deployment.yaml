@@ -4,6 +4,7 @@ metadata:
   name: elkia-gateway
   namespace: elkia
   labels:
+    app: elkia-gateway
     fleet.elkia.io/gateway: "true"
     fleet.elkia.io/channel: "1"
 spec:

@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: elkia-fleet
   namespace: elkia
+  labels:
+    app: elkia-fleet
 spec:
   replicas: 1
   selector:
