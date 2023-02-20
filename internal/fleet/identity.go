@@ -22,7 +22,45 @@ type IdentityProvider struct {
 	oryClient *ory.APIClient
 }
 
-func (i *IdentityProvider) PerformLoginFlowWithPasswordMethod(
+func (i *IdentityProvider) PerformGatewayLoginFlowWithPasswordMethod(
+	ctx context.Context,
+	identifier, password, token string,
+) (*fleet.Session, error) {
+	flow, _, err := i.oryClient.FrontendApi.
+		CreateNativeLoginFlow(ctx).
+		XSessionToken(token).
+		Refresh(true).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("fleet: created native login flow: %v", flow)
+	successLogin, _, err := i.oryClient.FrontendApi.
+		UpdateLoginFlow(ctx).
+		Flow(flow.Id).
+		XSessionToken(token).
+		UpdateLoginFlowBody(
+			ory.UpdateLoginFlowWithPasswordMethodAsUpdateLoginFlowBody(
+				ory.NewUpdateLoginFlowWithPasswordMethod(
+					identifier,
+					"password",
+					password,
+				),
+			),
+		).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("fleet: updated login flow: %v", successLogin)
+	return &fleet.Session{
+		Id:         successLogin.Session.Id,
+		IdentityId: successLogin.Session.Identity.Id,
+		Token:      *successLogin.SessionToken,
+	}, nil
+}
+
+func (i *IdentityProvider) PerformAuthServerLoginFlowWithPasswordMethod(
 	ctx context.Context,
 	identifier, password string,
 ) (*fleet.Session, error) {

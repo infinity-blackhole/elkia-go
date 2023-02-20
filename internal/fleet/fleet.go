@@ -3,7 +3,6 @@ package fleet
 import (
 	"context"
 	"encoding/gob"
-	"errors"
 	"hash/fnv"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
@@ -65,7 +64,7 @@ func (s *FleetServer) CreateHandoff(
 	in *fleet.CreateHandoffRequest,
 ) (*fleet.CreateHandoffResponse, error) {
 	session, err := s.identityProvider.
-		PerformLoginFlowWithPasswordMethod(
+		PerformAuthServerLoginFlowWithPasswordMethod(
 			ctx,
 			in.Identifier,
 			in.Token,
@@ -114,17 +113,15 @@ func (s *FleetServer) PerformHandoff(
 	}
 	logrus.Debugf("fleet: got session from key: %v", keySession)
 	credentialsSession, err := s.identityProvider.
-		PerformLoginFlowWithPasswordMethod(
+		PerformGatewayLoginFlowWithPasswordMethod(
 			ctx,
 			handoff.Identifier,
 			in.Token,
+			handoff.Token,
 		)
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got session from credentials: %v", credentialsSession)
-	if keySession.IdentityId != credentialsSession.IdentityId {
-		return nil, errors.New("invalid credentials")
-	}
 	return &emptypb.Empty{}, nil
 }
