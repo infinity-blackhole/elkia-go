@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos-selfservice-ui-node
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: kratos-selfservice-ui-node
+          env:
+            - name: KRATOS_PUBLIC_URL
+              value: http://kratos-public
+            - name: KRATOS_ADMIN_URL
+              value: http://kratos-admin

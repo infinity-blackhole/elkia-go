@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos-selfservice-ui-node
+  namespace: elkia
+  labels:
+    app: kratos-selfservice-ui-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kratos-selfservice-ui-node
+  template:
+    metadata:
+      labels:
+        app: kratos-selfservice-ui-node
+    spec:
+      containers:
+        - name: kratos-selfservice-ui-node
+          image: oryd/kratos-selfservice-ui-node:v0.10.1
+          env:
+            - name: PROJECT_NAME
+              value: Elkia
+            - name: SECURITY_MODE
+              value: ""
+          ports:
+            - name: http
+              containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /health/alive
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
