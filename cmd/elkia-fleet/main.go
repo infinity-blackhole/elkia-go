@@ -35,17 +35,17 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleet server: listening on %s:%s", host, port)
+	logrus.Debugf("fleetserver: listening on %s:%s", host, port)
 	sessionStore, err := NewSessionStore()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleet server: connected to etcd")
+	logrus.Debugf("fleetserver: connected to etcd")
 	orchestrator, err := NewOrchestrator()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleet server: connected to kubernetes")
+	logrus.Debugf("fleetserver: connected to kubernetes")
 	srv := grpc.NewServer()
 	fleet.RegisterFleetServer(
 		srv,
@@ -55,7 +55,7 @@ func main() {
 			SessionStore:     sessionStore,
 		}),
 	)
-	logrus.Debugf("fleet server: serving grpc")
+	logrus.Debugf("fleetserver: serving grpc")
 	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}
