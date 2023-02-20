@@ -112,7 +112,7 @@ func (s *FleetServer) PerformHandoff(
 		return nil, err
 	}
 	logrus.Debugf("fleet: got session from key: %v", keySession)
-	credentialsSession, err := s.identityProvider.
+	refreshSession, err := s.identityProvider.
 		PerformGatewayLoginFlowWithPasswordMethod(
 			ctx,
 			handoff.Identifier,
@@ -122,6 +122,17 @@ func (s *FleetServer) PerformHandoff(
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: got session from credentials: %v", credentialsSession)
+	if err := s.sessionStore.SetHandoffSession(
+		ctx,
+		in.Key,
+		&fleet.Handoff{
+			Id:         refreshSession.Id,
+			Identifier: handoff.Identifier,
+			Token:      refreshSession.Token,
+		},
+	); err != nil {
+		return nil, err
+	}
+	logrus.Debugf("fleet: updated handoff: %v", in.Key)
 	return &emptypb.Empty{}, nil
 }
