@@ -28,18 +28,6 @@ manifests:
   kustomize:
     paths:
       - manifests/elkia/overlays/default
----
-apiVersion: skaffold/v4beta2
-kind: Config
-metadata:
-  name: elkia-base
-manifests:
-  kustomize:
-    paths:
-      - manifests/kratos/overlays/default
-      - manifests/kratos-selfservice-ui-node/overlays/default
-      - manifests/etcd/overlays/default
-      - manifests/kafka/overlays/default
     buildArgs:
       - --enable-helm
 deploy:
