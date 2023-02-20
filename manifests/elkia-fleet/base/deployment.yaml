@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: elkia-fleet
-          image: gcr.io/infinity-blackhole/elkia-fleet
+          image: ghcr.io/infinity-blackhole/elkia-fleet
           env:
             - name: HOST
               value: "0.0.0.0"

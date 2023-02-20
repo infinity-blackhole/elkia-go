@@ -4,19 +4,19 @@ metadata:
   name: elkia
 build:
   artifacts:
-    - image: gcr.io/infinity-blackhole/elkia-authserver
+    - image: ghcr.io/infinity-blackhole/elkia-authserver
       context: .
       runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-authserver/Dockerfile
-    - image: gcr.io/infinity-blackhole/elkia-fleet
+    - image: ghcr.io/infinity-blackhole/elkia-fleet
       context: .
       runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-fleet/Dockerfile
-    - image: gcr.io/infinity-blackhole/elkia-gateway
+    - image: ghcr.io/infinity-blackhole/elkia-gateway
       context: .
       runtimeType: go
       docker:

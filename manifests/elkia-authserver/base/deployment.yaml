@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: elkia-authserver
-          image: gcr.io/infinity-blackhole/elkia-authserver
+          image: ghcr.io/infinity-blackhole/elkia-authserver
           env:
             - name: HOST
               value: "0.0.0.0"
