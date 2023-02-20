@@ -12,7 +12,7 @@ import (
 )
 
 type SessionStoreConfig struct {
-	Etcd *etcd.Client
+	Etcd etcd.KV
 }
 
 func NewSessionStoreClient(config SessionStoreConfig) *SessionStore {
@@ -22,7 +22,7 @@ func NewSessionStoreClient(config SessionStoreConfig) *SessionStore {
 }
 
 type SessionStore struct {
-	etcd *etcd.Client
+	etcd etcd.KV
 }
 
 func (s *SessionStore) GetHandoffSession(

@@ -118,12 +118,12 @@ func NewEtcd() (*etcd.Client, error) {
 }
 
 func NewSessionStore() (*fleetserver.SessionStore, error) {
-	etcd, err := NewEtcd()
+	cli, err := NewEtcd()
 	if err != nil {
 		return nil, err
 	}
 	return fleetserver.NewSessionStoreClient(fleetserver.SessionStoreConfig{
-		Etcd: etcd,
+		Etcd: etcd.NewKV(cli),
 	}), nil
 }
 
