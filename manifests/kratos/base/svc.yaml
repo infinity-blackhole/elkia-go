@@ -32,7 +32,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kratos-courier
+  name: kratos-courier-headless
   namespace: elkia
   labels:
     app.kubernetes.io/name: kratos-courier
