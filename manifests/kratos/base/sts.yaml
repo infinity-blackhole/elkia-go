@@ -6,13 +6,15 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: kratos-courier
+      app.kubernetes.io/name: kratos-courier
+      app.kubernetes.io/instance: kratos-courier
   serviceName: kratos-courier
   replicas: 1
   template:
     metadata:
       labels:
-        app: kratos-courier
+        app.kubernetes.io/name: kratos-courier
+        app.kubernetes.io/instance: kratos-courier
     spec:
       containers:
         - name: kratos-courier

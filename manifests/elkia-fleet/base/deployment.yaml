@@ -4,16 +4,19 @@ metadata:
   name: elkia-fleet
   namespace: elkia
   labels:
-    app: elkia-fleet
+    app.kubernetes.io/name: elkia-fleet
+    app.kubernetes.io/instance: elkia-fleet
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: elkia-fleet
+      app.kubernetes.io/name: elkia-fleet
+      app.kubernetes.io/instance: elkia-fleet
   template:
     metadata:
       labels:
-        app: elkia-fleet
+        app.kubernetes.io/name: elkia-fleet
+        app.kubernetes.io/instance: elkia-fleet
     spec:
       containers:
         - name: elkia-fleet

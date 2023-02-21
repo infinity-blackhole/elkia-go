@@ -9,4 +9,5 @@ spec:
       port: 4124
       targetPort: elkia
   selector:
-    app: elkia-gateway
+    app.kubernetes.io/name: elkia-gateway
+    app.kubernetes.io/instance: elkia-gateway

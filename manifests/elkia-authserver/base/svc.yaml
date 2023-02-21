@@ -9,4 +9,5 @@ spec:
       port: 4123
       targetPort: elkia
   selector:
-    app: elkia-authserver
+    app.kubernetes.io/name: elkia-authserver
+    app.kubernetes.io/instance: elkia-authserver

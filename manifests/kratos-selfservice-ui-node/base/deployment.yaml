@@ -4,16 +4,19 @@ metadata:
   name: kratos-selfservice-ui-node
   namespace: elkia
   labels:
-    app: kratos-selfservice-ui-node
+    app.kubernetes.io/name: kratos-selfservice-ui-node
+    app.kubernetes.io/instance: kratos-selfservice-ui-node
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kratos-selfservice-ui-node
+      app.kubernetes.io/name: kratos-selfservice-ui-node
+      app.kubernetes.io/instance: kratos-selfservice-ui-node
   template:
     metadata:
       labels:
-        app: kratos-selfservice-ui-node
+        app.kubernetes.io/name: kratos-selfservice-ui-node
+        app.kubernetes.io/instance: kratos-selfservice-ui-node
     spec:
       containers:
         - name: kratos-selfservice-ui-node

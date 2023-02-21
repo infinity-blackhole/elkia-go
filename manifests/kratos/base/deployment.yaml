@@ -3,15 +3,20 @@ kind: Deployment
 metadata:
   name: kratos
   namespace: elkia
+  labels:
+    app.kubernetes.io/name: kratos
+    app.kubernetes.io/instance: kratos
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kratos
+      app.kubernetes.io/name: kratos
+      app.kubernetes.io/instance: kratos
   template:
     metadata:
       labels:
-        app: kratos
+        app.kubernetes.io/name: kratos
+        app.kubernetes.io/instance: kratos
     spec:
       volumes:
         - name: kratos-config

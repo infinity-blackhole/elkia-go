@@ -4,7 +4,8 @@ metadata:
   name: elkia-gateway
   namespace: elkia
   labels:
-    app: elkia-gateway
+    app.kubernetes.io/name: elkia-gateway
+    app.kubernetes.io/instance: elkia-gateway
     fleet.elkia.io/managed: "true"
     fleet.elkia.io/channel-id: "1"
     fleet.elkia.io/channel-population: "0"
@@ -13,11 +14,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: elkia-gateway
+      app.kubernetes.io/name: elkia-gateway
+      app.kubernetes.io/instance: elkia-gateway
   template:
     metadata:
       labels:
-        app: elkia-gateway
+        app.kubernetes.io/name: elkia-gateway
+        app.kubernetes.io/instance: elkia-gateway
     spec:
       containers:
         - name: elkia-gateway

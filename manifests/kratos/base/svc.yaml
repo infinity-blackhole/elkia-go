@@ -4,14 +4,16 @@ metadata:
   name: kratos-admin
   namespace: elkia
   labels:
-    app: kratos
+    app.kubernetes.io/name: kratos
+    app.kubernetes.io/instance: kratos
 spec:
   ports:
     - port: 80
       targetPort: http-admin
       name: http
   selector:
-    app: kratos
+    app.kubernetes.io/name: kratos
+    app.kubernetes.io/instance: kratos
 ---
 apiVersion: v1
 kind: Service
@@ -24,15 +26,17 @@ spec:
       targetPort: http-public
       name: http
   selector:
-    app: kratos
+    app.kubernetes.io/name: kratos
+    app.kubernetes.io/instance: kratos
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: kratos-courier
-  namespace: default
+  namespace: elkia
   labels:
-    app: kratos-courier
+    app.kubernetes.io/name: kratos-courier
+    app.kubernetes.io/instance: kratos-courier
 spec:
   clusterIP: None
   ports:
@@ -40,4 +44,5 @@ spec:
       targetPort: http-public
       name: http
   selector:
-    app: kratos-courier
+    app.kubernetes.io/name: kratos-courier
+    app.kubernetes.io/instance: kratos-courier

@@ -3,11 +3,13 @@ kind: Service
 metadata:
   name: kratos-selfservice-ui-node
   labels:
-    app: kratos-selfservice-ui-node
+    app.kubernetes.io/name: kratos-selfservice-ui-node
+    app.kubernetes.io/instance: kratos-selfservice-ui-node
 spec:
   ports:
     - port: 80
       targetPort: http
       name: http
   selector:
-    app: kratos-selfservice-ui-node
+    app.kubernetes.io/name: kratos-selfservice-ui-node
+    app.kubernetes.io/instance: kratos-selfservice-ui-node

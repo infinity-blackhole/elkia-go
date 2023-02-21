@@ -4,16 +4,19 @@ metadata:
   name: elkia-authserver
   namespace: elkia
   labels:
-    app: elkia-authserver
+    app.kubernetes.io/name: elkia-authserver
+    app.kubernetes.io/instance: elkia-authserver
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: elkia-authserver
+      app.kubernetes.io/name: elkia-authserver
+      app.kubernetes.io/instance: elkia-authserver
   template:
     metadata:
       labels:
-        app: elkia-authserver
+        app.kubernetes.io/name: elkia-authserver
+        app.kubernetes.io/instance: elkia-authserver
     spec:
       containers:
         - name: elkia-authserver
