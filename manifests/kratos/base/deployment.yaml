@@ -38,12 +38,6 @@ spec:
             - name: kratos-config
               mountPath: /etc/kratos
               readOnly: true
-          env:
-            - name: DSN
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: dsn
       containers:
         - name: kratos
           image: oryd/kratos:v0.11.1
@@ -58,35 +52,6 @@ spec:
             - name: kratos-config
               mountPath: /etc/kratos
               readOnly: true
-          env:
-            - name: DSN
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: dsn
-            - name: SECRETS_DEFAULT
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: secretsDefault
-                  optional: true
-            - name: SECRETS_COOKIE
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: secretsCookie
-                  optional: true
-            - name: SECRETS_CIPHER
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: secretsCipher
-                  optional: true
-            - name: COURIER_SMTP_CONNECTION_URI
-              valueFrom:
-                secretKeyRef:
-                  name: kratos
-                  key: smtpConnectionURI
           ports:
             - name: http-admin
               containerPort: 4434

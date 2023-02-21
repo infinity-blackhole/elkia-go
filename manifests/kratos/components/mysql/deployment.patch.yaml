@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos
+  namespace: elkia
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: kratos-automigrate
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: mysql-root-password
+            - name: DSN
+              value: mysql://root:$(MYSQL_ROOT_PASSWORD)@tcp(mysql:3306)/kratos?max_conns=20&max_idle_conns=4
+      containers:
+        - name: kratos
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: mysql-root-password
+            - name: DSN
+              value: mysql://root:$(MYSQL_ROOT_PASSWORD)@tcp(mysql:3306)/kratos?max_conns=20&max_idle_conns=4

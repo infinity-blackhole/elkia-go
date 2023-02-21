@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: kratos
+          env:
+            - name: SECRETS_DEFAULT
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsDefault
+                  optional: true
+            - name: SECRETS_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsCookie
+                  optional: true
+            - name: SECRETS_CIPHER
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsCipher
+                  optional: true
+            - name: COURIER_SMTP_CONNECTION_URI
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: smtpConnectionURI

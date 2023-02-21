@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kratos-courier
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: kratos-courier
+          env:
+            - name: DSN
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: dsn
+            - name: SECRETS_DEFAULT
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsDefault
+                  optional: true
+            - name: SECRETS_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsCookie
+                  optional: true
+            - name: SECRETS_CIPHER
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: secretsCipher
+                  optional: true
+            - name: COURIER_SMTP_CONNECTION_URI
+              valueFrom:
+                secretKeyRef:
+                  name: kratos
+                  key: smtpConnectionURI
