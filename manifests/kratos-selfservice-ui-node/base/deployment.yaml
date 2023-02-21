@@ -33,10 +33,6 @@ spec:
             httpGet:
               path: /health/alive
               port: http
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: http
           resources:
             requests:
               cpu: 10m
