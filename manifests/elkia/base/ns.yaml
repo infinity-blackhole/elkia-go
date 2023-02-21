@@ -4,5 +4,5 @@ metadata:
   name: elkia
   labels:
     fleet.elkia.io/cluster: "true"
-    fleet.elkia.io/cluster-world: "1"
-    fleet.elkia.io/cluster-tenant: alpha
+    fleet.elkia.io/world: "1"
+    fleet.elkia.io/instance: alpha

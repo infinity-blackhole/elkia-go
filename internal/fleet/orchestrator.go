@@ -77,7 +77,7 @@ func (s *Orchestrator) getClusterFromNamespace(
 	ns *corev1.Namespace,
 ) (*fleet.Cluster, error) {
 	idUint, err := strconv.ParseUint(
-		ns.Labels["fleet.elkia.io/cluster-world"],
+		ns.Labels["fleet.elkia.io/world"],
 		10, 32,
 	)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Orchestrator) getClusterFromNamespace(
 	return &fleet.Cluster{
 		Id:      ns.Name,
 		WorldId: uint32(idUint),
-		Name:    ns.Labels["fleet.elkia.io/cluster-tenant"],
+		Name:    ns.Labels["fleet.elkia.io/instance"],
 	}, nil
 }
 
