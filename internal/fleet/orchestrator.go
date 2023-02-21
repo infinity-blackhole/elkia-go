@@ -53,7 +53,7 @@ func (s *Orchestrator) ListClusters(
 			ctx,
 			metav1.ListOptions{
 				LabelSelector: labels.SelectorFromSet(map[string]string{
-					"fleet.elkia.io/cluster": "true",
+					"fleet.elkia.io/managed": "true",
 				}).String(),
 			},
 		)
@@ -77,7 +77,7 @@ func (s *Orchestrator) getClusterFromNamespace(
 	ns *corev1.Namespace,
 ) (*fleet.Cluster, error) {
 	idUint, err := strconv.ParseUint(
-		ns.Labels["fleet.elkia.io/world"],
+		ns.Labels["fleet.elkia.io/world-id"],
 		10, 32,
 	)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Orchestrator) getClusterFromNamespace(
 	return &fleet.Cluster{
 		Id:      ns.Name,
 		WorldId: uint32(idUint),
-		Name:    ns.Labels["fleet.elkia.io/instance"],
+		Name:    ns.Labels["fleet.elkia.io/world-name"],
 	}, nil
 }
 
@@ -115,7 +115,7 @@ func (s *Orchestrator) ListGateways(
 		Services(in.Id).
 		List(ctx, metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(map[string]string{
-				"fleet.elkia.io/gateway": "true",
+				"fleet.elkia.io/managed": "true",
 			}).String(),
 			FieldSelector: fields.SelectorFromSet(map[string]string{
 				"spec.type": "LoadBalancer",
@@ -145,21 +145,21 @@ func (s *Orchestrator) getGatewayFromService(
 		return nil, err
 	}
 	idUint, err := strconv.ParseUint(
-		svc.Labels["fleet.elkia.io/gateway-channel"],
+		svc.Labels["fleet.elkia.io/channel-id"],
 		10, 32,
 	)
 	if err != nil {
 		return nil, err
 	}
 	populationUint, err := strconv.ParseUint(
-		svc.Labels["fleet.elkia.io/gateway-population"],
+		svc.Labels["fleet.elkia.io/channel-population"],
 		10, 32,
 	)
 	if err != nil {
 		return nil, err
 	}
 	capacityUint, err := strconv.ParseUint(
-		svc.Labels["fleet.elkia.io/gateway-capacity"],
+		svc.Labels["fleet.elkia.io/channel-capacity"],
 		10, 32,
 	)
 	if err != nil {
