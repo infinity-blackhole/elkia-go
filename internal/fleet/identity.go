@@ -60,7 +60,7 @@ func (i *IdentityProvider) PerformGatewayLoginFlowWithPasswordMethod(
 	}, nil
 }
 
-func (i *IdentityProvider) PerformAuthServerLoginFlowWithPasswordMethod(
+func (i *IdentityProvider) PerformAuthLoginFlowWithPasswordMethod(
 	ctx context.Context,
 	identifier, password string,
 ) (*fleet.Session, error) {

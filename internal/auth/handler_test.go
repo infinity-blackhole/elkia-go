@@ -1,4 +1,4 @@
-package authserver
+package auth
 
 import (
 	"bufio"

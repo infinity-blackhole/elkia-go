@@ -18,19 +18,19 @@ var (
 	HandoffOpCode = "NoS0575"
 )
 
-func NewAuthServerMessageReader(r io.Reader) *AuthServerMessageReader {
-	return &AuthServerMessageReader{
+func NewAuthMessageReader(r io.Reader) *AuthMessageReader {
+	return &AuthMessageReader{
 		MessageReader: MessageReader{
 			r: NewFieldReader(r),
 		},
 	}
 }
 
-type AuthServerMessageReader struct {
+type AuthMessageReader struct {
 	MessageReader
 }
 
-func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandoffMessage, error) {
+func (r *AuthMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandoffMessage, error) {
 	logrus.Debugf("reading request handoff message")
 	_, err := r.r.ReadString()
 	if err != nil {
@@ -59,7 +59,7 @@ func (r *AuthServerMessageReader) ReadRequestHandoffMessage() (*eventing.Request
 	}, nil
 }
 
-func (r *AuthServerMessageReader) readPassword() (string, error) {
+func (r *AuthMessageReader) readPassword() (string, error) {
 	pwd, err := r.r.ReadField()
 	if err != nil {
 		return "", err
@@ -89,7 +89,7 @@ func (r *AuthServerMessageReader) readPassword() (string, error) {
 
 var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)\n`)
 
-func (r *AuthServerMessageReader) readVersion() (string, error) {
+func (r *AuthMessageReader) readVersion() (string, error) {
 	version, err := r.r.ReadField()
 	if err != nil {
 		return "", err
@@ -107,38 +107,38 @@ func (r *AuthServerMessageReader) readVersion() (string, error) {
 	return fmt.Sprintf("%s.%s.%s+%s", major, minor, patch, build), nil
 }
 
-func NewAuthServerReader(r *bufio.Reader) *AuthServerReader {
-	return &AuthServerReader{
+func NewAuthReader(r *bufio.Reader) *AuthReader {
+	return &AuthReader{
 		r: simplesubtitution.NewReader(r),
 	}
 }
 
-type AuthServerReader struct {
+type AuthReader struct {
 	r *simplesubtitution.Reader
 }
 
-func (r *AuthServerReader) ReadMessage() (*AuthServerMessageReader, error) {
+func (r *AuthReader) ReadMessage() (*AuthMessageReader, error) {
 	buff, err := r.r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("authserver: read %s messages", string(buff))
-	return NewAuthServerMessageReader(bytes.NewReader(buff)), nil
+	logrus.Debugf("auth: read %s messages", string(buff))
+	return NewAuthMessageReader(bytes.NewReader(buff)), nil
 }
 
-func NewAuthServerWriter(w *bufio.Writer) *AuthServerWriter {
-	return &AuthServerWriter{
+func NewAuthWriter(w *bufio.Writer) *AuthWriter {
+	return &AuthWriter{
 		Writer: Writer{
 			w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
 		},
 	}
 }
 
-type AuthServerWriter struct {
+type AuthWriter struct {
 	Writer
 }
 
-func (w *AuthServerWriter) WriteProposeHandoffMessage(
+func (w *AuthWriter) WriteProposeHandoffMessage(
 	msg *eventing.ProposeHandoffMessage,
 ) error {
 	_, err := fmt.Fprintf(w.w, "%s %d", "NsTeST", msg.Key)
@@ -159,7 +159,7 @@ func (w *AuthServerWriter) WriteProposeHandoffMessage(
 	return w.w.Flush()
 }
 
-func (w *AuthServerWriter) WriteGatewayMessage(
+func (w *AuthWriter) WriteGatewayMessage(
 	msg *eventing.GatewayMessage,
 ) error {
 	_, err := fmt.Fprintf(

@@ -25,17 +25,17 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build \
     -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
-    -o /usr/local/bin/elkia-authserver \
-    ./cmd/elkia-authserver
+    -o /usr/local/bin/elkia-auth \
+    ./cmd/elkia-auth
 
-CMD ["/usr/local/bin/elkia-authserver"]
+CMD ["/usr/local/bin/elkia-auth"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Copy binary
-COPY --from=build /usr/local/bin/elkia-authserver /usr/local/bin/elkia-authserver
+COPY --from=build /usr/local/bin/elkia-auth /usr/local/bin/elkia-auth
 
-# NosTale auth server
+# NosTale Auth
 EXPOSE 4123
 
-ENTRYPOINT ["elkia-authserver"]
+ENTRYPOINT ["elkia-auth"]

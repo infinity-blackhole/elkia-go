@@ -64,7 +64,7 @@ func (s *FleetServer) CreateHandoff(
 	in *fleet.CreateHandoffRequest,
 ) (*fleet.CreateHandoffResponse, error) {
 	session, err := s.identityProvider.
-		PerformAuthServerLoginFlowWithPasswordMethod(
+		PerformAuthLoginFlowWithPasswordMethod(
 			ctx,
 			in.Identifier,
 			in.Token,

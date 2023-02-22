@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elkia-authserver
+  name: elkia-auth
   namespace: elkia
   labels:
-    app.kubernetes.io/name: elkia-authserver
-    app.kubernetes.io/instance: elkia-authserver
+    app.kubernetes.io/name: elkia-auth
+    app.kubernetes.io/instance: elkia-auth
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: elkia-authserver
-      app.kubernetes.io/instance: elkia-authserver
+      app.kubernetes.io/name: elkia-auth
+      app.kubernetes.io/instance: elkia-auth
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: elkia-authserver
-        app.kubernetes.io/instance: elkia-authserver
+        app.kubernetes.io/name: elkia-auth
+        app.kubernetes.io/instance: elkia-auth
     spec:
       containers:
-        - name: elkia-authserver
-          image: ghcr.io/infinity-blackhole/elkia-authserver
+        - name: elkia-auth
+          image: ghcr.io/infinity-blackhole/elkia-auth
           env:
             - name: HOST
               value: "0.0.0.0"

@@ -5,20 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Elkia Auth Server",
+      "name": "Launch Elkia Auth",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/elkia-authserver"
+      "program": "${workspaceFolder}/cmd/elkia-auth"
     },
     {
-      "name": "Attach Elkia Auth Server",
+      "name": "Attach Elkia Auth",
       "type": "go",
       "request": "attach",
       "mode": "remote",
       "host": "localhost",
       "port": 56268,
-      "cwd": "${workspaceFolder}/cmd/elkia-authserver"
+      "cwd": "${workspaceFolder}/cmd/elkia-auth"
     },
     {
       "name": "Launch Elkia Fleet",

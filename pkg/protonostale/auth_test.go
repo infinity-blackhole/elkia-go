@@ -14,7 +14,7 @@ func TestParseRequestHandoffMessage(t *testing.T) {
 		Password:      "s3cr3t",
 		ClientVersion: "0.9.3+3086",
 	}
-	result, err := NewAuthServerMessageReader(bytes.NewBuffer(input)).ReadRequestHandoffMessage()
+	result, err := NewAuthMessageReader(bytes.NewBuffer(input)).ReadRequestHandoffMessage()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -31,7 +31,7 @@ func TestParseRequestHandoffMessage(t *testing.T) {
 func TestReadPassword(t *testing.T) {
 	input := []byte("2EB6A196E4B60D96A9267E")
 	expected := "admin"
-	result, err := NewAuthServerMessageReader(bytes.NewBuffer(input)).readPassword()
+	result, err := NewAuthMessageReader(bytes.NewBuffer(input)).readPassword()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -41,7 +41,7 @@ func TestReadPassword(t *testing.T) {
 
 	input = []byte("1BE97B527A306B597A2")
 	expected = "user"
-	result, err = NewAuthServerMessageReader(bytes.NewBuffer(input)).readPassword()
+	result, err = NewAuthMessageReader(bytes.NewBuffer(input)).readPassword()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -53,7 +53,7 @@ func TestReadPassword(t *testing.T) {
 func TestReadVersion(t *testing.T) {
 	input := []byte{48, 48, 57, 55, 54, 55, 69, 67, 11, 48, 46, 57, 46, 51, 46, 51, 48, 56, 54, 10}
 	expected := "0.9.3+3086"
-	result, err := NewAuthServerMessageReader(bytes.NewBuffer(input)).readVersion()
+	result, err := NewAuthMessageReader(bytes.NewBuffer(input)).readVersion()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

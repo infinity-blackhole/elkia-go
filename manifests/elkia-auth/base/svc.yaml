@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: elkia-authserver
+  name: elkia-auth
   namespace: elkia
 spec:
   ports:
@@ -9,5 +9,5 @@ spec:
       port: 4123
       targetPort: elkia
   selector:
-    app.kubernetes.io/name: elkia-authserver
-    app.kubernetes.io/instance: elkia-authserver
+    app.kubernetes.io/name: elkia-auth
+    app.kubernetes.io/instance: elkia-auth

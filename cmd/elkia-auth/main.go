@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/authserver"
+	"github.com/infinity-blackhole/elkia/internal/auth"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
 	"github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ func main() {
 	if elkiaFleetEndpoint == "" {
 		elkiaFleetEndpoint = "localhost:8080"
 	}
-	logrus.Debugf("authserver: connecting to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("auth: connecting to fleet at %s", elkiaFleetEndpoint)
 	conn, err := grpc.Dial(
 		elkiaFleetEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("authserver: connected to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("auth: connected to fleet at %s", elkiaFleetEndpoint)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
@@ -42,14 +42,14 @@ func main() {
 	}
 	srv := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),
-		Handler: authserver.NewHandler(authserver.HandlerConfig{
+		Handler: auth.NewHandler(auth.HandlerConfig{
 			FleetClient: fleet.NewFleetClient(conn),
 		}),
 	})
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("authserver: listening on %s:%s", host, port)
+	logrus.Debugf("auth: listening on %s:%s", host, port)
 	if err := srv.ListenAndServe(); err != nil {
 		logrus.Fatal(err)
 	}
