@@ -90,6 +90,7 @@ func (c *Conn) serve(ctx context.Context) {
 		logrus.Debugf("auth: handle handoff")
 		c.handleHandoff(ctx, r)
 	default:
+		logrus.Debugf("auth: handle fallback")
 		c.handleFallback(opcode)
 	}
 }
