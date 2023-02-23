@@ -19,7 +19,13 @@ import (
 )
 
 func init() {
-	logrus.SetLevel(logrus.DebugLevel)
+	if logLevelStr := os.Getenv("LOG_LEVEL"); logLevelStr != "" {
+		logLevel, err := logrus.ParseLevel(logLevelStr)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		logrus.SetLevel(logLevel)
+	}
 }
 
 func main() {
