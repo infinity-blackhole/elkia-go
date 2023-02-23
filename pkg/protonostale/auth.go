@@ -51,7 +51,6 @@ func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("reading op code")
 	return &eventing.AuthLoginEvent{
 		Identifier:    identifier,
 		Password:      pwd,
@@ -87,7 +86,7 @@ func (r *AuthEventReader) ReadPassword() (string, error) {
 	return string(result), nil
 }
 
-var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)\n`)
+var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)`)
 
 func (r *AuthEventReader) ReadVersion() (string, error) {
 	version, err := r.r.ReadField()
