@@ -48,7 +48,7 @@ func (r *GatewayMessageReader) ReadChannelMessage() (*eventing.ChannelMessage, e
 	}, nil
 }
 
-func (r *GatewayMessageReader) ReadPerformHandoffMessage() (*eventing.PerformHandoffMessage, error) {
+func (r *GatewayMessageReader) ReadAuthHandoffMessage() (*eventing.AuthHandoffMessage, error) {
 	keyMsg, err := r.ReadKeyMessage()
 	if err != nil {
 		return nil, err
@@ -57,13 +57,13 @@ func (r *GatewayMessageReader) ReadPerformHandoffMessage() (*eventing.PerformHan
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.PerformHandoffMessage{
+	return &eventing.AuthHandoffMessage{
 		KeyMessage:      keyMsg,
 		PasswordMessage: pwdMsg,
 	}, nil
 }
 
-func (r *GatewayMessageReader) ReadKeyMessage() (*eventing.PerformHandoffKeyMessage, error) {
+func (r *GatewayMessageReader) ReadKeyMessage() (*eventing.AuthHandoffKeyMessage, error) {
 	sn, err := r.r.ReadUint32()
 	if err != nil {
 		return nil, err
@@ -72,13 +72,13 @@ func (r *GatewayMessageReader) ReadKeyMessage() (*eventing.PerformHandoffKeyMess
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.PerformHandoffKeyMessage{
+	return &eventing.AuthHandoffKeyMessage{
 		Sequence: sn,
 		Key:      key,
 	}, nil
 }
 
-func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.PerformHandoffPasswordMessage, error) {
+func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.AuthHandoffPasswordMessage, error) {
 	sn, err := r.r.ReadUint32()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.PerformHandoffPa
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.PerformHandoffPasswordMessage{
+	return &eventing.AuthHandoffPasswordMessage{
 		Sequence: sn,
 		Password: password,
 	}, nil

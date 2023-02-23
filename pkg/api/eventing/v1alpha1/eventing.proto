@@ -1,10 +1,9 @@
 syntax = "proto3";
-
 package io.elkia.eventing.v1alpha1;
 
 option go_package = "pkg/api/eventing/v1alpha1";
 
-message RequestHandoffMessage {
+message AuthLoginRequest {
   string identifier = 2;
   string password = 3;
   string client_version = 5;
@@ -26,17 +25,17 @@ message ProposeHandoffMessage {
   repeated GatewayMessage gateways = 2;
 }
 
-message PerformHandoffMessage {
-  PerformHandoffKeyMessage key_message = 1;
-  PerformHandoffPasswordMessage password_message = 2;
+message AuthHandoffMessage {
+  AuthHandoffKeyMessage key_message = 1;
+  AuthHandoffPasswordMessage password_message = 2;
 }
 
-message PerformHandoffKeyMessage {
+message AuthHandoffKeyMessage {
   uint32 sequence = 1;
   uint32 key = 2;
 }
 
-message PerformHandoffPasswordMessage {
+message AuthHandoffPasswordMessage {
   uint32 sequence = 1;
   string password = 2;
 }

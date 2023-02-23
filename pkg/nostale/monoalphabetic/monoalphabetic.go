@@ -55,12 +55,12 @@ func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
 
 func (r *Reader) readMessageSlice() ([][]byte, error) {
 	if r.key == 0 {
-		return r.readSessionMessage()
+		return r.readPresenceMessage()
 	}
 	return r.readChannelMessage()
 }
 
-func (r *Reader) readSessionMessage() ([][]byte, error) {
+func (r *Reader) readPresenceMessage() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err

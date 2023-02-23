@@ -64,9 +64,9 @@ func main() {
 	s := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),
 		Handler: gateway.NewHandler(gateway.HandlerConfig{
-			FleetClient:   fleet.NewFleetClient(conn),
-			KafkaProducer: kp,
-			KafkaConsumer: kc,
+			PresenceClient: fleet.NewPresenceClient(conn),
+			KafkaProducer:  kp,
+			KafkaConsumer:  kc,
 		}),
 	})
 	logrus.Debugf("gateway: listening on %s:%s", host, port)

@@ -16,17 +16,20 @@ import (
 const name = "github.com/infinity-blackhole/elkia/internal/auth"
 
 type HandlerConfig struct {
-	FleetClient fleet.FleetClient
+	PresenceClient fleet.PresenceClient
+	ClusterClient  fleet.ClusterClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		fleetClient: cfg.FleetClient,
+		presence: cfg.PresenceClient,
+		cluster:  cfg.ClusterClient,
 	}
 }
 
 type Handler struct {
-	fleetClient fleet.FleetClient
+	presence fleet.PresenceClient
+	cluster  fleet.ClusterClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -38,18 +41,20 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 
 func (h *Handler) newConn(c net.Conn) *Conn {
 	return &Conn{
-		rwc:         c,
-		rc:          protonostale.NewAuthReader(bufio.NewReader(c)),
-		wc:          protonostale.NewAuthWriter(bufio.NewWriter(c)),
-		fleetClient: h.fleetClient,
+		rwc:      c,
+		rc:       protonostale.NewAuthReader(bufio.NewReader(c)),
+		wc:       protonostale.NewAuthWriter(bufio.NewWriter(c)),
+		presence: h.presence,
+		cluster:  h.cluster,
 	}
 }
 
 type Conn struct {
-	rwc         net.Conn
-	rc          *protonostale.AuthReader
-	wc          *protonostale.AuthWriter
-	fleetClient fleet.FleetClient
+	rwc      net.Conn
+	rc       *protonostale.AuthReader
+	wc       *protonostale.AuthWriter
+	presence fleet.PresenceClient
+	cluster  fleet.ClusterClient
 }
 
 func (c *Conn) serve(ctx context.Context) {
@@ -92,7 +97,7 @@ func (c *Conn) serve(ctx context.Context) {
 func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageReader) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	m, err := r.ReadRequestHandoffMessage()
+	m, err := r.ReadAuthLoginRequest()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_BAD_CASE,
@@ -106,14 +111,13 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 	}
 	logrus.Debugf("auth: read handoff: %v", m)
 
-	handoff, err := c.fleetClient.
-		CreateHandoff(
-			ctx,
-			&fleet.CreateHandoffRequest{
-				Identifier: m.Identifier,
-				Token:      m.Password,
-			},
-		)
+	handoff, err := c.presence.AuthLogin(
+		ctx,
+		&fleet.AuthLoginRequest{
+			Identifier: m.Identifier,
+			Password:   m.Password,
+		},
+	)
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
@@ -127,8 +131,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 	}
 	logrus.Debugf("auth: create handoff: %v", handoff)
 
-	listClusters, err := c.fleetClient.
-		ListClusters(ctx, &fleet.ListClusterRequest{})
+	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_UNEXPECTED_ERROR,
@@ -140,13 +143,10 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	logrus.Debugf("auth: list clusters: %v", listClusters)
+	logrus.Debugf("auth: list members: %v", MemberList)
 	gateways := []*eventing.GatewayMessage{}
-	for _, cluster := range listClusters.Clusters {
-		listGateways, err := c.fleetClient.
-			ListGateways(ctx, &fleet.ListGatewayRequest{
-				Id: cluster.Id,
-			})
+	for _, m := range MemberList.Members {
+		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
 			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 				Code: eventing.FailureCode_UNEXPECTED_ERROR,
@@ -158,33 +158,18 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 			span.SetStatus(codes.Error, err.Error())
 			return
 		}
-		logrus.Debugf("auth: list gateways: %v", listGateways)
-		for _, g := range listGateways.Gateways {
-			host, port, err := net.SplitHostPort(g.Address)
-			if err != nil {
-				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-					Code: eventing.FailureCode_UNEXPECTED_ERROR,
-				}); err != nil {
-					logrus.Fatal(err)
-				}
-				logrus.Debug(err)
-				span.RecordError(err)
-				span.SetStatus(codes.Error, err.Error())
-				return
-			}
-			gateways = append(
-				gateways,
-				&eventing.GatewayMessage{
-					Host:       host,
-					Port:       port,
-					Population: g.Population,
-					Capacity:   g.Capacity,
-					WorldId:    cluster.WorldId,
-					ChannelId:  g.ChannelId,
-					WorldName:  cluster.Name,
-				},
-			)
-		}
+		gateways = append(
+			gateways,
+			&eventing.GatewayMessage{
+				Host:       host,
+				Port:       port,
+				Population: m.Population,
+				Capacity:   m.Capacity,
+				WorldId:    m.WorldId,
+				ChannelId:  m.ChannelId,
+				WorldName:  m.Name,
+			},
+		)
 	}
 	if err := c.wc.WriteProposeHandoffMessage(
 		&eventing.ProposeHandoffMessage{

@@ -7,7 +7,8 @@ import (
 	"os"
 	"strings"
 
-	fleetserver "github.com/infinity-blackhole/elkia/internal/fleet"
+	"github.com/infinity-blackhole/elkia/internal/fleet/cluster"
+	"github.com/infinity-blackhole/elkia/internal/fleet/presence"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/sirupsen/logrus"
@@ -36,23 +37,31 @@ func main() {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("fleetserver: listening on %s:%s", host, port)
-	sessionStore, err := NewSessionStore()
+	oryClient := newOryClient()
+	logrus.Debugf("fleetserver: connected to ory")
+	etcdClient, err := newEtcd()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("fleetserver: connected to etcd")
-	orchestrator, err := NewOrchestrator()
+	kubeClient, err := NewKubernetesClient()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("fleetserver: connected to kubernetes")
 	srv := grpc.NewServer()
-	fleet.RegisterFleetServer(
+	fleet.RegisterPresenceServer(
 		srv,
-		fleetserver.NewFleetServer(fleetserver.FleetServerConfig{
-			Orchestrator:     orchestrator,
-			IdentityProvider: NewIdentityProvider(),
-			SessionStore:     sessionStore,
+		presence.NewPresenceServer(presence.PresenceServerConfig{
+			OryClient:  oryClient,
+			EtcdClient: etcdClient,
+		}),
+	)
+	fleet.RegisterClusterServer(
+		srv,
+		cluster.NewKubernetesClusterServer(cluster.KubernetesClusterServerConfig{
+			Namespace:        "elkia",
+			KubernetesClient: kubeClient,
 		}),
 	)
 	logrus.Debugf("fleetserver: serving grpc")
@@ -61,17 +70,7 @@ func main() {
 	}
 }
 
-func NewOrchestrator() (*fleetserver.Orchestrator, error) {
-	clientset, err := NewKubernetesClientSet()
-	if err != nil {
-		return nil, err
-	}
-	return fleetserver.NewOrchestrator(fleetserver.OrchestratorConfig{
-		KubernetesClientSet: clientset,
-	}), nil
-}
-
-func NewIdentityProvider() *fleetserver.IdentityProvider {
+func newOryClient() *ory.APIClient {
 	kratosUrlStr := os.Getenv("KRATOS_URIS")
 	var kratosUrls []string
 	if kratosUrlStr != "" {
@@ -83,17 +82,15 @@ func NewIdentityProvider() *fleetserver.IdentityProvider {
 	for _, url := range kratosUrls {
 		oryServerConfigs = append(oryServerConfigs, ory.ServerConfiguration{URL: url})
 	}
-	return fleetserver.NewIdentityProvider(&fleetserver.IdentityProviderServiceConfig{
-		OryClient: ory.NewAPIClient(&ory.Configuration{
-			DefaultHeader: make(map[string]string),
-			UserAgent:     "OpenAPI-Generator/1.0.0/go",
-			Debug:         false,
-			Servers:       oryServerConfigs,
-		}),
+	return ory.NewAPIClient(&ory.Configuration{
+		DefaultHeader: make(map[string]string),
+		UserAgent:     "OpenAPI-Generator/1.0.0/go",
+		Debug:         false,
+		Servers:       oryServerConfigs,
 	})
 }
 
-func NewEtcd() (*etcd.Client, error) {
+func newEtcd() (*etcd.Client, error) {
 	etcdUrisStr := os.Getenv("ETCD_URIS")
 	var etcdUris []string
 	if etcdUrisStr == "" {
@@ -117,22 +114,12 @@ func NewEtcd() (*etcd.Client, error) {
 	})
 }
 
-func NewSessionStore() (*fleetserver.SessionStore, error) {
-	cli, err := NewEtcd()
-	if err != nil {
-		return nil, err
-	}
-	return fleetserver.NewSessionStoreClient(fleetserver.SessionStoreConfig{
-		Etcd: etcd.NewKV(cli),
-	}), nil
-}
-
-func NewKubernetesConfig() (*rest.Config, error) {
+func newKubernetesConfig() (*rest.Config, error) {
 	return rest.InClusterConfig()
 }
 
-func NewKubernetesClientSet() (*kubernetes.Clientset, error) {
-	config, err := NewKubernetesConfig()
+func NewKubernetesClient() (*kubernetes.Clientset, error) {
+	config, err := newKubernetesConfig()
 	if err != nil {
 		return nil, err
 	}

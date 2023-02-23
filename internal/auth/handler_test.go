@@ -3,122 +3,86 @@ package auth
 import (
 	"bufio"
 	"context"
-	"crypto/sha1"
-	"encoding/base64"
-	"hash/fnv"
 	"net"
 	"testing"
 
+	"github.com/infinity-blackhole/elkia/internal/fleet/cluster"
+	"github.com/infinity-blackhole/elkia/internal/fleet/clustertest"
+	"github.com/infinity-blackhole/elkia/internal/fleet/presence"
+	"github.com/infinity-blackhole/elkia/internal/fleet/presencetest"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/test/bufconn"
 )
-
-type fleetServiceServerMock struct {
-	fleet.UnimplementedFleetServer
-}
-
-func (n *fleetServiceServerMock) CreateHandoff(
-	ctx context.Context,
-	in *fleet.CreateHandoffRequest,
-) (*fleet.CreateHandoffResponse, error) {
-	h := fnv.New32a()
-	h.Write([]byte(in.Identifier))
-	h.Write([]byte(in.Token))
-	key := h.Sum32()
-	return &fleet.CreateHandoffResponse{
-		Key: key,
-	}, nil
-}
-
-func (s *fleetServiceServerMock) ListClusters(
-	ctx context.Context,
-	in *fleet.ListClusterRequest,
-) (*fleet.ListClusterResponse, error) {
-	return &fleet.ListClusterResponse{
-		Clusters: []*fleet.Cluster{
-			{
-				Id:      "foo",
-				WorldId: 1,
-				Name:    "test-1",
-			},
-			{
-				Id:      "bar",
-				WorldId: 2,
-				Name:    "test-2",
-			},
-		},
-	}, nil
-}
-
-func (s *fleetServiceServerMock) ListGateways(
-	ctx context.Context,
-	in *fleet.ListGatewayRequest,
-) (*fleet.ListGatewayResponse, error) {
-	sh := sha1.New()
-	sh.Write([]byte(in.Id))
-	id := base64.URLEncoding.EncodeToString(sh.Sum(nil))
-	nh := fnv.New32a()
-	nh.Write([]byte(in.Id))
-	channelId := nh.Sum32()
-	return &fleet.ListGatewayResponse{
-		Gateways: []*fleet.Gateway{
-			{
-				Id:         id,
-				ChannelId:  channelId,
-				Address:    "127.0.0.1:4321",
-				Population: 0,
-				Capacity:   1000,
-			},
-		},
-	}, nil
-}
-
-func serveFleetServerMock(lis net.Listener) error {
-	server := grpc.NewServer()
-	fleet.RegisterFleetServer(
-		server, &fleetServiceServerMock{},
-	)
-	return server.Serve(lis)
-}
-
-func dialFleetServerMock(
-	ctx context.Context, lis *bufconn.Listener,
-) (fleet.FleetClient, error) {
-	conn, err := grpc.DialContext(
-		ctx,
-		"bufnet",
-		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-			return lis.DialContext(ctx)
-		}),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		return nil, err
-	}
-	return fleet.NewFleetClient(conn), nil
-}
 
 func TestHandlerServeNosTale(t *testing.T) {
 	ctx := context.Background()
 	wg := errgroup.Group{}
-	lis := bufconn.Listen(1024 * 1024)
-	wg.Go(func() error {
-		return serveFleetServerMock(lis)
+	fakePresence := presencetest.NewFakePresence(presence.MemoryPresenceServerConfig{
+		Identities: map[uint32]*presence.Identity{
+			1: {
+				Username: "admin",
+				Password: "admin",
+			},
+			2: {
+				Username: "user",
+				Password: "user",
+			},
+		},
 	})
-	server, client := net.Pipe()
-	defer client.Close()
-	defer server.Close()
-	fleetClient, err := dialFleetServerMock(ctx, lis)
+	wg.Go(fakePresence.Serve)
+	presenceClient, err := fakePresence.Dial(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fakeCluster := clustertest.NewFakeCluster(cluster.MemoryClusterServerConfig{
+		Members: []*fleet.Member{
+			{
+				Id:         "gateway-alpha",
+				WorldId:    1,
+				ChannelId:  1,
+				Name:       "world-alpha",
+				Population: 10,
+				Capacity:   100,
+			},
+			{
+				Id:         "gateway-beta",
+				WorldId:    1,
+				ChannelId:  2,
+				Name:       "world-alpha",
+				Population: 10,
+				Capacity:   100,
+			},
+			{
+				Id:         "gateway-gamma",
+				WorldId:    1,
+				ChannelId:  3,
+				Name:       "world-alpha",
+				Population: 10,
+				Capacity:   100,
+			},
+			{
+				Id:         "gateway-delta",
+				WorldId:    2,
+				ChannelId:  1,
+				Name:       "world-beta",
+				Population: 10,
+				Capacity:   100,
+			},
+		},
+	})
+	wg.Go(fakeCluster.Serve)
+	clusterClient, err := fakeCluster.Dial(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	handler := NewHandler(HandlerConfig{
-		FleetClient: fleetClient,
+		PresenceClient: presenceClient,
+		ClusterClient:  clusterClient,
 	})
+	server, client := net.Pipe()
+	defer client.Close()
+	defer server.Close()
 	handler.ServeNosTale(server)
 	input := []byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,

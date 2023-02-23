@@ -7,14 +7,14 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func TestParseRequestHandoffMessage(t *testing.T) {
+func TestParseAuthLoginRequest(t *testing.T) {
 	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086\n")
-	expected := &eventing.RequestHandoffMessage{
+	expected := &eventing.AuthLoginRequest{
 		Identifier:    "admin",
 		Password:      "s3cr3t",
 		ClientVersion: "0.9.3+3086",
 	}
-	result, err := NewAuthMessageReader(bytes.NewBuffer(input)).ReadRequestHandoffMessage()
+	result, err := NewAuthMessageReader(bytes.NewBuffer(input)).ReadAuthLoginRequest()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

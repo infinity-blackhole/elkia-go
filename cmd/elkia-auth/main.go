@@ -43,7 +43,8 @@ func main() {
 	srv := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),
 		Handler: auth.NewHandler(auth.HandlerConfig{
-			FleetClient: fleet.NewFleetClient(conn),
+			PresenceClient: fleet.NewPresenceClient(conn),
+			ClusterClient:  fleet.NewClusterClient(conn),
 		}),
 	})
 	if err != nil {

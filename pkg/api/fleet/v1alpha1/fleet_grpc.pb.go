@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,266 +18,522 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// FleetClient is the client API for Fleet service.
+// ClusterClient is the client API for Cluster service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type FleetClient interface {
-	ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error)
-	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error)
-	ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error)
-	GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error)
-	CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error)
-	PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+type ClusterClient interface {
+	// MemberAdd adds a member into the cluster.
+	MemberAdd(ctx context.Context, in *MemberAddRequest, opts ...grpc.CallOption) (*MemberAddResponse, error)
+	// MemberRemove removes an existing member from the cluster.
+	MemberRemove(ctx context.Context, in *MemberRemoveRequest, opts ...grpc.CallOption) (*MemberRemoveResponse, error)
+	// MemberUpdate updates the member configuration.
+	MemberUpdate(ctx context.Context, in *MemberUpdateRequest, opts ...grpc.CallOption) (*MemberUpdateResponse, error)
+	// MemberList lists all the members in the cluster.
+	MemberList(ctx context.Context, in *MemberListRequest, opts ...grpc.CallOption) (*MemberListResponse, error)
 }
 
-type fleetClient struct {
+type clusterClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewFleetClient(cc grpc.ClientConnInterface) FleetClient {
-	return &fleetClient{cc}
+func NewClusterClient(cc grpc.ClientConnInterface) ClusterClient {
+	return &clusterClient{cc}
 }
 
-func (c *fleetClient) ListClusters(ctx context.Context, in *ListClusterRequest, opts ...grpc.CallOption) (*ListClusterResponse, error) {
-	out := new(ListClusterResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/ListClusters", in, out, opts...)
+func (c *clusterClient) MemberAdd(ctx context.Context, in *MemberAddRequest, opts ...grpc.CallOption) (*MemberAddResponse, error) {
+	out := new(MemberAddResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Cluster/MemberAdd", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*Cluster, error) {
-	out := new(Cluster)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/GetCluster", in, out, opts...)
+func (c *clusterClient) MemberRemove(ctx context.Context, in *MemberRemoveRequest, opts ...grpc.CallOption) (*MemberRemoveResponse, error) {
+	out := new(MemberRemoveResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Cluster/MemberRemove", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetClient) ListGateways(ctx context.Context, in *ListGatewayRequest, opts ...grpc.CallOption) (*ListGatewayResponse, error) {
-	out := new(ListGatewayResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/ListGateways", in, out, opts...)
+func (c *clusterClient) MemberUpdate(ctx context.Context, in *MemberUpdateRequest, opts ...grpc.CallOption) (*MemberUpdateResponse, error) {
+	out := new(MemberUpdateResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Cluster/MemberUpdate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetClient) GetGateway(ctx context.Context, in *GetGatewayRequest, opts ...grpc.CallOption) (*Gateway, error) {
-	out := new(Gateway)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/GetGateway", in, out, opts...)
+func (c *clusterClient) MemberList(ctx context.Context, in *MemberListRequest, opts ...grpc.CallOption) (*MemberListResponse, error) {
+	out := new(MemberListResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Cluster/MemberList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fleetClient) CreateHandoff(ctx context.Context, in *CreateHandoffRequest, opts ...grpc.CallOption) (*CreateHandoffResponse, error) {
-	out := new(CreateHandoffResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/CreateHandoff", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fleetClient) PerformHandoff(ctx context.Context, in *PerformHandoffRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Fleet/PerformHandoff", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// FleetServer is the server API for Fleet service.
-// All implementations must embed UnimplementedFleetServer
+// ClusterServer is the server API for Cluster service.
+// All implementations must embed UnimplementedClusterServer
 // for forward compatibility
-type FleetServer interface {
-	ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error)
-	GetCluster(context.Context, *GetClusterRequest) (*Cluster, error)
-	ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error)
-	GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error)
-	CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error)
-	PerformHandoff(context.Context, *PerformHandoffRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedFleetServer()
+type ClusterServer interface {
+	// MemberAdd adds a member into the cluster.
+	MemberAdd(context.Context, *MemberAddRequest) (*MemberAddResponse, error)
+	// MemberRemove removes an existing member from the cluster.
+	MemberRemove(context.Context, *MemberRemoveRequest) (*MemberRemoveResponse, error)
+	// MemberUpdate updates the member configuration.
+	MemberUpdate(context.Context, *MemberUpdateRequest) (*MemberUpdateResponse, error)
+	// MemberList lists all the members in the cluster.
+	MemberList(context.Context, *MemberListRequest) (*MemberListResponse, error)
+	mustEmbedUnimplementedClusterServer()
 }
 
-// UnimplementedFleetServer must be embedded to have forward compatible implementations.
-type UnimplementedFleetServer struct {
+// UnimplementedClusterServer must be embedded to have forward compatible implementations.
+type UnimplementedClusterServer struct {
 }
 
-func (UnimplementedFleetServer) ListClusters(context.Context, *ListClusterRequest) (*ListClusterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListClusters not implemented")
+func (UnimplementedClusterServer) MemberAdd(context.Context, *MemberAddRequest) (*MemberAddResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MemberAdd not implemented")
 }
-func (UnimplementedFleetServer) GetCluster(context.Context, *GetClusterRequest) (*Cluster, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCluster not implemented")
+func (UnimplementedClusterServer) MemberRemove(context.Context, *MemberRemoveRequest) (*MemberRemoveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MemberRemove not implemented")
 }
-func (UnimplementedFleetServer) ListGateways(context.Context, *ListGatewayRequest) (*ListGatewayResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGateways not implemented")
+func (UnimplementedClusterServer) MemberUpdate(context.Context, *MemberUpdateRequest) (*MemberUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MemberUpdate not implemented")
 }
-func (UnimplementedFleetServer) GetGateway(context.Context, *GetGatewayRequest) (*Gateway, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGateway not implemented")
+func (UnimplementedClusterServer) MemberList(context.Context, *MemberListRequest) (*MemberListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MemberList not implemented")
 }
-func (UnimplementedFleetServer) CreateHandoff(context.Context, *CreateHandoffRequest) (*CreateHandoffResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateHandoff not implemented")
-}
-func (UnimplementedFleetServer) PerformHandoff(context.Context, *PerformHandoffRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PerformHandoff not implemented")
-}
-func (UnimplementedFleetServer) mustEmbedUnimplementedFleetServer() {}
+func (UnimplementedClusterServer) mustEmbedUnimplementedClusterServer() {}
 
-// UnsafeFleetServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to FleetServer will
+// UnsafeClusterServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ClusterServer will
 // result in compilation errors.
-type UnsafeFleetServer interface {
-	mustEmbedUnimplementedFleetServer()
+type UnsafeClusterServer interface {
+	mustEmbedUnimplementedClusterServer()
 }
 
-func RegisterFleetServer(s grpc.ServiceRegistrar, srv FleetServer) {
-	s.RegisterService(&Fleet_ServiceDesc, srv)
+func RegisterClusterServer(s grpc.ServiceRegistrar, srv ClusterServer) {
+	s.RegisterService(&Cluster_ServiceDesc, srv)
 }
 
-func _Fleet_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListClusterRequest)
+func _Cluster_MemberAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemberAddRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServer).ListClusters(ctx, in)
+		return srv.(ClusterServer).MemberAdd(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/ListClusters",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Cluster/MemberAdd",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).ListClusters(ctx, req.(*ListClusterRequest))
+		return srv.(ClusterServer).MemberAdd(ctx, req.(*MemberAddRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Fleet_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetClusterRequest)
+func _Cluster_MemberRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemberRemoveRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServer).GetCluster(ctx, in)
+		return srv.(ClusterServer).MemberRemove(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/GetCluster",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Cluster/MemberRemove",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).GetCluster(ctx, req.(*GetClusterRequest))
+		return srv.(ClusterServer).MemberRemove(ctx, req.(*MemberRemoveRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Fleet_ListGateways_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGatewayRequest)
+func _Cluster_MemberUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemberUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServer).ListGateways(ctx, in)
+		return srv.(ClusterServer).MemberUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/ListGateways",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Cluster/MemberUpdate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).ListGateways(ctx, req.(*ListGatewayRequest))
+		return srv.(ClusterServer).MemberUpdate(ctx, req.(*MemberUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Fleet_GetGateway_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGatewayRequest)
+func _Cluster_MemberList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MemberListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FleetServer).GetGateway(ctx, in)
+		return srv.(ClusterServer).MemberList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/GetGateway",
+		FullMethod: "/io.elkia.fleet.v1alpha1.Cluster/MemberList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).GetGateway(ctx, req.(*GetGatewayRequest))
+		return srv.(ClusterServer).MemberList(ctx, req.(*MemberListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Fleet_CreateHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateHandoffRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FleetServer).CreateHandoff(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/CreateHandoff",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).CreateHandoff(ctx, req.(*CreateHandoffRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Fleet_PerformHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PerformHandoffRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FleetServer).PerformHandoff(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/io.elkia.fleet.v1alpha1.Fleet/PerformHandoff",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FleetServer).PerformHandoff(ctx, req.(*PerformHandoffRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// Fleet_ServiceDesc is the grpc.ServiceDesc for Fleet service.
+// Cluster_ServiceDesc is the grpc.ServiceDesc for Cluster service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Fleet_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.fleet.v1alpha1.Fleet",
-	HandlerType: (*FleetServer)(nil),
+var Cluster_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.fleet.v1alpha1.Cluster",
+	HandlerType: (*ClusterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListClusters",
-			Handler:    _Fleet_ListClusters_Handler,
+			MethodName: "MemberAdd",
+			Handler:    _Cluster_MemberAdd_Handler,
 		},
 		{
-			MethodName: "GetCluster",
-			Handler:    _Fleet_GetCluster_Handler,
+			MethodName: "MemberRemove",
+			Handler:    _Cluster_MemberRemove_Handler,
 		},
 		{
-			MethodName: "ListGateways",
-			Handler:    _Fleet_ListGateways_Handler,
+			MethodName: "MemberUpdate",
+			Handler:    _Cluster_MemberUpdate_Handler,
 		},
 		{
-			MethodName: "GetGateway",
-			Handler:    _Fleet_GetGateway_Handler,
+			MethodName: "MemberList",
+			Handler:    _Cluster_MemberList_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "pkg/api/fleet/v1alpha1/fleet.proto",
+}
+
+// PresenceClient is the client API for Presence service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type PresenceClient interface {
+	// Audthenticate authenticates a session with a given identifier and token.
+	AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error)
+	// AuthRefreshLogin authenticates a gateway with a given identifier and
+	// token.
+	AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error)
+	// AuthHandoff hands off a session to a gateway with a given token and
+	// key.
+	AuthHandoff(ctx context.Context, in *AuthHandoffRequest, opts ...grpc.CallOption) (*AuthHandoffResponse, error)
+	// AuthLogout logs out a session with a given key.
+	AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error)
+	// SessionGet gets a session with a given key.
+	SessionGet(ctx context.Context, in *SessionGetRequest, opts ...grpc.CallOption) (*SessionGetResponse, error)
+	// SessionPut creates a session with a given identifier and token.
+	SessionPut(ctx context.Context, in *SessionPutRequest, opts ...grpc.CallOption) (*SessionPutResponse, error)
+	// SessionDelete Deletes a session with a given key.
+	SessionDelete(ctx context.Context, in *SessionDeleteRequest, opts ...grpc.CallOption) (*SessionDeleteResponse, error)
+}
+
+type presenceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPresenceClient(cc grpc.ClientConnInterface) PresenceClient {
+	return &presenceClient{cc}
+}
+
+func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error) {
+	out := new(AuthLoginResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/AuthLogin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error) {
+	out := new(AuthRefreshLoginResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) AuthHandoff(ctx context.Context, in *AuthHandoffRequest, opts ...grpc.CallOption) (*AuthHandoffResponse, error) {
+	out := new(AuthHandoffResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/AuthHandoff", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error) {
+	out := new(AuthLogoutResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/AuthLogout", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) SessionGet(ctx context.Context, in *SessionGetRequest, opts ...grpc.CallOption) (*SessionGetResponse, error) {
+	out := new(SessionGetResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/SessionGet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) SessionPut(ctx context.Context, in *SessionPutRequest, opts ...grpc.CallOption) (*SessionPutResponse, error) {
+	out := new(SessionPutResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/SessionPut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) SessionDelete(ctx context.Context, in *SessionDeleteRequest, opts ...grpc.CallOption) (*SessionDeleteResponse, error) {
+	out := new(SessionDeleteResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.fleet.v1alpha1.Presence/SessionDelete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PresenceServer is the server API for Presence service.
+// All implementations must embed UnimplementedPresenceServer
+// for forward compatibility
+type PresenceServer interface {
+	// Audthenticate authenticates a session with a given identifier and token.
+	AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error)
+	// AuthRefreshLogin authenticates a gateway with a given identifier and
+	// token.
+	AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error)
+	// AuthHandoff hands off a session to a gateway with a given token and
+	// key.
+	AuthHandoff(context.Context, *AuthHandoffRequest) (*AuthHandoffResponse, error)
+	// AuthLogout logs out a session with a given key.
+	AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error)
+	// SessionGet gets a session with a given key.
+	SessionGet(context.Context, *SessionGetRequest) (*SessionGetResponse, error)
+	// SessionPut creates a session with a given identifier and token.
+	SessionPut(context.Context, *SessionPutRequest) (*SessionPutResponse, error)
+	// SessionDelete Deletes a session with a given key.
+	SessionDelete(context.Context, *SessionDeleteRequest) (*SessionDeleteResponse, error)
+	mustEmbedUnimplementedPresenceServer()
+}
+
+// UnimplementedPresenceServer must be embedded to have forward compatible implementations.
+type UnimplementedPresenceServer struct {
+}
+
+func (UnimplementedPresenceServer) AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthLogin not implemented")
+}
+func (UnimplementedPresenceServer) AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthRefreshLogin not implemented")
+}
+func (UnimplementedPresenceServer) AuthHandoff(context.Context, *AuthHandoffRequest) (*AuthHandoffResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthHandoff not implemented")
+}
+func (UnimplementedPresenceServer) AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthLogout not implemented")
+}
+func (UnimplementedPresenceServer) SessionGet(context.Context, *SessionGetRequest) (*SessionGetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionGet not implemented")
+}
+func (UnimplementedPresenceServer) SessionPut(context.Context, *SessionPutRequest) (*SessionPutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionPut not implemented")
+}
+func (UnimplementedPresenceServer) SessionDelete(context.Context, *SessionDeleteRequest) (*SessionDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionDelete not implemented")
+}
+func (UnimplementedPresenceServer) mustEmbedUnimplementedPresenceServer() {}
+
+// UnsafePresenceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PresenceServer will
+// result in compilation errors.
+type UnsafePresenceServer interface {
+	mustEmbedUnimplementedPresenceServer()
+}
+
+func RegisterPresenceServer(s grpc.ServiceRegistrar, srv PresenceServer) {
+	s.RegisterService(&Presence_ServiceDesc, srv)
+}
+
+func _Presence_AuthLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/AuthLogin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthLogin(ctx, req.(*AuthLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_AuthRefreshLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthRefreshLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthRefreshLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthRefreshLogin(ctx, req.(*AuthRefreshLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_AuthHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthHandoffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthHandoff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/AuthHandoff",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthHandoff(ctx, req.(*AuthHandoffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_AuthLogout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthLogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthLogout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/AuthLogout",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthLogout(ctx, req.(*AuthLogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_SessionGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).SessionGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/SessionGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).SessionGet(ctx, req.(*SessionGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_SessionPut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionPutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).SessionPut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/SessionPut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).SessionPut(ctx, req.(*SessionPutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_SessionDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).SessionDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.fleet.v1alpha1.Presence/SessionDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).SessionDelete(ctx, req.(*SessionDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Presence_ServiceDesc is the grpc.ServiceDesc for Presence service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Presence_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.fleet.v1alpha1.Presence",
+	HandlerType: (*PresenceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AuthLogin",
+			Handler:    _Presence_AuthLogin_Handler,
 		},
 		{
-			MethodName: "CreateHandoff",
-			Handler:    _Fleet_CreateHandoff_Handler,
+			MethodName: "AuthRefreshLogin",
+			Handler:    _Presence_AuthRefreshLogin_Handler,
 		},
 		{
-			MethodName: "PerformHandoff",
-			Handler:    _Fleet_PerformHandoff_Handler,
+			MethodName: "AuthHandoff",
+			Handler:    _Presence_AuthHandoff_Handler,
+		},
+		{
+			MethodName: "AuthLogout",
+			Handler:    _Presence_AuthLogout_Handler,
+		},
+		{
+			MethodName: "SessionGet",
+			Handler:    _Presence_SessionGet_Handler,
+		},
+		{
+			MethodName: "SessionPut",
+			Handler:    _Presence_SessionPut_Handler,
+		},
+		{
+			MethodName: "SessionDelete",
+			Handler:    _Presence_SessionDelete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

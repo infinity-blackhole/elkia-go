@@ -17,21 +17,21 @@ import (
 var name = "github.com/infinity-blackhole/elkia/internal/gateway"
 
 type HandlerConfig struct {
-	FleetClient   fleet.FleetClient
-	KafkaProducer *kafka.Producer
-	KafkaConsumer *kafka.Consumer
+	PresenceClient fleet.PresenceClient
+	KafkaProducer  *kafka.Producer
+	KafkaConsumer  *kafka.Consumer
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		fleetClient:   cfg.FleetClient,
+		presence:      cfg.PresenceClient,
 		kafkaProducer: cfg.KafkaProducer,
 		kafkaConsumer: cfg.KafkaConsumer,
 	}
 }
 
 type Handler struct {
-	fleetClient   fleet.FleetClient
+	presence      fleet.PresenceClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
 }
@@ -48,7 +48,7 @@ func (h *Handler) newConn(c net.Conn) *Conn {
 		rwc:           c,
 		rc:            protonostale.NewGatewayReader(bufio.NewReader(c)),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(c)),
-		fleetClient:   h.fleetClient,
+		presence:      h.presence,
 		kafkaProducer: h.kafkaProducer,
 	}
 }
@@ -57,7 +57,7 @@ type Conn struct {
 	rwc           net.Conn
 	rc            *protonostale.GatewayReader
 	wc            *protonostale.GatewayWriter
-	fleetClient   fleet.FleetClient
+	presence      fleet.PresenceClient
 	kafkaProducer *kafka.Producer
 }
 
@@ -173,7 +173,7 @@ func (c *Conn) handoff(
 		}
 		return nil, nil
 	}
-	handoffMsg, err := rs[1].ReadPerformHandoffMessage()
+	handoffMsg, err := rs[1].ReadAuthHandoffMessage()
 	if err != nil {
 		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
 			Code: eventing.FailureCode_BAD_CASE,
@@ -199,11 +199,10 @@ func (c *Conn) handoff(
 		return nil, nil
 	}
 	c.rc.SetKey(handoffMsg.KeyMessage.Key)
-	_, err = c.fleetClient.
-		PerformHandoff(ctx, &fleet.PerformHandoffRequest{
-			Key:   handoffMsg.KeyMessage.Key,
-			Token: handoffMsg.PasswordMessage.Password,
-		})
+	_, err = c.presence.AuthHandoff(ctx, &fleet.AuthHandoffRequest{
+		Key:      handoffMsg.KeyMessage.Key,
+		Password: handoffMsg.PasswordMessage.Password,
+	})
 	if err != nil {
 		return nil, nil
 	}

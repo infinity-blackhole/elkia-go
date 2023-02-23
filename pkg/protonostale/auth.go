@@ -30,7 +30,7 @@ type AuthMessageReader struct {
 	MessageReader
 }
 
-func (r *AuthMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandoffMessage, error) {
+func (r *AuthMessageReader) ReadAuthLoginRequest() (*eventing.AuthLoginRequest, error) {
 	logrus.Debugf("reading request handoff message")
 	_, err := r.r.ReadString()
 	if err != nil {
@@ -52,7 +52,7 @@ func (r *AuthMessageReader) ReadRequestHandoffMessage() (*eventing.RequestHandof
 		return nil, err
 	}
 	logrus.Debugf("reading op code")
-	return &eventing.RequestHandoffMessage{
+	return &eventing.AuthLoginRequest{
 		Identifier:    identifier,
 		Password:      pwd,
 		ClientVersion: clientVersion,
