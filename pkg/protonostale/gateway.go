@@ -10,60 +10,42 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewGatewayMessageReader(r io.Reader) *GatewayMessageReader {
-	return &GatewayMessageReader{
-		MessageReader{
+func NewGatewayHandshakeEventReader(r io.Reader) *GatewayHandshakeEventReader {
+	return &GatewayHandshakeEventReader{
+		EventReader{
 			r: NewFieldReader(r),
 		},
 	}
 }
 
-type GatewayMessageReader struct {
-	MessageReader
+type GatewayHandshakeEventReader struct {
+	EventReader
 }
 
-func (r *GatewayMessageReader) ReadSyncMessage() (*eventing.ChannelMessage, error) {
+func (r *GatewayHandshakeEventReader) ReadSyncEvent() (*eventing.SyncEvent, error) {
 	sn, err := r.r.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.ChannelMessage{
-		Sequence: sn,
-		Payload:  &eventing.ChannelMessage_SyncMessage{SyncMessage: &eventing.SyncMessage{}},
+	return &eventing.SyncEvent{Sequence: sn}, nil
+}
+
+func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHandoffEvent, error) {
+	keyMsg, err := r.ReadAuthHandoffKeyEvent()
+	if err != nil {
+		return nil, err
+	}
+	pwdMsg, err := r.ReadAuthHandoffPasswordEvent()
+	if err != nil {
+		return nil, err
+	}
+	return &eventing.AuthHandoffEvent{
+		KeyEvent:      keyMsg,
+		PasswordEvent: pwdMsg,
 	}, nil
 }
 
-func (r *GatewayMessageReader) ReadChannelMessage() (*eventing.ChannelMessage, error) {
-	sn, err := r.r.ReadUint32()
-	if err != nil {
-		return nil, err
-	}
-	payload, err := r.r.ReadPayload()
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.ChannelMessage{
-		Sequence: sn,
-		Payload:  &eventing.ChannelMessage_UnknownMessage{UnknownMessage: payload},
-	}, nil
-}
-
-func (r *GatewayMessageReader) ReadAuthHandoffMessage() (*eventing.AuthHandoffMessage, error) {
-	keyMsg, err := r.ReadKeyMessage()
-	if err != nil {
-		return nil, err
-	}
-	pwdMsg, err := r.ReadPasswordMessage()
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.AuthHandoffMessage{
-		KeyMessage:      keyMsg,
-		PasswordMessage: pwdMsg,
-	}, nil
-}
-
-func (r *GatewayMessageReader) ReadKeyMessage() (*eventing.AuthHandoffKeyMessage, error) {
+func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthHandoffKeyEvent, error) {
 	sn, err := r.r.ReadUint32()
 	if err != nil {
 		return nil, err
@@ -72,13 +54,13 @@ func (r *GatewayMessageReader) ReadKeyMessage() (*eventing.AuthHandoffKeyMessage
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffKeyMessage{
+	return &eventing.AuthHandoffKeyEvent{
 		Sequence: sn,
 		Key:      key,
 	}, nil
 }
 
-func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.AuthHandoffPasswordMessage, error) {
+func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.AuthHandoffPasswordEvent, error) {
 	sn, err := r.r.ReadUint32()
 	if err != nil {
 		return nil, err
@@ -87,9 +69,41 @@ func (r *GatewayMessageReader) ReadPasswordMessage() (*eventing.AuthHandoffPassw
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffPasswordMessage{
+	return &eventing.AuthHandoffPasswordEvent{
 		Sequence: sn,
 		Password: password,
+	}, nil
+}
+
+func NewGatewayChannelEventReader(r io.Reader) *GatewayChannelEventReader {
+	return &GatewayChannelEventReader{
+		EventReader{
+			r: NewFieldReader(r),
+		},
+	}
+}
+
+type GatewayChannelEventReader struct {
+	EventReader
+}
+
+func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, error) {
+	sn, err := r.r.ReadUint32()
+	if err != nil {
+		return nil, err
+	}
+	opcode, err := r.ReadOpCode()
+	if err != nil {
+		return nil, err
+	}
+	payload, err := r.r.ReadPayload()
+	if err != nil {
+		return nil, err
+	}
+	return &eventing.ChannelEvent{
+		Sequence: sn,
+		OpCode:   opcode,
+		Payload:  &eventing.ChannelEvent_UnknownPayload{UnknownPayload: payload},
 	}, nil
 }
 
@@ -105,29 +119,50 @@ type GatewayWriter struct {
 	Writer
 }
 
-func NewGatewayReader(r *bufio.Reader) *GatewayReader {
-	return &GatewayReader{
+func NewGatewayHandshakeReader(r *bufio.Reader) *GatewayHandshakeReader {
+	return &GatewayHandshakeReader{
 		r: monoalphabetic.NewReader(r),
 	}
 }
 
-type GatewayReader struct {
+type GatewayHandshakeReader struct {
 	r *monoalphabetic.Reader
 }
 
-func (r *GatewayReader) SetKey(key uint32) {
-	r.r.SetKey(key)
-}
-
-func (r *GatewayReader) ReadMessageSlice() ([]*GatewayMessageReader, error) {
+func (r *GatewayHandshakeReader) ReadMessageSlice() ([]*GatewayHandshakeEventReader, error) {
 	buff, err := r.r.ReadMessageSliceBytes()
 	if err != nil {
 		return nil, err
 	}
-	readers := make([]*GatewayMessageReader, len(buff))
+	readers := make([]*GatewayHandshakeEventReader, len(buff))
 	for i, b := range buff {
 		logrus.Debugf("gateway: read %v message", string(b))
-		readers[i] = NewGatewayMessageReader(bytes.NewReader(b))
+		readers[i] = NewGatewayHandshakeEventReader(bytes.NewReader(b))
+	}
+	return readers, nil
+}
+
+func NewGatewayChannelReader(r *bufio.Reader, key uint32) *GatewayChannelReader {
+	return &GatewayChannelReader{
+		r:   monoalphabetic.NewReaderWithKey(r, key),
+		key: key,
+	}
+}
+
+type GatewayChannelReader struct {
+	r   *monoalphabetic.Reader
+	key uint32
+}
+
+func (r *GatewayChannelReader) ReadMessageSlice() ([]*GatewayChannelEventReader, error) {
+	buff, err := r.r.ReadMessageSliceBytes()
+	if err != nil {
+		return nil, err
+	}
+	readers := make([]*GatewayChannelEventReader, len(buff))
+	for i, b := range buff {
+		logrus.Debugf("gateway: read %v message", string(b))
+		readers[i] = NewGatewayChannelEventReader(bytes.NewReader(b))
 	}
 	return readers, nil
 }

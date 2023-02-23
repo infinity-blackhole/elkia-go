@@ -62,8 +62,8 @@ func (c *Conn) serve(ctx context.Context) {
 	defer span.End()
 	r, err := c.rc.ReadMessage()
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -72,10 +72,10 @@ func (c *Conn) serve(ctx context.Context) {
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
-	opcode, err := r.ReadOpcode()
+	opcode, err := r.ReadOpCode()
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -94,13 +94,13 @@ func (c *Conn) serve(ctx context.Context) {
 	}
 }
 
-func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageReader) {
+func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReader) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	m, err := r.ReadAuthLoginRequest()
+	m, err := r.ReadAuthLoginEvent()
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -119,8 +119,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 		},
 	)
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -133,8 +133,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 
 	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -144,12 +144,12 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 		return
 	}
 	logrus.Debugf("auth: list members: %v", MemberList)
-	gateways := []*eventing.GatewayMessage{}
+	gateways := []*eventing.Gateway{}
 	for _, m := range MemberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
-			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-				Code: eventing.FailureCode_UNEXPECTED_ERROR,
+			if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+				Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 			}); err != nil {
 				logrus.Fatal(err)
 			}
@@ -160,7 +160,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 		}
 		gateways = append(
 			gateways,
-			&eventing.GatewayMessage{
+			&eventing.Gateway{
 				Host:       host,
 				Port:       port,
 				Population: m.Population,
@@ -171,14 +171,14 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 			},
 		)
 	}
-	if err := c.wc.WriteProposeHandoffMessage(
-		&eventing.ProposeHandoffMessage{
+	if err := c.wc.WriteGatewayListEvent(
+		&eventing.GatewayListEvent{
 			Key:      handoff.Key,
 			Gateways: gateways,
 		},
 	); err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -190,8 +190,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthMessageRea
 }
 
 func (c *Conn) handleFallback(opcode string) {
-	if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-		Code: eventing.FailureCode_BAD_CASE,
+	if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+		Code: eventing.ErrorCode_BAD_CASE,
 	}); err != nil {
 		logrus.Fatal(err)
 	}

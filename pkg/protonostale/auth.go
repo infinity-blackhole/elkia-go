@@ -18,19 +18,19 @@ var (
 	HandoffOpCode = "NoS0575"
 )
 
-func NewAuthMessageReader(r io.Reader) *AuthMessageReader {
-	return &AuthMessageReader{
-		MessageReader: MessageReader{
+func NewAuthEventReader(r io.Reader) *AuthEventReader {
+	return &AuthEventReader{
+		EventReader: EventReader{
 			r: NewFieldReader(r),
 		},
 	}
 }
 
-type AuthMessageReader struct {
-	MessageReader
+type AuthEventReader struct {
+	EventReader
 }
 
-func (r *AuthMessageReader) ReadAuthLoginRequest() (*eventing.AuthLoginRequest, error) {
+func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error) {
 	logrus.Debugf("reading request handoff message")
 	_, err := r.r.ReadString()
 	if err != nil {
@@ -42,24 +42,24 @@ func (r *AuthMessageReader) ReadAuthLoginRequest() (*eventing.AuthLoginRequest, 
 		return nil, err
 	}
 	logrus.Debugf("reading password")
-	pwd, err := r.readPassword()
+	pwd, err := r.ReadPassword()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("reading client version")
-	clientVersion, err := r.readVersion()
+	clientVersion, err := r.ReadVersion()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("reading op code")
-	return &eventing.AuthLoginRequest{
+	return &eventing.AuthLoginEvent{
 		Identifier:    identifier,
 		Password:      pwd,
 		ClientVersion: clientVersion,
 	}, nil
 }
 
-func (r *AuthMessageReader) readPassword() (string, error) {
+func (r *AuthEventReader) ReadPassword() (string, error) {
 	pwd, err := r.r.ReadField()
 	if err != nil {
 		return "", err
@@ -89,7 +89,7 @@ func (r *AuthMessageReader) readPassword() (string, error) {
 
 var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)\n`)
 
-func (r *AuthMessageReader) readVersion() (string, error) {
+func (r *AuthEventReader) ReadVersion() (string, error) {
 	version, err := r.r.ReadField()
 	if err != nil {
 		return "", err
@@ -117,13 +117,13 @@ type AuthReader struct {
 	r *simplesubtitution.Reader
 }
 
-func (r *AuthReader) ReadMessage() (*AuthMessageReader, error) {
+func (r *AuthReader) ReadMessage() (*AuthEventReader, error) {
 	buff, err := r.r.ReadMessageBytes()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("auth: read %s messages", string(buff))
-	return NewAuthMessageReader(bytes.NewReader(buff)), nil
+	return NewAuthEventReader(bytes.NewReader(buff)), nil
 }
 
 func NewAuthWriter(w *bufio.Writer) *AuthWriter {
@@ -138,15 +138,15 @@ type AuthWriter struct {
 	Writer
 }
 
-func (w *AuthWriter) WriteProposeHandoffMessage(
-	msg *eventing.ProposeHandoffMessage,
+func (w *AuthWriter) WriteGatewayListEvent(
+	msg *eventing.GatewayListEvent,
 ) error {
 	_, err := fmt.Fprintf(w.w, "%s %d", "NsTeST", msg.Key)
 	if err != nil {
 		return err
 	}
 	for _, g := range msg.Gateways {
-		if err := w.WriteGatewayMessage(g); err != nil {
+		if err := w.WriteGateway(g); err != nil {
 			return err
 		}
 		if err := w.w.WriteByte(' '); err != nil {
@@ -159,8 +159,8 @@ func (w *AuthWriter) WriteProposeHandoffMessage(
 	return w.w.Flush()
 }
 
-func (w *AuthWriter) WriteGatewayMessage(
-	msg *eventing.GatewayMessage,
+func (w *AuthWriter) WriteGateway(
+	msg *eventing.Gateway,
 ) error {
 	_, err := fmt.Fprintf(
 		w.w,

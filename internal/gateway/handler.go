@@ -38,36 +38,36 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	conn := h.newConn(c)
+	conn := h.newHandshakeConn(c)
 	logrus.Debugf("gateway: new connection from %s", c.RemoteAddr().String())
 	go conn.serve(ctx)
 }
 
-func (h *Handler) newConn(c net.Conn) *Conn {
-	return &Conn{
+func (h *Handler) newHandshakeConn(c net.Conn) *handshakeConn {
+	return &handshakeConn{
 		rwc:           c,
-		rc:            protonostale.NewGatewayReader(bufio.NewReader(c)),
+		rc:            protonostale.NewGatewayHandshakeReader(bufio.NewReader(c)),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(c)),
 		presence:      h.presence,
 		kafkaProducer: h.kafkaProducer,
 	}
 }
 
-type Conn struct {
+type handshakeConn struct {
 	rwc           net.Conn
-	rc            *protonostale.GatewayReader
+	rc            *protonostale.GatewayHandshakeReader
 	wc            *protonostale.GatewayWriter
 	presence      fleet.PresenceClient
 	kafkaProducer *kafka.Producer
 }
 
-func (c *Conn) serve(ctx context.Context) {
+func (c *handshakeConn) serve(ctx context.Context) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
 	ack, err := c.handoff(ctx)
 	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -77,8 +77,8 @@ func (c *Conn) serve(ctx context.Context) {
 		return
 	}
 	if ack == nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_CANT_AUTHENTICATE,
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_CANT_AUTHENTICATE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -86,11 +86,99 @@ func (c *Conn) serve(ctx context.Context) {
 		return
 	}
 	logrus.Debugf("gateway: handoff acknowledged: %v", ack)
+	conn := c.newConn(ack.Key)
+	conn.serve(ctx)
+}
+
+func (c *handshakeConn) handoff(
+	ctx context.Context,
+) (*eventing.AuthHandoffSuccessEvent, error) {
+	rs, err := c.rc.ReadMessageSlice()
+	if err != nil {
+		return nil, err
+	}
+	if len(rs) != 2 {
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	syncMsg, err := rs[0].ReadSyncEvent()
+	if err != nil {
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	handoffMsg, err := rs[1].ReadAuthHandoffEvent()
+	if err != nil {
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	if syncMsg.Sequence != handoffMsg.KeyEvent.Sequence+1 {
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	if handoffMsg.KeyEvent.Sequence != handoffMsg.PasswordEvent.Sequence+1 {
+		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+			Code: eventing.ErrorCode_BAD_CASE,
+		}); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	_, err = c.presence.AuthHandoff(ctx, &fleet.AuthHandoffRequest{
+		Key:      handoffMsg.KeyEvent.Key,
+		Password: handoffMsg.PasswordEvent.Password,
+	})
+	if err != nil {
+		return nil, nil
+	}
+	return &eventing.AuthHandoffSuccessEvent{
+		Key:      handoffMsg.KeyEvent.Key,
+		Sequence: syncMsg.Sequence,
+	}, nil
+}
+
+func (h *handshakeConn) newConn(key uint32) *Conn {
+	return &Conn{
+		rwc:           h.rwc,
+		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), key),
+		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(h.rwc)),
+		presence:      h.presence,
+		kafkaProducer: h.kafkaProducer,
+	}
+}
+
+type Conn struct {
+	rwc           net.Conn
+	rc            *protonostale.GatewayChannelReader
+	wc            *protonostale.GatewayWriter
+	presence      fleet.PresenceClient
+	kafkaProducer *kafka.Producer
+	lastSequence  uint32
+}
+
+func (c *Conn) serve(ctx context.Context) {
+	_, span := otel.Tracer(name).Start(ctx, "Serve")
+	defer span.End()
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
-			if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-				Code: eventing.FailureCode_UNEXPECTED_ERROR,
+			if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+				Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 			}); err != nil {
 				logrus.Fatal(err)
 			}
@@ -100,10 +188,10 @@ func (c *Conn) serve(ctx context.Context) {
 			return
 		}
 		for _, r := range rs {
-			opcode, err := r.ReadOpcode()
+			msg, err := r.ReadChannelEvent()
 			if err != nil {
-				if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-					Code: eventing.FailureCode_BAD_CASE,
+				if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+					Code: eventing.ErrorCode_UNEXPECTED_ERROR,
 				}); err != nil {
 					logrus.Fatal(err)
 				}
@@ -112,102 +200,23 @@ func (c *Conn) serve(ctx context.Context) {
 				span.SetStatus(codes.Error, err.Error())
 				return
 			}
-			logrus.Debugf("gateway: received opcode: %v", opcode)
-			switch opcode {
-			default:
-				msg, err := r.ReadChannelMessage()
-				if err != nil {
-					if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-						Code: eventing.FailureCode_UNEXPECTED_ERROR,
-					}); err != nil {
-						logrus.Fatal(err)
-					}
-					logrus.Debug(err)
-					span.RecordError(err)
-					span.SetStatus(codes.Error, err.Error())
-					return
+			logrus.Debugf("gateway: received message: %v", msg)
+			if msg.Sequence != c.lastSequence+1 {
+				if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
+					Code: eventing.ErrorCode_BAD_CASE,
+				}); err != nil {
+					logrus.Fatal(err)
 				}
-				logrus.Debugf("gateway: received message: %v", msg)
-				if msg.Sequence != ack.Sequence+1 {
-					if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-						Code: eventing.FailureCode_BAD_CASE,
-					}); err != nil {
-						logrus.Fatal(err)
-					}
-					logrus.Debugf("gateway: sequence mismatch: %v", msg)
-					return
-				} else {
-					ack.Sequence = msg.Sequence
-				}
-				c.kafkaProducer.Produce(&kafka.Message{
-					TopicPartition: kafka.TopicPartition{
-						Partition: kafka.PartitionAny,
-					},
-				}, nil)
+				logrus.Debugf("gateway: sequence mismatch: %v", msg)
+				return
+			} else {
+				c.lastSequence = msg.Sequence
 			}
+			c.kafkaProducer.Produce(&kafka.Message{
+				TopicPartition: kafka.TopicPartition{
+					Partition: kafka.PartitionAny,
+				},
+			}, nil)
 		}
 	}
-}
-
-func (c *Conn) handoff(
-	ctx context.Context,
-) (*eventing.AcknowledgeHandoffMessage, error) {
-	rs, err := c.rc.ReadMessageSlice()
-	if err != nil {
-		return nil, err
-	}
-	if len(rs) != 2 {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
-		}); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	syncMsg, err := rs[0].ReadSyncMessage()
-	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
-		}); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	handoffMsg, err := rs[1].ReadAuthHandoffMessage()
-	if err != nil {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
-		}); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	if syncMsg.Sequence != handoffMsg.KeyMessage.Sequence+1 {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
-		}); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	if handoffMsg.KeyMessage.Sequence != handoffMsg.PasswordMessage.Sequence+1 {
-		if err := c.wc.WriteFailCodeMessage(&eventing.FailureMessage{
-			Code: eventing.FailureCode_BAD_CASE,
-		}); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	c.rc.SetKey(handoffMsg.KeyMessage.Key)
-	_, err = c.presence.AuthHandoff(ctx, &fleet.AuthHandoffRequest{
-		Key:      handoffMsg.KeyMessage.Key,
-		Password: handoffMsg.PasswordMessage.Password,
-	})
-	if err != nil {
-		return nil, nil
-	}
-	return &eventing.AcknowledgeHandoffMessage{
-		Key:      handoffMsg.KeyMessage.Key,
-		Sequence: syncMsg.Sequence,
-	}, nil
 }

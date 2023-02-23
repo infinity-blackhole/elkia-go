@@ -11,20 +11,22 @@ var charLookup = []string{
 	"5", "6", "7", "8", "9", "\n", "\x00",
 }
 
-type Reader struct {
-	R   *bufio.Reader
-	key uint32
-}
-
 func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
 		R: r,
 	}
 }
 
-// SetKey sets the key for the reader.
-func (r *Reader) SetKey(key uint32) {
-	r.key = key
+func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
+	return &Reader{
+		R:   r,
+		key: &key,
+	}
+}
+
+type Reader struct {
+	R   *bufio.Reader
+	key *uint32
 }
 
 // ReadMessageSlice reads a single message from r,
@@ -54,21 +56,6 @@ func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
 }
 
 func (r *Reader) readMessageSlice() ([][]byte, error) {
-	if r.key == 0 {
-		return r.readPresenceMessage()
-	}
-	return r.readChannelMessage()
-}
-
-func (r *Reader) readPresenceMessage() ([][]byte, error) {
-	binary, err := r.R.ReadBytes(0xFF)
-	if err != nil {
-		return nil, err
-	}
-	return r.unpack(r.decryptMessage(binary)), nil
-}
-
-func (r *Reader) readChannelMessage() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err
@@ -85,20 +72,23 @@ func (r *Reader) decryptMessage(msg []byte) []byte {
 }
 
 func (r *Reader) decryptByte(c byte) byte {
-	mode := r.key & 0xFF
-	offset := (r.key >> 6) & 3
-	switch mode {
-	case 0:
-		return (c - byte(offset) - 0x40) & 0xFF
-	case 1:
-		return (c + byte(offset) + 0x40) & 0xFF
-	case 2:
-		return ((c - byte(offset) - 0x40) ^ 0xC3) & 0xFF
-	case 3:
-		return ((c + byte(offset) + 0x40) ^ 0xC3) & 0xFF
-	default:
-		return (c - 0x0F) & 0xFF
+	if r.key == nil {
+		mode := *r.key & 0xFF
+		offset := (*r.key >> 6) & 3
+		switch mode {
+		case 0:
+			return (c - byte(offset) - 0x40) & 0xFF
+		case 1:
+			return (c + byte(offset) + 0x40) & 0xFF
+		case 2:
+			return ((c - byte(offset) - 0x40) ^ 0xC3) & 0xFF
+		case 3:
+			return ((c + byte(offset) + 0x40) ^ 0xC3) & 0xFF
+		default:
+			return (c - 0x0F) & 0xFF
+		}
 	}
+	return (c - 0x0F) & 0xFF
 }
 
 func (r *Reader) unpack(data []byte) [][]byte {

@@ -20,23 +20,23 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type FailureCode int32
+type ErrorCode int32
 
 const (
-	FailureCode_OUTDATED_CLIENT      FailureCode = 0
-	FailureCode_UNEXPECTED_ERROR     FailureCode = 1
-	FailureCode_MAINTENANCE          FailureCode = 2
-	FailureCode_SESSION_ALREADY_USED FailureCode = 3
-	FailureCode_UNVALID_CREDENTIALS  FailureCode = 4
-	FailureCode_CANT_AUTHENTICATE    FailureCode = 5
-	FailureCode_USER_BLOCKLISTED     FailureCode = 6
-	FailureCode_COUNTRY_BLACKLISTED  FailureCode = 7
-	FailureCode_BAD_CASE             FailureCode = 8
+	ErrorCode_OUTDATED_CLIENT      ErrorCode = 0
+	ErrorCode_UNEXPECTED_ERROR     ErrorCode = 1
+	ErrorCode_MAINTENANCE          ErrorCode = 2
+	ErrorCode_SESSION_ALREADY_USED ErrorCode = 3
+	ErrorCode_UNVALID_CREDENTIALS  ErrorCode = 4
+	ErrorCode_CANT_AUTHENTICATE    ErrorCode = 5
+	ErrorCode_USER_BLOCKLISTED     ErrorCode = 6
+	ErrorCode_COUNTRY_BLACKLISTED  ErrorCode = 7
+	ErrorCode_BAD_CASE             ErrorCode = 8
 )
 
-// Enum value maps for FailureCode.
+// Enum value maps for ErrorCode.
 var (
-	FailureCode_name = map[int32]string{
+	ErrorCode_name = map[int32]string{
 		0: "OUTDATED_CLIENT",
 		1: "UNEXPECTED_ERROR",
 		2: "MAINTENANCE",
@@ -47,7 +47,7 @@ var (
 		7: "COUNTRY_BLACKLISTED",
 		8: "BAD_CASE",
 	}
-	FailureCode_value = map[string]int32{
+	ErrorCode_value = map[string]int32{
 		"OUTDATED_CLIENT":      0,
 		"UNEXPECTED_ERROR":     1,
 		"MAINTENANCE":          2,
@@ -60,34 +60,34 @@ var (
 	}
 )
 
-func (x FailureCode) Enum() *FailureCode {
-	p := new(FailureCode)
+func (x ErrorCode) Enum() *ErrorCode {
+	p := new(ErrorCode)
 	*p = x
 	return p
 }
 
-func (x FailureCode) String() string {
+func (x ErrorCode) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (FailureCode) Descriptor() protoreflect.EnumDescriptor {
+func (ErrorCode) Descriptor() protoreflect.EnumDescriptor {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes[0].Descriptor()
 }
 
-func (FailureCode) Type() protoreflect.EnumType {
+func (ErrorCode) Type() protoreflect.EnumType {
 	return &file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes[0]
 }
 
-func (x FailureCode) Number() protoreflect.EnumNumber {
+func (x ErrorCode) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use FailureCode.Descriptor instead.
-func (FailureCode) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ErrorCode.Descriptor instead.
+func (ErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{0}
 }
 
-type AuthLoginRequest struct {
+type AuthLoginEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -98,8 +98,8 @@ type AuthLoginRequest struct {
 	ClientChecksum string `protobuf:"bytes,7,opt,name=client_checksum,json=clientChecksum,proto3" json:"client_checksum,omitempty"`
 }
 
-func (x *AuthLoginRequest) Reset() {
-	*x = AuthLoginRequest{}
+func (x *AuthLoginEvent) Reset() {
+	*x = AuthLoginEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -107,13 +107,13 @@ func (x *AuthLoginRequest) Reset() {
 	}
 }
 
-func (x *AuthLoginRequest) String() string {
+func (x *AuthLoginEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthLoginRequest) ProtoMessage() {}
+func (*AuthLoginEvent) ProtoMessage() {}
 
-func (x *AuthLoginRequest) ProtoReflect() protoreflect.Message {
+func (x *AuthLoginEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -125,40 +125,40 @@ func (x *AuthLoginRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthLoginRequest.ProtoReflect.Descriptor instead.
-func (*AuthLoginRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthLoginEvent.ProtoReflect.Descriptor instead.
+func (*AuthLoginEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AuthLoginRequest) GetIdentifier() string {
+func (x *AuthLoginEvent) GetIdentifier() string {
 	if x != nil {
 		return x.Identifier
 	}
 	return ""
 }
 
-func (x *AuthLoginRequest) GetPassword() string {
+func (x *AuthLoginEvent) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-func (x *AuthLoginRequest) GetClientVersion() string {
+func (x *AuthLoginEvent) GetClientVersion() string {
 	if x != nil {
 		return x.ClientVersion
 	}
 	return ""
 }
 
-func (x *AuthLoginRequest) GetClientChecksum() string {
+func (x *AuthLoginEvent) GetClientChecksum() string {
 	if x != nil {
 		return x.ClientChecksum
 	}
 	return ""
 }
 
-type GatewayMessage struct {
+type Gateway struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -172,8 +172,8 @@ type GatewayMessage struct {
 	WorldName  string `protobuf:"bytes,7,opt,name=world_name,json=worldName,proto3" json:"world_name,omitempty"`
 }
 
-func (x *GatewayMessage) Reset() {
-	*x = GatewayMessage{}
+func (x *Gateway) Reset() {
+	*x = Gateway{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -181,13 +181,13 @@ func (x *GatewayMessage) Reset() {
 	}
 }
 
-func (x *GatewayMessage) String() string {
+func (x *Gateway) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GatewayMessage) ProtoMessage() {}
+func (*Gateway) ProtoMessage() {}
 
-func (x *GatewayMessage) ProtoReflect() protoreflect.Message {
+func (x *Gateway) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -199,71 +199,71 @@ func (x *GatewayMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GatewayMessage.ProtoReflect.Descriptor instead.
-func (*GatewayMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use Gateway.ProtoReflect.Descriptor instead.
+func (*Gateway) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GatewayMessage) GetHost() string {
+func (x *Gateway) GetHost() string {
 	if x != nil {
 		return x.Host
 	}
 	return ""
 }
 
-func (x *GatewayMessage) GetPort() string {
+func (x *Gateway) GetPort() string {
 	if x != nil {
 		return x.Port
 	}
 	return ""
 }
 
-func (x *GatewayMessage) GetPopulation() uint32 {
+func (x *Gateway) GetPopulation() uint32 {
 	if x != nil {
 		return x.Population
 	}
 	return 0
 }
 
-func (x *GatewayMessage) GetCapacity() uint32 {
+func (x *Gateway) GetCapacity() uint32 {
 	if x != nil {
 		return x.Capacity
 	}
 	return 0
 }
 
-func (x *GatewayMessage) GetWorldId() uint32 {
+func (x *Gateway) GetWorldId() uint32 {
 	if x != nil {
 		return x.WorldId
 	}
 	return 0
 }
 
-func (x *GatewayMessage) GetChannelId() uint32 {
+func (x *Gateway) GetChannelId() uint32 {
 	if x != nil {
 		return x.ChannelId
 	}
 	return 0
 }
 
-func (x *GatewayMessage) GetWorldName() string {
+func (x *Gateway) GetWorldName() string {
 	if x != nil {
 		return x.WorldName
 	}
 	return ""
 }
 
-type ProposeHandoffMessage struct {
+type GatewayListEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key      uint32            `protobuf:"varint,1,opt,name=key,proto3" json:"key,omitempty"`
-	Gateways []*GatewayMessage `protobuf:"bytes,2,rep,name=gateways,proto3" json:"gateways,omitempty"`
+	Key      uint32     `protobuf:"varint,1,opt,name=key,proto3" json:"key,omitempty"`
+	Gateways []*Gateway `protobuf:"bytes,2,rep,name=gateways,proto3" json:"gateways,omitempty"`
 }
 
-func (x *ProposeHandoffMessage) Reset() {
-	*x = ProposeHandoffMessage{}
+func (x *GatewayListEvent) Reset() {
+	*x = GatewayListEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -271,13 +271,13 @@ func (x *ProposeHandoffMessage) Reset() {
 	}
 }
 
-func (x *ProposeHandoffMessage) String() string {
+func (x *GatewayListEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ProposeHandoffMessage) ProtoMessage() {}
+func (*GatewayListEvent) ProtoMessage() {}
 
-func (x *ProposeHandoffMessage) ProtoReflect() protoreflect.Message {
+func (x *GatewayListEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -289,36 +289,36 @@ func (x *ProposeHandoffMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ProposeHandoffMessage.ProtoReflect.Descriptor instead.
-func (*ProposeHandoffMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use GatewayListEvent.ProtoReflect.Descriptor instead.
+func (*GatewayListEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ProposeHandoffMessage) GetKey() uint32 {
+func (x *GatewayListEvent) GetKey() uint32 {
 	if x != nil {
 		return x.Key
 	}
 	return 0
 }
 
-func (x *ProposeHandoffMessage) GetGateways() []*GatewayMessage {
+func (x *GatewayListEvent) GetGateways() []*Gateway {
 	if x != nil {
 		return x.Gateways
 	}
 	return nil
 }
 
-type AuthHandoffMessage struct {
+type AuthHandoffKeyEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	KeyMessage      *AuthHandoffKeyMessage      `protobuf:"bytes,1,opt,name=key_message,json=keyMessage,proto3" json:"key_message,omitempty"`
-	PasswordMessage *AuthHandoffPasswordMessage `protobuf:"bytes,2,opt,name=password_message,json=passwordMessage,proto3" json:"password_message,omitempty"`
+	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Key      uint32 `protobuf:"varint,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
-func (x *AuthHandoffMessage) Reset() {
-	*x = AuthHandoffMessage{}
+func (x *AuthHandoffKeyEvent) Reset() {
+	*x = AuthHandoffKeyEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -326,13 +326,13 @@ func (x *AuthHandoffMessage) Reset() {
 	}
 }
 
-func (x *AuthHandoffMessage) String() string {
+func (x *AuthHandoffKeyEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffMessage) ProtoMessage() {}
+func (*AuthHandoffKeyEvent) ProtoMessage() {}
 
-func (x *AuthHandoffMessage) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffKeyEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -344,36 +344,36 @@ func (x *AuthHandoffMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffMessage.ProtoReflect.Descriptor instead.
-func (*AuthHandoffMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffKeyEvent.ProtoReflect.Descriptor instead.
+func (*AuthHandoffKeyEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *AuthHandoffMessage) GetKeyMessage() *AuthHandoffKeyMessage {
+func (x *AuthHandoffKeyEvent) GetSequence() uint32 {
 	if x != nil {
-		return x.KeyMessage
+		return x.Sequence
 	}
-	return nil
+	return 0
 }
 
-func (x *AuthHandoffMessage) GetPasswordMessage() *AuthHandoffPasswordMessage {
+func (x *AuthHandoffKeyEvent) GetKey() uint32 {
 	if x != nil {
-		return x.PasswordMessage
+		return x.Key
 	}
-	return nil
+	return 0
 }
 
-type AuthHandoffKeyMessage struct {
+type AuthHandoffPasswordEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Key      uint32 `protobuf:"varint,2,opt,name=key,proto3" json:"key,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
-func (x *AuthHandoffKeyMessage) Reset() {
-	*x = AuthHandoffKeyMessage{}
+func (x *AuthHandoffPasswordEvent) Reset() {
+	*x = AuthHandoffPasswordEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -381,13 +381,13 @@ func (x *AuthHandoffKeyMessage) Reset() {
 	}
 }
 
-func (x *AuthHandoffKeyMessage) String() string {
+func (x *AuthHandoffPasswordEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffKeyMessage) ProtoMessage() {}
+func (*AuthHandoffPasswordEvent) ProtoMessage() {}
 
-func (x *AuthHandoffKeyMessage) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffPasswordEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -399,36 +399,36 @@ func (x *AuthHandoffKeyMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffKeyMessage.ProtoReflect.Descriptor instead.
-func (*AuthHandoffKeyMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffPasswordEvent.ProtoReflect.Descriptor instead.
+func (*AuthHandoffPasswordEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AuthHandoffKeyMessage) GetSequence() uint32 {
+func (x *AuthHandoffPasswordEvent) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (x *AuthHandoffKeyMessage) GetKey() uint32 {
+func (x *AuthHandoffPasswordEvent) GetPassword() string {
 	if x != nil {
-		return x.Key
+		return x.Password
 	}
-	return 0
+	return ""
 }
 
-type AuthHandoffPasswordMessage struct {
+type AuthHandoffSuccessEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Key      uint32 `protobuf:"varint,1,opt,name=key,proto3" json:"key,omitempty"`
+	Sequence uint32 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
-func (x *AuthHandoffPasswordMessage) Reset() {
-	*x = AuthHandoffPasswordMessage{}
+func (x *AuthHandoffSuccessEvent) Reset() {
+	*x = AuthHandoffSuccessEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -436,13 +436,13 @@ func (x *AuthHandoffPasswordMessage) Reset() {
 	}
 }
 
-func (x *AuthHandoffPasswordMessage) String() string {
+func (x *AuthHandoffSuccessEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffPasswordMessage) ProtoMessage() {}
+func (*AuthHandoffSuccessEvent) ProtoMessage() {}
 
-func (x *AuthHandoffPasswordMessage) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffSuccessEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -454,41 +454,36 @@ func (x *AuthHandoffPasswordMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffPasswordMessage.ProtoReflect.Descriptor instead.
-func (*AuthHandoffPasswordMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffSuccessEvent.ProtoReflect.Descriptor instead.
+func (*AuthHandoffSuccessEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AuthHandoffPasswordMessage) GetSequence() uint32 {
+func (x *AuthHandoffSuccessEvent) GetKey() uint32 {
+	if x != nil {
+		return x.Key
+	}
+	return 0
+}
+
+func (x *AuthHandoffSuccessEvent) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (x *AuthHandoffPasswordMessage) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-type ChannelMessage struct {
+type AuthHandoffEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// Types that are assignable to Payload:
-	//
-	//	*ChannelMessage_UnknownMessage
-	//	*ChannelMessage_SyncMessage
-	//	*ChannelMessage_CommandMessage
-	Payload isChannelMessage_Payload `protobuf_oneof:"payload"`
+	KeyEvent      *AuthHandoffKeyEvent      `protobuf:"bytes,1,opt,name=key_event,json=keyEvent,proto3" json:"key_event,omitempty"`
+	PasswordEvent *AuthHandoffPasswordEvent `protobuf:"bytes,2,opt,name=password_event,json=passwordEvent,proto3" json:"password_event,omitempty"`
 }
 
-func (x *ChannelMessage) Reset() {
-	*x = ChannelMessage{}
+func (x *AuthHandoffEvent) Reset() {
+	*x = AuthHandoffEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -496,13 +491,13 @@ func (x *ChannelMessage) Reset() {
 	}
 }
 
-func (x *ChannelMessage) String() string {
+func (x *AuthHandoffEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ChannelMessage) ProtoMessage() {}
+func (*AuthHandoffEvent) ProtoMessage() {}
 
-func (x *ChannelMessage) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -514,76 +509,35 @@ func (x *ChannelMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ChannelMessage.ProtoReflect.Descriptor instead.
-func (*ChannelMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffEvent.ProtoReflect.Descriptor instead.
+func (*AuthHandoffEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ChannelMessage) GetSequence() uint32 {
+func (x *AuthHandoffEvent) GetKeyEvent() *AuthHandoffKeyEvent {
 	if x != nil {
-		return x.Sequence
-	}
-	return 0
-}
-
-func (m *ChannelMessage) GetPayload() isChannelMessage_Payload {
-	if m != nil {
-		return m.Payload
+		return x.KeyEvent
 	}
 	return nil
 }
 
-func (x *ChannelMessage) GetUnknownMessage() []byte {
-	if x, ok := x.GetPayload().(*ChannelMessage_UnknownMessage); ok {
-		return x.UnknownMessage
+func (x *AuthHandoffEvent) GetPasswordEvent() *AuthHandoffPasswordEvent {
+	if x != nil {
+		return x.PasswordEvent
 	}
 	return nil
 }
 
-func (x *ChannelMessage) GetSyncMessage() *SyncMessage {
-	if x, ok := x.GetPayload().(*ChannelMessage_SyncMessage); ok {
-		return x.SyncMessage
-	}
-	return nil
-}
-
-func (x *ChannelMessage) GetCommandMessage() *CommandMessage {
-	if x, ok := x.GetPayload().(*ChannelMessage_CommandMessage); ok {
-		return x.CommandMessage
-	}
-	return nil
-}
-
-type isChannelMessage_Payload interface {
-	isChannelMessage_Payload()
-}
-
-type ChannelMessage_UnknownMessage struct {
-	UnknownMessage []byte `protobuf:"bytes,2,opt,name=unknown_message,json=unknownMessage,proto3,oneof"`
-}
-
-type ChannelMessage_SyncMessage struct {
-	SyncMessage *SyncMessage `protobuf:"bytes,3,opt,name=sync_message,json=syncMessage,proto3,oneof"`
-}
-
-type ChannelMessage_CommandMessage struct {
-	CommandMessage *CommandMessage `protobuf:"bytes,5,opt,name=command_message,json=commandMessage,proto3,oneof"`
-}
-
-func (*ChannelMessage_UnknownMessage) isChannelMessage_Payload() {}
-
-func (*ChannelMessage_SyncMessage) isChannelMessage_Payload() {}
-
-func (*ChannelMessage_CommandMessage) isChannelMessage_Payload() {}
-
-type SyncMessage struct {
+type SyncEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
-func (x *SyncMessage) Reset() {
-	*x = SyncMessage{}
+func (x *SyncEvent) Reset() {
+	*x = SyncEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -591,13 +545,13 @@ func (x *SyncMessage) Reset() {
 	}
 }
 
-func (x *SyncMessage) String() string {
+func (x *SyncEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SyncMessage) ProtoMessage() {}
+func (*SyncEvent) ProtoMessage() {}
 
-func (x *SyncMessage) ProtoReflect() protoreflect.Message {
+func (x *SyncEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -609,25 +563,33 @@ func (x *SyncMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SyncMessage.ProtoReflect.Descriptor instead.
-func (*SyncMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use SyncEvent.ProtoReflect.Descriptor instead.
+func (*SyncEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{7}
 }
 
-type CommandMessage struct {
+func (x *SyncEvent) GetSequence() uint32 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+type HandshakeEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Opcode string `protobuf:"bytes,1,opt,name=opcode,proto3" json:"opcode,omitempty"`
 	// Types that are assignable to Payload:
 	//
-	//	*CommandMessage_UnknownPayload
-	Payload isCommandMessage_Payload `protobuf_oneof:"payload"`
+	//	*HandshakeEvent_UnknownMessage
+	//	*HandshakeEvent_SyncEvent
+	//	*HandshakeEvent_AuthHandoffEvent
+	Payload isHandshakeEvent_Payload `protobuf_oneof:"payload"`
 }
 
-func (x *CommandMessage) Reset() {
-	*x = CommandMessage{}
+func (x *HandshakeEvent) Reset() {
+	*x = HandshakeEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -635,13 +597,13 @@ func (x *CommandMessage) Reset() {
 	}
 }
 
-func (x *CommandMessage) String() string {
+func (x *HandshakeEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CommandMessage) ProtoMessage() {}
+func (*HandshakeEvent) ProtoMessage() {}
 
-func (x *CommandMessage) ProtoReflect() protoreflect.Message {
+func (x *HandshakeEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -653,53 +615,76 @@ func (x *CommandMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CommandMessage.ProtoReflect.Descriptor instead.
-func (*CommandMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use HandshakeEvent.ProtoReflect.Descriptor instead.
+func (*HandshakeEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *CommandMessage) GetOpcode() string {
-	if x != nil {
-		return x.Opcode
-	}
-	return ""
-}
-
-func (m *CommandMessage) GetPayload() isCommandMessage_Payload {
+func (m *HandshakeEvent) GetPayload() isHandshakeEvent_Payload {
 	if m != nil {
 		return m.Payload
 	}
 	return nil
 }
 
-func (x *CommandMessage) GetUnknownPayload() []byte {
-	if x, ok := x.GetPayload().(*CommandMessage_UnknownPayload); ok {
-		return x.UnknownPayload
+func (x *HandshakeEvent) GetUnknownMessage() []byte {
+	if x, ok := x.GetPayload().(*HandshakeEvent_UnknownMessage); ok {
+		return x.UnknownMessage
 	}
 	return nil
 }
 
-type isCommandMessage_Payload interface {
-	isCommandMessage_Payload()
+func (x *HandshakeEvent) GetSyncEvent() *SyncEvent {
+	if x, ok := x.GetPayload().(*HandshakeEvent_SyncEvent); ok {
+		return x.SyncEvent
+	}
+	return nil
 }
 
-type CommandMessage_UnknownPayload struct {
-	UnknownPayload []byte `protobuf:"bytes,2,opt,name=unknown_payload,json=unknownPayload,proto3,oneof"`
+func (x *HandshakeEvent) GetAuthHandoffEvent() *AuthHandoffEvent {
+	if x, ok := x.GetPayload().(*HandshakeEvent_AuthHandoffEvent); ok {
+		return x.AuthHandoffEvent
+	}
+	return nil
 }
 
-func (*CommandMessage_UnknownPayload) isCommandMessage_Payload() {}
+type isHandshakeEvent_Payload interface {
+	isHandshakeEvent_Payload()
+}
 
-type AcknowledgeHandoffMessage struct {
+type HandshakeEvent_UnknownMessage struct {
+	UnknownMessage []byte `protobuf:"bytes,1,opt,name=unknown_message,json=unknownMessage,proto3,oneof"`
+}
+
+type HandshakeEvent_SyncEvent struct {
+	SyncEvent *SyncEvent `protobuf:"bytes,3,opt,name=sync_event,json=syncEvent,proto3,oneof"`
+}
+
+type HandshakeEvent_AuthHandoffEvent struct {
+	AuthHandoffEvent *AuthHandoffEvent `protobuf:"bytes,4,opt,name=auth_handoff_event,json=authHandoffEvent,proto3,oneof"`
+}
+
+func (*HandshakeEvent_UnknownMessage) isHandshakeEvent_Payload() {}
+
+func (*HandshakeEvent_SyncEvent) isHandshakeEvent_Payload() {}
+
+func (*HandshakeEvent_AuthHandoffEvent) isHandshakeEvent_Payload() {}
+
+type ChannelEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Key      uint32 `protobuf:"varint,1,opt,name=key,proto3" json:"key,omitempty"`
-	Sequence uint32 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	OpCode   string `protobuf:"bytes,2,opt,name=op_code,json=opCode,proto3" json:"op_code,omitempty"`
+	// Types that are assignable to Payload:
+	//
+	//	*ChannelEvent_UnknownPayload
+	Payload isChannelEvent_Payload `protobuf_oneof:"payload"`
 }
 
-func (x *AcknowledgeHandoffMessage) Reset() {
-	*x = AcknowledgeHandoffMessage{}
+func (x *ChannelEvent) Reset() {
+	*x = ChannelEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -707,13 +692,13 @@ func (x *AcknowledgeHandoffMessage) Reset() {
 	}
 }
 
-func (x *AcknowledgeHandoffMessage) String() string {
+func (x *ChannelEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AcknowledgeHandoffMessage) ProtoMessage() {}
+func (*ChannelEvent) ProtoMessage() {}
 
-func (x *AcknowledgeHandoffMessage) ProtoReflect() protoreflect.Message {
+func (x *ChannelEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -725,35 +710,59 @@ func (x *AcknowledgeHandoffMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AcknowledgeHandoffMessage.ProtoReflect.Descriptor instead.
-func (*AcknowledgeHandoffMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelEvent.ProtoReflect.Descriptor instead.
+func (*ChannelEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *AcknowledgeHandoffMessage) GetKey() uint32 {
-	if x != nil {
-		return x.Key
-	}
-	return 0
-}
-
-func (x *AcknowledgeHandoffMessage) GetSequence() uint32 {
+func (x *ChannelEvent) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-type FailureMessage struct {
+func (x *ChannelEvent) GetOpCode() string {
+	if x != nil {
+		return x.OpCode
+	}
+	return ""
+}
+
+func (m *ChannelEvent) GetPayload() isChannelEvent_Payload {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
+func (x *ChannelEvent) GetUnknownPayload() []byte {
+	if x, ok := x.GetPayload().(*ChannelEvent_UnknownPayload); ok {
+		return x.UnknownPayload
+	}
+	return nil
+}
+
+type isChannelEvent_Payload interface {
+	isChannelEvent_Payload()
+}
+
+type ChannelEvent_UnknownPayload struct {
+	UnknownPayload []byte `protobuf:"bytes,3,opt,name=unknown_payload,json=unknownPayload,proto3,oneof"`
+}
+
+func (*ChannelEvent_UnknownPayload) isChannelEvent_Payload() {}
+
+type ErrorMessageEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Code FailureCode `protobuf:"varint,1,opt,name=code,proto3,enum=io.elkia.eventing.v1alpha1.FailureCode" json:"code,omitempty"`
+	Code ErrorCode `protobuf:"varint,1,opt,name=code,proto3,enum=io.elkia.eventing.v1alpha1.ErrorCode" json:"code,omitempty"`
 }
 
-func (x *FailureMessage) Reset() {
-	*x = FailureMessage{}
+func (x *ErrorMessageEvent) Reset() {
+	*x = ErrorMessageEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -761,13 +770,13 @@ func (x *FailureMessage) Reset() {
 	}
 }
 
-func (x *FailureMessage) String() string {
+func (x *ErrorMessageEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FailureMessage) ProtoMessage() {}
+func (*ErrorMessageEvent) ProtoMessage() {}
 
-func (x *FailureMessage) ProtoReflect() protoreflect.Message {
+func (x *ErrorMessageEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -779,19 +788,19 @@ func (x *FailureMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FailureMessage.ProtoReflect.Descriptor instead.
-func (*FailureMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use ErrorMessageEvent.ProtoReflect.Descriptor instead.
+func (*ErrorMessageEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *FailureMessage) GetCode() FailureCode {
+func (x *ErrorMessageEvent) GetCode() ErrorCode {
 	if x != nil {
 		return x.Code
 	}
-	return FailureCode_OUTDATED_CLIENT
+	return ErrorCode_OUTDATED_CLIENT
 }
 
-type InfoMessage struct {
+type InfoMessageEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -799,8 +808,8 @@ type InfoMessage struct {
 	Content string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 }
 
-func (x *InfoMessage) Reset() {
-	*x = InfoMessage{}
+func (x *InfoMessageEvent) Reset() {
+	*x = InfoMessageEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -808,13 +817,13 @@ func (x *InfoMessage) Reset() {
 	}
 }
 
-func (x *InfoMessage) String() string {
+func (x *InfoMessageEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*InfoMessage) ProtoMessage() {}
+func (*InfoMessageEvent) ProtoMessage() {}
 
-func (x *InfoMessage) ProtoReflect() protoreflect.Message {
+func (x *InfoMessageEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -826,12 +835,12 @@ func (x *InfoMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use InfoMessage.ProtoReflect.Descriptor instead.
-func (*InfoMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use InfoMessageEvent.ProtoReflect.Descriptor instead.
+func (*InfoMessageEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *InfoMessage) GetContent() string {
+func (x *InfoMessageEvent) GetContent() string {
 	if x != nil {
 		return x.Content
 	}
@@ -845,97 +854,96 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x6e, 0x67, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x65, 0x76, 0x65, 0x6e,
 	0x74, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1a, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x22, 0xa3, 0x01, 0x0a, 0x15, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72,
-	0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x25, 0x0a, 0x0e,
-	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x56, 0x65, 0x72, 0x73,
-	0x69, 0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x0f, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x63, 0x68,
-	0x65, 0x63, 0x6b, 0x73, 0x75, 0x6d, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x63, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x73, 0x75, 0x6d, 0x22, 0xcd, 0x01, 0x0a,
-	0x0e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
-	0x12, 0x0a, 0x04, 0x68, 0x6f, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68,
-	0x6f, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x6f, 0x70, 0x75, 0x6c,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a, 0x70, 0x6f, 0x70,
-	0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x61, 0x70, 0x61, 0x63,
-	0x69, 0x74, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x63, 0x61, 0x70, 0x61, 0x63,
-	0x69, 0x74, 0x79, 0x12, 0x19, 0x0a, 0x08, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x5f, 0x69, 0x64, 0x18,
-	0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x49, 0x64, 0x12, 0x1d,
-	0x0a, 0x0a, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x06, 0x20, 0x01,
-	0x28, 0x0d, 0x52, 0x09, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x49, 0x64, 0x12, 0x1d, 0x0a,
-	0x0a, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x71, 0x0a, 0x15,
-	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x46, 0x0a, 0x08, 0x67, 0x61, 0x74, 0x65, 0x77,
-	0x61, 0x79, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
-	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x08, 0x67, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x73, 0x22,
-	0xcb, 0x01, 0x0a, 0x12, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x52, 0x0a, 0x0b, 0x6b, 0x65, 0x79, 0x5f, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x31, 0x2e, 0x69, 0x6f,
-	0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e,
-	0x64, 0x6f, 0x66, 0x66, 0x4b, 0x65, 0x79, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x0a,
-	0x6b, 0x65, 0x79, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x61, 0x0a, 0x10, 0x70, 0x61,
-	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x36, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e,
-	0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61,
-	0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x50, 0x61, 0x73,
-	0x73, 0x77, 0x6f, 0x72, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x0f, 0x70, 0x61,
-	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x45, 0x0a,
-	0x15, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4b, 0x65, 0x79, 0x4d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x22, 0x9c, 0x01, 0x0a, 0x0e, 0x41, 0x75, 0x74, 0x68, 0x4c,
+	0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x64, 0x65,
+	0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69,
+	0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f,
+	0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x63,
+	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x0f,
+	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x73, 0x75, 0x6d, 0x18,
+	0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x73, 0x75, 0x6d, 0x22, 0xc6, 0x01, 0x0a, 0x07, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61,
+	0x79, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x6f, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x68, 0x6f, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x6f, 0x70,
+	0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a, 0x70,
+	0x6f, 0x70, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x61, 0x70,
+	0x61, 0x63, 0x69, 0x74, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x63, 0x61, 0x70,
+	0x61, 0x63, 0x69, 0x74, 0x79, 0x12, 0x19, 0x0a, 0x08, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x5f, 0x69,
+	0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x49, 0x64,
+	0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x49, 0x64, 0x12,
+	0x1d, 0x0a, 0x0a, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x07, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x65,
+	0x0a, 0x10, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x03, 0x6b, 0x65, 0x79, 0x12, 0x3f, 0x0a, 0x08, 0x67, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x73,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69,
+	0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0x2e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x52, 0x08, 0x67, 0x61, 0x74,
+	0x65, 0x77, 0x61, 0x79, 0x73, 0x22, 0x43, 0x0a, 0x13, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e,
+	0x64, 0x6f, 0x66, 0x66, 0x4b, 0x65, 0x79, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08,
+	0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08,
+	0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x52, 0x0a, 0x18, 0x41, 0x75,
+	0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
+	0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
 	0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
-	0x63, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x22, 0x54, 0x0a, 0x1a, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64,
-	0x6f, 0x66, 0x66, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x1a,
-	0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x87, 0x02, 0x0a, 0x0e, 0x43,
-	0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a,
-	0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
-	0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x29, 0x0a, 0x0f, 0x75, 0x6e, 0x6b,
-	0x6e, 0x6f, 0x77, 0x6e, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0c, 0x48, 0x00, 0x52, 0x0e, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x4d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x12, 0x4c, 0x0a, 0x0c, 0x73, 0x79, 0x6e, 0x63, 0x5f, 0x6d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x69, 0x6f, 0x2e,
-	0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76,
-	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x4d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x48, 0x00, 0x52, 0x0b, 0x73, 0x79, 0x6e, 0x63, 0x4d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x12, 0x55, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x5f, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6f,
-	0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e,
-	0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x63, 0x6f, 0x6d, 0x6d, 0x61,
-	0x6e, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79,
-	0x6c, 0x6f, 0x61, 0x64, 0x22, 0x0d, 0x0a, 0x0b, 0x53, 0x79, 0x6e, 0x63, 0x4d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x22, 0x5e, 0x0a, 0x0e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x4d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x70, 0x63, 0x6f, 0x64, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x70, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x29, 0x0a,
-	0x0f, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x5f, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x0e, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77,
-	0x6e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x49, 0x0a, 0x19, 0x41, 0x63, 0x6b, 0x6e, 0x6f, 0x77, 0x6c, 0x65, 0x64,
-	0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b,
-	0x65, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x4d,
-	0x0a, 0x0e, 0x46, 0x61, 0x69, 0x6c, 0x75, 0x72, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x3b, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x27,
-	0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69,
-	0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x46, 0x61, 0x69, 0x6c,
-	0x75, 0x72, 0x65, 0x43, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x27, 0x0a,
-	0x0b, 0x49, 0x6e, 0x66, 0x6f, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x07,
-	0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63,
-	0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2a, 0xd0, 0x01, 0x0a, 0x0b, 0x46, 0x61, 0x69, 0x6c, 0x75,
-	0x72, 0x65, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x55, 0x54, 0x44, 0x41, 0x54,
+	0x63, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x47,
+	0x0a, 0x17, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x53, 0x75, 0x63,
+	0x63, 0x65, 0x73, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x73,
+	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73,
+	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0xbd, 0x01, 0x0a, 0x10, 0x41, 0x75, 0x74, 0x68,
+	0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x4c, 0x0a, 0x09,
+	0x6b, 0x65, 0x79, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x2f, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74,
+	0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74,
+	0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4b, 0x65, 0x79, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x52, 0x08, 0x6b, 0x65, 0x79, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x5b, 0x0a, 0x0e, 0x70, 0x61,
+	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x34, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76,
+	0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e,
+	0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x50, 0x61, 0x73, 0x73, 0x77,
+	0x6f, 0x72, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x0d, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
+	0x72, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x22, 0x27, 0x0a, 0x09, 0x53, 0x79, 0x6e, 0x63, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65,
+	0x22, 0xec, 0x01, 0x0a, 0x0e, 0x48, 0x61, 0x6e, 0x64, 0x73, 0x68, 0x61, 0x6b, 0x65, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x12, 0x29, 0x0a, 0x0f, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x5f, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x0e,
+	0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x46,
+	0x0a, 0x0a, 0x73, 0x79, 0x6e, 0x63, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x25, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76,
+	0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e,
+	0x53, 0x79, 0x6e, 0x63, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x09, 0x73, 0x79, 0x6e,
+	0x63, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x5c, 0x0a, 0x12, 0x61, 0x75, 0x74, 0x68, 0x5f, 0x68,
+	0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76,
+	0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e,
+	0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x48, 0x00, 0x52, 0x10, 0x61, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22,
+	0x79, 0x0a, 0x0c, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12,
+	0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x6f,
+	0x70, 0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x70,
+	0x43, 0x6f, 0x64, 0x65, 0x12, 0x29, 0x0a, 0x0f, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x5f,
+	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52,
+	0x0e, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x42,
+	0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x4e, 0x0a, 0x11, 0x45, 0x72,
+	0x72, 0x6f, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12,
+	0x39, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x25, 0x2e,
+	0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e,
+	0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x45, 0x72, 0x72, 0x6f, 0x72,
+	0x43, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x2c, 0x0a, 0x10, 0x49, 0x6e,
+	0x66, 0x6f, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18,
+	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2a, 0xce, 0x01, 0x0a, 0x09, 0x45, 0x72, 0x72,
+	0x6f, 0x72, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x55, 0x54, 0x44, 0x41, 0x54,
 	0x45, 0x44, 0x5f, 0x43, 0x4c, 0x49, 0x45, 0x4e, 0x54, 0x10, 0x00, 0x12, 0x14, 0x0a, 0x10, 0x55,
 	0x4e, 0x45, 0x58, 0x50, 0x45, 0x43, 0x54, 0x45, 0x44, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10,
 	0x01, 0x12, 0x0f, 0x0a, 0x0b, 0x4d, 0x41, 0x49, 0x4e, 0x54, 0x45, 0x4e, 0x41, 0x4e, 0x43, 0x45,
@@ -967,27 +975,27 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP() []byte {
 var file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_pkg_api_eventing_v1alpha1_eventing_proto_goTypes = []interface{}{
-	(FailureCode)(0),                   // 0: io.elkia.eventing.v1alpha1.FailureCode
-	(*AuthLoginRequest)(nil),      // 1: io.elkia.eventing.v1alpha1.AuthLoginRequest
-	(*GatewayMessage)(nil),             // 2: io.elkia.eventing.v1alpha1.GatewayMessage
-	(*ProposeHandoffMessage)(nil),      // 3: io.elkia.eventing.v1alpha1.ProposeHandoffMessage
-	(*AuthHandoffMessage)(nil),         // 4: io.elkia.eventing.v1alpha1.AuthHandoffMessage
-	(*AuthHandoffKeyMessage)(nil),      // 5: io.elkia.eventing.v1alpha1.AuthHandoffKeyMessage
-	(*AuthHandoffPasswordMessage)(nil), // 6: io.elkia.eventing.v1alpha1.AuthHandoffPasswordMessage
-	(*ChannelMessage)(nil),             // 7: io.elkia.eventing.v1alpha1.ChannelMessage
-	(*SyncMessage)(nil),                // 8: io.elkia.eventing.v1alpha1.SyncMessage
-	(*CommandMessage)(nil),             // 9: io.elkia.eventing.v1alpha1.CommandMessage
-	(*AcknowledgeHandoffMessage)(nil),  // 10: io.elkia.eventing.v1alpha1.AcknowledgeHandoffMessage
-	(*FailureMessage)(nil),             // 11: io.elkia.eventing.v1alpha1.FailureMessage
-	(*InfoMessage)(nil),                // 12: io.elkia.eventing.v1alpha1.InfoMessage
+	(ErrorCode)(0),                   // 0: io.elkia.eventing.v1alpha1.ErrorCode
+	(*AuthLoginEvent)(nil),           // 1: io.elkia.eventing.v1alpha1.AuthLoginEvent
+	(*Gateway)(nil),                  // 2: io.elkia.eventing.v1alpha1.Gateway
+	(*GatewayListEvent)(nil),         // 3: io.elkia.eventing.v1alpha1.GatewayListEvent
+	(*AuthHandoffKeyEvent)(nil),      // 4: io.elkia.eventing.v1alpha1.AuthHandoffKeyEvent
+	(*AuthHandoffPasswordEvent)(nil), // 5: io.elkia.eventing.v1alpha1.AuthHandoffPasswordEvent
+	(*AuthHandoffSuccessEvent)(nil),  // 6: io.elkia.eventing.v1alpha1.AuthHandoffSuccessEvent
+	(*AuthHandoffEvent)(nil),         // 7: io.elkia.eventing.v1alpha1.AuthHandoffEvent
+	(*SyncEvent)(nil),                // 8: io.elkia.eventing.v1alpha1.SyncEvent
+	(*HandshakeEvent)(nil),           // 9: io.elkia.eventing.v1alpha1.HandshakeEvent
+	(*ChannelEvent)(nil),             // 10: io.elkia.eventing.v1alpha1.ChannelEvent
+	(*ErrorMessageEvent)(nil),        // 11: io.elkia.eventing.v1alpha1.ErrorMessageEvent
+	(*InfoMessageEvent)(nil),         // 12: io.elkia.eventing.v1alpha1.InfoMessageEvent
 }
 var file_pkg_api_eventing_v1alpha1_eventing_proto_depIdxs = []int32{
-	2, // 0: io.elkia.eventing.v1alpha1.ProposeHandoffMessage.gateways:type_name -> io.elkia.eventing.v1alpha1.GatewayMessage
-	5, // 1: io.elkia.eventing.v1alpha1.AuthHandoffMessage.key_message:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffKeyMessage
-	6, // 2: io.elkia.eventing.v1alpha1.AuthHandoffMessage.password_message:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffPasswordMessage
-	8, // 3: io.elkia.eventing.v1alpha1.ChannelMessage.sync_message:type_name -> io.elkia.eventing.v1alpha1.SyncMessage
-	9, // 4: io.elkia.eventing.v1alpha1.ChannelMessage.command_message:type_name -> io.elkia.eventing.v1alpha1.CommandMessage
-	0, // 5: io.elkia.eventing.v1alpha1.FailureMessage.code:type_name -> io.elkia.eventing.v1alpha1.FailureCode
+	2, // 0: io.elkia.eventing.v1alpha1.GatewayListEvent.gateways:type_name -> io.elkia.eventing.v1alpha1.Gateway
+	4, // 1: io.elkia.eventing.v1alpha1.AuthHandoffEvent.key_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffKeyEvent
+	5, // 2: io.elkia.eventing.v1alpha1.AuthHandoffEvent.password_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffPasswordEvent
+	8, // 3: io.elkia.eventing.v1alpha1.HandshakeEvent.sync_event:type_name -> io.elkia.eventing.v1alpha1.SyncEvent
+	7, // 4: io.elkia.eventing.v1alpha1.HandshakeEvent.auth_handoff_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffEvent
+	0, // 5: io.elkia.eventing.v1alpha1.ErrorMessageEvent.code:type_name -> io.elkia.eventing.v1alpha1.ErrorCode
 	6, // [6:6] is the sub-list for method output_type
 	6, // [6:6] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
@@ -1002,7 +1010,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthLoginRequest); i {
+			switch v := v.(*AuthLoginEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1014,7 +1022,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GatewayMessage); i {
+			switch v := v.(*Gateway); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1026,7 +1034,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ProposeHandoffMessage); i {
+			switch v := v.(*GatewayListEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1038,7 +1046,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffMessage); i {
+			switch v := v.(*AuthHandoffKeyEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1050,7 +1058,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffKeyMessage); i {
+			switch v := v.(*AuthHandoffPasswordEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1062,7 +1070,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffPasswordMessage); i {
+			switch v := v.(*AuthHandoffSuccessEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1074,7 +1082,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ChannelMessage); i {
+			switch v := v.(*AuthHandoffEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1086,7 +1094,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SyncMessage); i {
+			switch v := v.(*SyncEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1098,7 +1106,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CommandMessage); i {
+			switch v := v.(*HandshakeEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1110,7 +1118,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AcknowledgeHandoffMessage); i {
+			switch v := v.(*ChannelEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1122,7 +1130,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FailureMessage); i {
+			switch v := v.(*ErrorMessageEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1134,7 +1142,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*InfoMessage); i {
+			switch v := v.(*InfoMessageEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1146,13 +1154,13 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 	}
-	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6].OneofWrappers = []interface{}{
-		(*ChannelMessage_UnknownMessage)(nil),
-		(*ChannelMessage_SyncMessage)(nil),
-		(*ChannelMessage_CommandMessage)(nil),
-	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8].OneofWrappers = []interface{}{
-		(*CommandMessage_UnknownPayload)(nil),
+		(*HandshakeEvent_UnknownMessage)(nil),
+		(*HandshakeEvent_SyncEvent)(nil),
+		(*HandshakeEvent_AuthHandoffEvent)(nil),
+	}
+	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9].OneofWrappers = []interface{}{
+		(*ChannelEvent_UnknownPayload)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
