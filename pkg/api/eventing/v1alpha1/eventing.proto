@@ -49,7 +49,7 @@ message SyncEvent { uint32 sequence = 1; }
 
 message HandshakeEvent {
   oneof payload {
-    bytes unknown_message = 1;
+    bytes fallback_event = 1;
     SyncEvent sync_event = 3;
     AuthHandoffEvent auth_handoff_event = 4;
   }
