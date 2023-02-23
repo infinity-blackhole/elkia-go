@@ -63,7 +63,7 @@ func (c *Conn) serve(ctx context.Context) {
 	r, err := c.rc.ReadMessage()
 	if err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
+			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -75,7 +75,7 @@ func (c *Conn) serve(ctx context.Context) {
 	opcode, err := r.ReadOpCode()
 	if err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_BAD_CASE,
+			Code: eventing.ErrorMessageCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -101,7 +101,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	m, err := r.ReadAuthLoginEvent()
 	if err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_BAD_CASE,
+			Code: eventing.ErrorMessageCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -121,7 +121,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	)
 	if err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
+			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -135,7 +135,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
+			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -150,7 +150,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
 			if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-				Code: eventing.ErrorCode_UNEXPECTED_ERROR,
+				Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
 			}); err != nil {
 				logrus.Fatal(err)
 			}
@@ -179,7 +179,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		},
 	); err != nil {
 		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorCode_UNEXPECTED_ERROR,
+			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -192,7 +192,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 
 func (c *Conn) handleFallback(opcode string) {
 	if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-		Code: eventing.ErrorCode_BAD_CASE,
+		Code: eventing.ErrorMessageCode_BAD_CASE,
 	}); err != nil {
 		logrus.Fatal(err)
 	}

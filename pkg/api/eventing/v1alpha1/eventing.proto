@@ -3,6 +3,22 @@ package io.elkia.eventing.v1alpha1;
 
 option go_package = "pkg/api/eventing/v1alpha1";
 
+enum ErrorMessageCode {
+  OUTDATED_CLIENT = 0;
+  UNEXPECTED_ERROR = 1;
+  MAINTENANCE = 2;
+  SESSION_ALREADY_USED = 3;
+  UNVALID_CREDENTIALS = 4;
+  CANT_AUTHENTICATE = 5;
+  USER_BLOCKLISTED = 6;
+  COUNTRY_BLACKLISTED = 7;
+  BAD_CASE = 8;
+}
+
+message ErrorMessageEvent { ErrorMessageCode code = 1; }
+
+message InfoMessageEvent { string content = 1; }
+
 message AuthLoginEvent {
   string identifier = 2;
   string password = 3;
@@ -25,6 +41,8 @@ message GatewayListEvent {
   repeated Gateway gateways = 2;
 }
 
+message SyncEvent { uint32 sequence = 1; }
+
 message AuthHandoffKeyEvent {
   uint32 sequence = 1;
   uint32 key = 2;
@@ -35,17 +53,15 @@ message AuthHandoffPasswordEvent {
   string password = 2;
 }
 
-message AuthHandoffSuccessEvent {
-  uint32 key = 1;
-  uint32 sequence = 2;
-}
-
 message AuthHandoffEvent {
   AuthHandoffKeyEvent key_event = 1;
   AuthHandoffPasswordEvent password_event = 2;
 }
 
-message SyncEvent { uint32 sequence = 1; }
+message AuthHandoffSuccessEvent {
+  uint32 key = 1;
+  uint32 sequence = 2;
+}
 
 message HandshakeEvent {
   oneof payload {
@@ -60,19 +76,3 @@ message ChannelEvent {
   string op_code = 2;
   oneof payload { bytes unknown_payload = 3; }
 }
-
-enum ErrorCode {
-  OUTDATED_CLIENT = 0;
-  UNEXPECTED_ERROR = 1;
-  MAINTENANCE = 2;
-  SESSION_ALREADY_USED = 3;
-  UNVALID_CREDENTIALS = 4;
-  CANT_AUTHENTICATE = 5;
-  USER_BLOCKLISTED = 6;
-  COUNTRY_BLACKLISTED = 7;
-  BAD_CASE = 8;
-}
-
-message ErrorMessageEvent { ErrorCode code = 1; }
-
-message InfoMessageEvent { string content = 1; }
