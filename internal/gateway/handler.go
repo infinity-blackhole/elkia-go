@@ -154,8 +154,8 @@ func (c *handshaker) handoff(
 	}, nil
 }
 
-func (h *handshaker) newConn(ack *eventing.AuthHandoffSuccessEvent) *Conn {
-	return &Conn{
+func (h *handshaker) newConn(ack *eventing.AuthHandoffSuccessEvent) *conn {
+	return &conn{
 		rwc:           h.rwc,
 		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), ack.Key),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(h.rwc)),
@@ -165,7 +165,7 @@ func (h *handshaker) newConn(ack *eventing.AuthHandoffSuccessEvent) *Conn {
 	}
 }
 
-type Conn struct {
+type conn struct {
 	rwc           net.Conn
 	rc            *protonostale.GatewayChannelReader
 	wc            *protonostale.GatewayWriter
@@ -174,7 +174,7 @@ type Conn struct {
 	lastSequence  uint32
 }
 
-func (c *Conn) serve(ctx context.Context) {
+func (c *conn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
 	for {

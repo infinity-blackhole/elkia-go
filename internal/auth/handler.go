@@ -39,8 +39,8 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	go conn.serve(ctx)
 }
 
-func (h *Handler) newConn(c net.Conn) *Conn {
-	return &Conn{
+func (h *Handler) newConn(c net.Conn) *conn {
+	return &conn{
 		rwc:      c,
 		rc:       protonostale.NewAuthReader(bufio.NewReader(c)),
 		wc:       protonostale.NewAuthWriter(bufio.NewWriter(c)),
@@ -49,7 +49,7 @@ func (h *Handler) newConn(c net.Conn) *Conn {
 	}
 }
 
-type Conn struct {
+type conn struct {
 	rwc      net.Conn
 	rc       *protonostale.AuthReader
 	wc       *protonostale.AuthWriter
@@ -57,7 +57,7 @@ type Conn struct {
 	cluster  fleet.ClusterClient
 }
 
-func (c *Conn) serve(ctx context.Context) {
+func (c *conn) serve(ctx context.Context) {
 	go func() {
 		if err := recover(); err != nil {
 			c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
@@ -97,7 +97,7 @@ func (c *Conn) serve(ctx context.Context) {
 	}
 }
 
-func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReader) {
+func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReader) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
 	m, err := r.ReadAuthLoginEvent()
@@ -171,7 +171,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	}
 }
 
-func (c *Conn) handleFallback(opcode string) {
+func (c *conn) handleFallback(opcode string) {
 	if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
 		Code: eventing.DialogErrorCode_BAD_CASE,
 	}); err != nil {
