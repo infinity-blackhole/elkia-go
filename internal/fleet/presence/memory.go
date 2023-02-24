@@ -52,11 +52,15 @@ func (s *MemoryPresenceServer) AuthLogin(
 	if err != nil {
 		return nil, err
 	}
+	sessionToken, err := s.generateSecureToken(16)
+	if err != nil {
+		return nil, err
+	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
 			Id:         id.String(),
 			Identifier: in.Identifier,
-			Token:      GenerateSecureToken(16),
+			Token:      sessionToken,
 		},
 	})
 	if err != nil {
@@ -71,14 +75,34 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	ctx context.Context,
 	in *fleet.AuthRefreshLoginRequest,
 ) (*fleet.AuthRefreshLoginResponse, error) {
-	_, err := s.AuthLogin(ctx, &fleet.AuthLoginRequest{
-		Identifier: in.Identifier,
-		Password:   in.Password,
-	})
+	var session *fleet.Session
+	for _, i := range s.sessions {
+		if i.Token == in.Token {
+			session = i
+			break
+		}
+	}
+	if session == nil {
+		return nil, errors.New("invalid session")
+	}
+	var identity *Identity
+	for _, i := range s.identities {
+		if i.Username == in.Identifier && i.Password == in.Password {
+			identity = i
+			break
+		}
+	}
+	if identity == nil {
+		return nil, errors.New("invalid credentials")
+	}
+	if session.Identifier != in.Identifier {
+		return nil, errors.New("invalid credentials")
+	}
+	id, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
 	}
-	id, err := uuid.NewUUID()
+	sessionToken, err := s.generateSecureToken(16)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +110,7 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 		Session: &fleet.Session{
 			Id:         id.String(),
 			Identifier: in.Identifier,
-			Token:      GenerateSecureToken(16),
+			Token:      sessionToken,
 		},
 	})
 	if err != nil {
@@ -95,6 +119,14 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	return &fleet.AuthRefreshLoginResponse{
 		Key: sessionPut.Key,
 	}, nil
+}
+
+func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func (s *MemoryPresenceServer) AuthLogout(
@@ -145,12 +177,4 @@ func (s *MemoryPresenceServer) SessionDelete(
 ) (*fleet.SessionDeleteResponse, error) {
 	delete(s.sessions, in.Key)
 	return &fleet.SessionDeleteResponse{}, nil
-}
-
-func GenerateSecureToken(length int) string {
-	b := make([]byte, length)
-	if _, err := rand.Read(b); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(b)
 }
