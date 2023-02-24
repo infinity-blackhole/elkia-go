@@ -12,6 +12,7 @@ metadata:
     fleet.elkia.io/channel-id: "1"
     fleet.elkia.io/population: "0"
     fleet.elkia.io/capacity: "3000"
+    fleet.elkia.io/port: elkia
 spec:
   type: LoadBalancer
   ports:

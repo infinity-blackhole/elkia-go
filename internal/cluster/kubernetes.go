@@ -153,8 +153,8 @@ func (s *KubernetesClusterServer) getGatewayPortFromService(
 		)
 	}
 	for _, port := range svc.Spec.Ports {
-		if port.Name == "elkia" {
-			return strconv.Itoa(int(port.Port)), nil
+		if port.Name == svc.Labels["fleet.elkia.io/port"] {
+			return strconv.Itoa(int(port.NodePort)), nil
 		}
 	}
 	return "", fmt.Errorf(
