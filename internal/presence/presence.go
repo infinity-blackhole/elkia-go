@@ -201,13 +201,10 @@ func (s *PresenceServer) SessionPut(
 	if err != nil {
 		return nil, err
 	}
-	h := fnv.New32a()
-	if err := gob.
-		NewEncoder(h).
-		Encode(in.Session.Id); err != nil {
+	key, err := s.generateKey(in.Session.Id)
+	if err != nil {
 		return nil, err
 	}
-	key := h.Sum32()
 	res, err := s.etcd.Put(ctx, fmt.Sprintf("sessions:%d", key), string(d))
 	if err != nil {
 		return nil, err
@@ -216,6 +213,16 @@ func (s *PresenceServer) SessionPut(
 	return &fleet.SessionPutResponse{
 		Key: key,
 	}, nil
+}
+
+func (*PresenceServer) generateKey(id string) (uint32, error) {
+	h := fnv.New32a()
+	if err := gob.
+		NewEncoder(h).
+		Encode(id); err != nil {
+		return 0, err
+	}
+	return h.Sum32(), nil
 }
 
 func (s *PresenceServer) SessionDelete(
