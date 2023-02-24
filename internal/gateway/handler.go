@@ -62,19 +62,20 @@ type handshakeConn struct {
 }
 
 func (c *handshakeConn) serve(ctx context.Context) {
+	go func() {
+		if err := recover(); err != nil {
+			c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			})
+		}
+	}()
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
 	ack, err := c.handoff(ctx)
 	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-		}); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debug(err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return
+		logrus.Fatal(err)
 	}
 	if ack == nil {
 		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
@@ -178,28 +179,16 @@ func (c *Conn) serve(ctx context.Context) {
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
-			if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			}); err != nil {
-				logrus.Fatal(err)
-			}
-			logrus.Debug(err)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			return
+			logrus.Fatal(err)
 		}
 		for _, r := range rs {
 			msg, err := r.ReadChannelEvent()
 			if err != nil {
-				if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-					Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				}); err != nil {
-					logrus.Fatal(err)
-				}
-				logrus.Debug(err)
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
-				return
+				logrus.Fatal(err)
 			}
 			logrus.Debugf("gateway: received message: %v", msg)
 			if msg.Sequence != c.lastSequence+1 {

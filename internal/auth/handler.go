@@ -58,19 +58,20 @@ type Conn struct {
 }
 
 func (c *Conn) serve(ctx context.Context) {
+	go func() {
+		if err := recover(); err != nil {
+			c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			})
+		}
+	}()
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
 	r, err := c.rc.ReadMessage()
 	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-		}); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debug(err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return
+		logrus.Fatal(err)
 	}
 	opcode, err := r.ReadOpCode()
 	if err != nil {
@@ -120,44 +121,26 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		},
 	)
 	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-		}); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debug(err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return
+		logrus.Fatal(err)
 	}
 	logrus.Debugf("auth: create handoff: %v", handoff)
 
 	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-		}); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debug(err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return
+		logrus.Fatal(err)
 	}
 	logrus.Debugf("auth: list members: %v", MemberList)
 	gateways := []*eventing.Gateway{}
 	for _, m := range MemberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
-			if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			}); err != nil {
-				logrus.Fatal(err)
-			}
-			logrus.Debug(err)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			return
+			logrus.Fatal(err)
 		}
 		gateways = append(
 			gateways,
@@ -178,15 +161,9 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 			Gateways: gateways,
 		},
 	); err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-		}); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debug(err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return
+		logrus.Fatal(err)
 	}
 }
 
