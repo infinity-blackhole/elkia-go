@@ -61,7 +61,7 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthH
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.AuthHandoffPasswordEvent, error) {
-	sn, err := r.ReadUint32()
+	sn, err := r.ReadSequence()
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ type GatewayChannelEventReader struct {
 }
 
 func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, error) {
-	sn, err := r.ReadUint32()
+	sn, err := r.ReadSequence()
 	if err != nil {
 		return nil, err
 	}
