@@ -30,26 +30,25 @@ type AuthEventReader struct {
 }
 
 func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error) {
-	logrus.Debugf("reading request handoff message")
 	_, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("reading identifier")
 	identifier, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("reading password")
+	logrus.Debugf("read identifier %s", identifier)
 	pwd, err := r.ReadPassword()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("reading client version")
+	logrus.Debugf("read password %s", pwd)
 	clientVersion, err := r.ReadVersion()
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("read client version %s", clientVersion)
 	return &eventing.AuthLoginEvent{
 		Identifier:    identifier,
 		Password:      pwd,

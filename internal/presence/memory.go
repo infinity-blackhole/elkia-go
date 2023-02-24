@@ -24,6 +24,7 @@ type MemoryPresenceServerConfig struct {
 func NewMemoryPresenceServer(c MemoryPresenceServerConfig) *MemoryPresenceServer {
 	return &MemoryPresenceServer{
 		identities: c.Identities,
+		sessions:   map[uint32]*fleet.Session{},
 	}
 }
 

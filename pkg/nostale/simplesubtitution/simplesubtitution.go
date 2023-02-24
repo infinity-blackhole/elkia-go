@@ -48,7 +48,7 @@ func (r *Reader) readMessageSlice() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("simple substitution encoded message: %s", msg)
+	logrus.Debugf("simple substitution encoded message: %v", msg)
 	buf := make([]byte, 0, len(msg))
 	for _, b := range msg {
 		if b > 14 {

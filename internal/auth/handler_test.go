@@ -22,11 +22,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		Identities: map[uint32]*presence.Identity{
 			1: {
 				Username: "admin",
-				Password: "admin",
-			},
-			2: {
-				Username: "user",
-				Password: "user",
+				Password: "s3cr3t",
 			},
 		},
 	})
@@ -41,6 +37,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-alpha",
 				WorldId:    1,
 				ChannelId:  1,
+				Address:    "127.0.0.1:4124",
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -49,6 +46,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-beta",
 				WorldId:    1,
 				ChannelId:  2,
+				Address:    "127.0.0.1:4125",
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -57,6 +55,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-gamma",
 				WorldId:    1,
 				ChannelId:  3,
+				Address:    "127.0.0.1:4126",
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -65,6 +64,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-delta",
 				WorldId:    2,
 				ChannelId:  1,
+				Address:    "127.0.0.1:4127",
 				Name:       "world-beta",
 				Population: 10,
 				Capacity:   100,
@@ -85,18 +85,10 @@ func TestHandlerServeNosTale(t *testing.T) {
 	defer server.Close()
 	handler.ServeNosTale(server)
 	input := []byte{
-		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
-		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
-		2, 4, 5, 149, 150, 2, 3, 145, 6, 1, 9, 10, 9, 149, 6, 2, 0, 5, 144, 3,
-		9, 150, 1, 255, 9, 255, 2, 145, 0, 145, 10, 143, 5, 3, 150, 4, 144, 6,
-		255, 0, 5, 0, 0, 4, 3, 2, 3, 150, 9, 5, 4, 145, 2, 10, 0, 150, 1, 149,
-		9, 1, 144, 6, 150, 9, 4, 145, 3, 9, 255, 5, 4, 0, 150, 148, 9, 10,
-		148, 150, 2, 255, 143, 9, 150, 143, 148, 3, 6, 255, 143, 9, 143, 3,
-		144, 6, 149, 255, 2, 5, 5, 150, 6, 148, 9, 148, 2, 9, 144, 145, 2, 1,
-		5, 242, 2, 2, 255, 9, 149, 255, 150, 143, 215, 2, 252, 9, 252, 255,
-		252, 255, 2, 3, 1, 242, 2, 242, 143, 3, 150, 0, 5, 2, 255, 144, 150,
-		0, 5, 3, 148, 5, 144, 145, 149, 2, 10, 3, 2, 148, 6, 2, 143, 0, 150,
-		145, 255, 4, 4, 4, 216,
+		156, 187, 159, 2, 5, 3, 5, 242, 1, 2, 1, 5, 6, 4, 9, 9, 242, 177, 182,
+		189, 185, 188, 242, 1, 1, 10, 6, 3, 255, 255, 1, 255, 5, 255, 255, 4,
+		6, 255, 6, 3, 5, 0, 0, 255, 5, 255, 6, 3, 144, 6, 242, 2, 2, 255, 0,
+		145, 2, 9, 2, 215, 2, 252, 9, 252, 255, 252, 255, 2, 10, 4, 216,
 	}
 	if _, err := client.Write(input); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
