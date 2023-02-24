@@ -2,13 +2,13 @@ package presence
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"hash/fnv"
+	"math/rand"
+	"strconv"
 
-	"github.com/google/uuid"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 )
 
@@ -19,12 +19,14 @@ type Identity struct {
 
 type MemoryPresenceServerConfig struct {
 	Identities map[uint32]*Identity
+	Seed       int64
 }
 
 func NewMemoryPresenceServer(c MemoryPresenceServerConfig) *MemoryPresenceServer {
 	return &MemoryPresenceServer{
 		identities: c.Identities,
 		sessions:   map[uint32]*fleet.Session{},
+		rand:       rand.New(rand.NewSource(c.Seed)),
 	}
 }
 
@@ -32,6 +34,7 @@ type MemoryPresenceServer struct {
 	fleet.UnimplementedPresenceServer
 	identities map[uint32]*Identity
 	sessions   map[uint32]*fleet.Session
+	rand       *rand.Rand
 }
 
 func (s *MemoryPresenceServer) AuthLogin(
@@ -48,17 +51,13 @@ func (s *MemoryPresenceServer) AuthLogin(
 	if identity == nil {
 		return nil, errors.New("invalid credentials")
 	}
-	id, err := uuid.NewUUID()
-	if err != nil {
-		return nil, err
-	}
 	sessionToken, err := s.generateSecureToken(16)
 	if err != nil {
 		return nil, err
 	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         id.String(),
+			Id:         strconv.Itoa(s.rand.Int()),
 			Identifier: in.Identifier,
 			Token:      sessionToken,
 		},
@@ -98,17 +97,13 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if session.Identifier != in.Identifier {
 		return nil, errors.New("invalid credentials")
 	}
-	id, err := uuid.NewUUID()
-	if err != nil {
-		return nil, err
-	}
 	sessionToken, err := s.generateSecureToken(16)
 	if err != nil {
 		return nil, err
 	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         id.String(),
+			Id:         strconv.Itoa(s.rand.Int()),
 			Identifier: in.Identifier,
 			Token:      sessionToken,
 		},
@@ -123,7 +118,7 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 
 func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
 	b := make([]byte, length)
-	if _, err := rand.Read(b); err != nil {
+	if _, err := s.rand.Read(b); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
