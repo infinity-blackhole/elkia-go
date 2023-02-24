@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/infinity-blackhole/elkia/internal/fleet/cluster"
-	"github.com/infinity-blackhole/elkia/internal/fleet/presence"
+	"github.com/infinity-blackhole/elkia/internal/cluster"
+	"github.com/infinity-blackhole/elkia/internal/presence"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/sirupsen/logrus"
