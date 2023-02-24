@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"net"
 	"strconv"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
@@ -83,18 +84,15 @@ func (s *KubernetesClusterServer) getMemberFromService(
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	populationUint, err := strconv.ParseUint(
-		svc.Labels["fleet.elkia.io/channel-population"],
+		svc.Labels["fleet.elkia.io/population"],
 		10, 32,
 	)
 	if err != nil {
 		return nil, err
 	}
 	capacityUint, err := strconv.ParseUint(
-		svc.Labels["fleet.elkia.io/channel-capacity"],
+		svc.Labels["fleet.elkia.io/capacity"],
 		10, 32,
 	)
 	if err != nil {
@@ -122,20 +120,26 @@ func (s *KubernetesClusterServer) getGatewayAddrFromService(
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(ip, port), nil
+	return net.JoinHostPort(ip, strconv.Itoa(int(port))), nil
 }
 
 func (s *KubernetesClusterServer) getGatewayIpFromService(
 	svc *corev1.Service,
 ) (string, error) {
-	if svc.Spec.LoadBalancerIP == "" {
-		return "", fmt.Errorf(
-			"service %s/%s has no LoadBalancerIP",
-			svc.Namespace,
-			svc.Name,
-		)
+	// TODO: We might want to support multiple IPs in the future
+	for _, ingress := range svc.Status.LoadBalancer.Ingress {
+		if ingress.IP != "" {
+			return ingress.IP, nil
+		}
+		if ingress.Hostname != "" {
+			return ingress.Hostname, nil
+		}
 	}
-	return svc.Spec.LoadBalancerIP, nil
+	return "", fmt.Errorf(
+		"service %s/%s has no ingress",
+		svc.Namespace,
+		svc.Name,
+	)
 }
 
 func (s *KubernetesClusterServer) getGatewayPortFromService(

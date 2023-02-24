@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: elkia-fleet
   namespace: elkia
+  labels:
+    app.kubernetes.io/name: elkia-fleet
+    app.kubernetes.io/instance: elkia-fleet
 spec:
   ports:
     - name: http

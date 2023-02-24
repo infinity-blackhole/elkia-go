@@ -3,7 +3,17 @@ kind: Service
 metadata:
   name: elkia-gateway
   namespace: elkia
+  labels:
+    app.kubernetes.io/name: elkia-gateway
+    app.kubernetes.io/instance: elkia-gateway
+    fleet.elkia.io/managed: "true"
+    fleet.elkia.io/world-id: "1"
+    fleet.elkia.io/world-name: "elkia"
+    fleet.elkia.io/channel-id: "1"
+    fleet.elkia.io/population: "0"
+    fleet.elkia.io/capacity: "3000"
 spec:
+  type: LoadBalancer
   ports:
     - name: elkia
       port: 4124
