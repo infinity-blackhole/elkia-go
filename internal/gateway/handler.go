@@ -86,7 +86,7 @@ func (c *handshakeConn) serve(ctx context.Context) {
 		return
 	}
 	logrus.Debugf("gateway: handoff acknowledged: %v", ack)
-	conn := c.newConn(ack.Key)
+	conn := c.newConn(ack)
 	conn.serve(ctx)
 }
 
@@ -152,13 +152,14 @@ func (c *handshakeConn) handoff(
 	}, nil
 }
 
-func (h *handshakeConn) newConn(key uint32) *Conn {
+func (h *handshakeConn) newConn(ack *eventing.AuthHandoffSuccessEvent) *Conn {
 	return &Conn{
 		rwc:           h.rwc,
-		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), key),
+		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), ack.Key),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(h.rwc)),
 		presence:      h.presence,
 		kafkaProducer: h.kafkaProducer,
+		lastSequence:  ack.Sequence,
 	}
 }
 
