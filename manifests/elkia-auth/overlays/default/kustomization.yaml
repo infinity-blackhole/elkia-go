@@ -5,4 +5,5 @@ resources:
 components:
   - ../../components/elkia-fleet
 patches:
+  - path: deployment.patch.yaml
   - path: svc.patch.yaml

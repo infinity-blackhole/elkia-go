@@ -6,4 +6,5 @@ components:
   - ../../components/etcd
   - ../../components/kratos
 patches:
+  - path: deployment.patch.yaml
   - path: svc.patch.yaml
