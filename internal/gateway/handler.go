@@ -73,9 +73,10 @@ func (c *handshakeConn) serve(ctx context.Context) {
 	defer span.End()
 	ack, err := c.handoff(ctx)
 	if err != nil {
+		logrus.Debugf("gateway: handoff failed: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		logrus.Fatal(err)
+		return
 	}
 	if ack == nil {
 		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
@@ -179,16 +180,18 @@ func (c *Conn) serve(ctx context.Context) {
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
+			logrus.Debugf("gateway: read failed: %v", err)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			logrus.Fatal(err)
+			return
 		}
 		for _, r := range rs {
 			msg, err := r.ReadChannelEvent()
 			if err != nil {
+				logrus.Debugf("gateway: read failed: %v", err)
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
-				logrus.Fatal(err)
+				return
 			}
 			logrus.Debugf("gateway: received message: %v", msg)
 			if msg.Sequence != c.lastSequence+1 {

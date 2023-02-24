@@ -69,9 +69,10 @@ func (c *Conn) serve(ctx context.Context) {
 	defer span.End()
 	r, err := c.rc.ReadMessage()
 	if err != nil {
+		logrus.Debugf("auth: read message: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		logrus.Fatal(err)
+		return
 	}
 	opcode, err := r.ReadOpCode()
 	if err != nil {
@@ -80,7 +81,7 @@ func (c *Conn) serve(ctx context.Context) {
 		}); err != nil {
 			logrus.Fatal(err)
 		}
-		logrus.Debug(err)
+		logrus.Debugf("auth: read opcode: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return
@@ -106,7 +107,7 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		}); err != nil {
 			logrus.Fatal(err)
 		}
-		logrus.Debug(err)
+		logrus.Debugf("auth: read handoff: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return
@@ -121,26 +122,29 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		},
 	)
 	if err != nil {
+		logrus.Debugf("auth: create handoff: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		logrus.Fatal(err)
+		return
 	}
 	logrus.Debugf("auth: create handoff: %v", handoff)
 
 	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
+		logrus.Debugf("auth: list members: %v", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		logrus.Fatal(err)
+		return
 	}
 	logrus.Debugf("auth: list members: %v", MemberList)
 	gateways := []*eventing.Gateway{}
 	for _, m := range MemberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
+			logrus.Debugf("auth: split host port: %v", err)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
-			logrus.Fatal(err)
+			return
 		}
 		gateways = append(
 			gateways,

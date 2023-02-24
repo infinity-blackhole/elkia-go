@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/sirupsen/logrus"
 )
 
 type Identity struct {
@@ -162,7 +161,7 @@ func (s *MemoryPresenceServer) SessionPut(
 	if err := gob.
 		NewEncoder(h).
 		Encode(in.Session.Id); err != nil {
-		logrus.Fatal(err)
+		return nil, err
 	}
 	key := h.Sum32()
 	s.sessions[key] = in.Session
