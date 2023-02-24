@@ -13,7 +13,7 @@ import (
 func NewGatewayHandshakeEventReader(r io.Reader) *GatewayHandshakeEventReader {
 	return &GatewayHandshakeEventReader{
 		EventReader{
-			FieldReader: NewFieldReader(r),
+			r: bufio.NewReader(r),
 		},
 	}
 }
@@ -50,7 +50,7 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthH
 	if err != nil {
 		return nil, err
 	}
-	key, err := r.FieldReader.ReadUint32()
+	key, err := r.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +61,11 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthH
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.AuthHandoffPasswordEvent, error) {
-	sn, err := r.FieldReader.ReadUint32()
+	sn, err := r.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
-	password, err := r.FieldReader.ReadString()
+	password, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.
 func NewGatewayChannelEventReader(r io.Reader) *GatewayChannelEventReader {
 	return &GatewayChannelEventReader{
 		EventReader{
-			FieldReader: NewFieldReader(r),
+			r: bufio.NewReader(r),
 		},
 	}
 }
@@ -88,7 +88,7 @@ type GatewayChannelEventReader struct {
 }
 
 func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, error) {
-	sn, err := r.FieldReader.ReadUint32()
+	sn, err := r.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, 
 	if err != nil {
 		return nil, err
 	}
-	payload, err := r.FieldReader.ReadPayload()
+	payload, err := r.ReadPayload()
 	if err != nil {
 		return nil, err
 	}
@@ -109,14 +109,14 @@ func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, 
 
 func NewGatewayWriter(w *bufio.Writer) *GatewayWriter {
 	return &GatewayWriter{
-		Writer: Writer{
+		EventWriter: EventWriter{
 			w: bufio.NewWriter(monoalphabetic.NewWriter(w)),
 		},
 	}
 }
 
 type GatewayWriter struct {
-	Writer
+	EventWriter
 }
 
 func NewGatewayHandshakeReader(r *bufio.Reader) *GatewayHandshakeReader {

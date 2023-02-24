@@ -21,7 +21,7 @@ var (
 func NewAuthEventReader(r io.Reader) *AuthEventReader {
 	return &AuthEventReader{
 		EventReader: EventReader{
-			FieldReader: NewFieldReader(r),
+			r: bufio.NewReader(r),
 		},
 	}
 }
@@ -32,12 +32,12 @@ type AuthEventReader struct {
 
 func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error) {
 	logrus.Debugf("reading request handoff message")
-	_, err := r.FieldReader.ReadString()
+	_, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("reading identifier")
-	identifier, err := r.FieldReader.ReadString()
+	identifier, err := r.ReadString()
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error)
 }
 
 func (r *AuthEventReader) ReadPassword() (string, error) {
-	pwd, err := r.FieldReader.ReadField()
+	pwd, err := r.ReadField()
 	if err != nil {
 		return "", err
 	}
@@ -89,7 +89,7 @@ func (r *AuthEventReader) ReadPassword() (string, error) {
 var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)`)
 
 func (r *AuthEventReader) ReadVersion() (string, error) {
-	version, err := r.FieldReader.ReadField()
+	version, err := r.ReadField()
 	if err != nil {
 		return "", err
 	}
@@ -127,14 +127,14 @@ func (r *AuthReader) ReadMessage() (*AuthEventReader, error) {
 
 func NewAuthWriter(w *bufio.Writer) *AuthWriter {
 	return &AuthWriter{
-		Writer: Writer{
+		EventWriter: EventWriter{
 			w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
 		},
 	}
 }
 
 type AuthWriter struct {
-	Writer
+	EventWriter
 }
 
 func (w *AuthWriter) WriteGatewayListEvent(
