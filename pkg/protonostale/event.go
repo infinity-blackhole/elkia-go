@@ -8,11 +8,15 @@ import (
 )
 
 type EventReader struct {
-	r *FieldReader
+	FieldReader *FieldReader
+}
+
+func (r *EventReader) ReadSequence() (uint32, error) {
+	return r.FieldReader.ReadUint32()
 }
 
 func (r *EventReader) ReadOpCode() (string, error) {
-	return r.r.ReadString()
+	return r.FieldReader.ReadString()
 }
 
 type Writer struct {

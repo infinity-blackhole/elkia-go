@@ -13,7 +13,7 @@ import (
 func NewGatewayHandshakeEventReader(r io.Reader) *GatewayHandshakeEventReader {
 	return &GatewayHandshakeEventReader{
 		EventReader{
-			r: NewFieldReader(r),
+			FieldReader: NewFieldReader(r),
 		},
 	}
 }
@@ -23,7 +23,7 @@ type GatewayHandshakeEventReader struct {
 }
 
 func (r *GatewayHandshakeEventReader) ReadSyncEvent() (*eventing.SyncEvent, error) {
-	sn, err := r.r.ReadUint32()
+	sn, err := r.ReadSequence()
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,11 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHand
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthHandoffKeyEvent, error) {
-	sn, err := r.r.ReadUint32()
+	sn, err := r.ReadSequence()
 	if err != nil {
 		return nil, err
 	}
-	key, err := r.r.ReadUint32()
+	key, err := r.FieldReader.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +61,11 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthH
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.AuthHandoffPasswordEvent, error) {
-	sn, err := r.r.ReadUint32()
+	sn, err := r.FieldReader.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
-	password, err := r.r.ReadString()
+	password, err := r.FieldReader.ReadString()
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffPasswordEvent() (*eventing.
 func NewGatewayChannelEventReader(r io.Reader) *GatewayChannelEventReader {
 	return &GatewayChannelEventReader{
 		EventReader{
-			r: NewFieldReader(r),
+			FieldReader: NewFieldReader(r),
 		},
 	}
 }
@@ -88,7 +88,7 @@ type GatewayChannelEventReader struct {
 }
 
 func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, error) {
-	sn, err := r.r.ReadUint32()
+	sn, err := r.FieldReader.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (r *GatewayChannelEventReader) ReadChannelEvent() (*eventing.ChannelEvent, 
 	if err != nil {
 		return nil, err
 	}
-	payload, err := r.r.ReadPayload()
+	payload, err := r.FieldReader.ReadPayload()
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ var (
 func NewAuthEventReader(r io.Reader) *AuthEventReader {
 	return &AuthEventReader{
 		EventReader: EventReader{
-			r: NewFieldReader(r),
+			FieldReader: NewFieldReader(r),
 		},
 	}
 }
@@ -32,12 +32,12 @@ type AuthEventReader struct {
 
 func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error) {
 	logrus.Debugf("reading request handoff message")
-	_, err := r.r.ReadString()
+	_, err := r.FieldReader.ReadString()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("reading identifier")
-	identifier, err := r.r.ReadString()
+	identifier, err := r.FieldReader.ReadString()
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error)
 }
 
 func (r *AuthEventReader) ReadPassword() (string, error) {
-	pwd, err := r.r.ReadField()
+	pwd, err := r.FieldReader.ReadField()
 	if err != nil {
 		return "", err
 	}
@@ -89,7 +89,7 @@ func (r *AuthEventReader) ReadPassword() (string, error) {
 var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)`)
 
 func (r *AuthEventReader) ReadVersion() (string, error) {
-	version, err := r.r.ReadField()
+	version, err := r.FieldReader.ReadField()
 	if err != nil {
 		return "", err
 	}
