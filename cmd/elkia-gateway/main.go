@@ -65,7 +65,7 @@ func main() {
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "4123"
+		port = "4124"
 	}
 	s := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),
