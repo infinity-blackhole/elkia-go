@@ -1,24 +1,24 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: elkia-fleet-service-agent
   namespace: elkia
 rules:
-- apiGroups: [""]
-  resources: ["namespaces", "services"]
-  verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "watch", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: elkia-fleet-service-agent
   namespace: elkia
 subjects:
-- kind: ServiceAccount
-  name: elkia-fleet
-  namespace: elkia
-  apiGroup: ""
+  - kind: ServiceAccount
+    name: elkia-fleet
+    namespace: elkia
+    apiGroup: ""
 roleRef:
-  kind: ClusterRole
-  name: namespace-reader
+  kind: Role
+  name: elkia-fleet-service-agent
   apiGroup: rbac.authorization.k8s.io
