@@ -38,13 +38,13 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	conn := h.newHandshakeConn(c)
+	conn := h.newHandshaker(c)
 	logrus.Debugf("gateway: new connection from %s", c.RemoteAddr().String())
-	go conn.serve(ctx)
+	go conn.handshake(ctx)
 }
 
-func (h *Handler) newHandshakeConn(c net.Conn) *handshakeConn {
-	return &handshakeConn{
+func (h *Handler) newHandshaker(c net.Conn) *handshaker {
+	return &handshaker{
 		rwc:           c,
 		rc:            protonostale.NewGatewayHandshakeReader(bufio.NewReader(c)),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(c)),
@@ -53,7 +53,7 @@ func (h *Handler) newHandshakeConn(c net.Conn) *handshakeConn {
 	}
 }
 
-type handshakeConn struct {
+type handshaker struct {
 	rwc           net.Conn
 	rc            *protonostale.GatewayHandshakeReader
 	wc            *protonostale.GatewayWriter
@@ -61,7 +61,7 @@ type handshakeConn struct {
 	kafkaProducer *kafka.Producer
 }
 
-func (c *handshakeConn) serve(ctx context.Context) {
+func (c *handshaker) handshake(ctx context.Context) {
 	go func() {
 		if err := recover(); err != nil {
 			c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
@@ -92,7 +92,7 @@ func (c *handshakeConn) serve(ctx context.Context) {
 	conn.serve(ctx)
 }
 
-func (c *handshakeConn) handoff(
+func (c *handshaker) handoff(
 	ctx context.Context,
 ) (*eventing.AuthHandoffSuccessEvent, error) {
 	rs, err := c.rc.ReadMessageSlice()
@@ -154,7 +154,7 @@ func (c *handshakeConn) handoff(
 	}, nil
 }
 
-func (h *handshakeConn) newConn(ack *eventing.AuthHandoffSuccessEvent) *Conn {
+func (h *handshaker) newConn(ack *eventing.AuthHandoffSuccessEvent) *Conn {
 	return &Conn{
 		rwc:           h.rwc,
 		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), ack.Key),
