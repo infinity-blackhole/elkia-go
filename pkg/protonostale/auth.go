@@ -138,7 +138,7 @@ func (w *AuthWriter) WriteGatewayListEvent(
 			return err
 		}
 	}
-	if _, err = w.w.WriteString("-1 -1 -1 10000 10000 1"); err != nil {
+	if _, err = w.w.WriteString("-1:-1:-1:10000.10000.1"); err != nil {
 		return err
 	}
 	return w.w.Flush()
@@ -149,11 +149,10 @@ func (w *AuthWriter) WriteGateway(
 ) error {
 	_, err := fmt.Fprintf(
 		w.w,
-		"%s %s %d %.f %d %d %s",
+		"%s:%s:%d:%d.%d.%s",
 		msg.Host,
 		msg.Port,
-		msg.Population,
-		math.Round(float64(msg.Population)/float64(msg.Capacity)*20)+1,
+		int(math.Round(float64(msg.Population)/float64(msg.Capacity)*20)+1),
 		msg.WorldId,
 		msg.ChannelId,
 		msg.WorldName,
