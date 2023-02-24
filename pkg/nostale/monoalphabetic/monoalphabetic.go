@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"math"
+
+	"github.com/sirupsen/logrus"
 )
 
 var charLookup = []string{
@@ -35,6 +37,7 @@ func (r *Reader) ReadMessageSlice() ([]string, error) {
 	msgs, err := r.readMessageSlice()
 	results := make([]string, len(msgs))
 	for _, msg := range msgs {
+		logrus.Debugf("monoalphabetic decoded message: %s", msg)
 		results = append(results, string(msg))
 	}
 	return results, err
@@ -46,17 +49,16 @@ func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
 	msgs, err := r.readMessageSlice()
 	results := make([][]byte, len(msgs))
 	for _, msg := range msgs {
-		if msg != nil {
-			buf := make([]byte, len(msg))
-			copy(buf, msg)
-			results = append(results, buf)
-		}
+		buf := make([]byte, len(msg))
+		copy(buf, msg)
+		results = append(results, buf)
 	}
 	return results, err
 }
 
 func (r *Reader) readMessageSlice() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
+	logrus.Debugf("monoalphabetic encoded message: %s", binary)
 	if err != nil {
 		return nil, err
 	}

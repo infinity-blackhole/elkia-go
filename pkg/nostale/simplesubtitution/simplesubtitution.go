@@ -2,6 +2,8 @@ package simplesubtitution
 
 import (
 	"bufio"
+
+	"github.com/sirupsen/logrus"
 )
 
 // A Reader implements convenience methods for reading messages
@@ -25,6 +27,7 @@ func NewReader(r *bufio.Reader) *Reader {
 // eliding the final \n or \r\n from the returned string.
 func (r *Reader) ReadMessage() (string, error) {
 	msg, err := r.readMessageSlice()
+	logrus.Debugf("simple substitution decoded message: %s", msg)
 	return string(msg), err
 }
 
@@ -45,6 +48,7 @@ func (r *Reader) readMessageSlice() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("simple substitution encoded message: %s", msg)
 	buf := make([]byte, 0, len(msg))
 	for _, b := range msg {
 		if b > 14 {
