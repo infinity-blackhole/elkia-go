@@ -66,8 +66,8 @@ func (c *handshakeConn) serve(ctx context.Context) {
 	defer span.End()
 	ack, err := c.handoff(ctx)
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -77,8 +77,8 @@ func (c *handshakeConn) serve(ctx context.Context) {
 		return
 	}
 	if ack == nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_CANT_AUTHENTICATE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_CANT_AUTHENTICATE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -98,8 +98,8 @@ func (c *handshakeConn) handoff(
 		return nil, err
 	}
 	if len(rs) != 2 {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			return nil, err
 		}
@@ -107,8 +107,8 @@ func (c *handshakeConn) handoff(
 	}
 	syncMsg, err := rs[0].ReadSyncEvent()
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			return nil, err
 		}
@@ -116,24 +116,24 @@ func (c *handshakeConn) handoff(
 	}
 	handoffMsg, err := rs[1].ReadAuthHandoffEvent()
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	}
 	if syncMsg.Sequence != handoffMsg.KeyEvent.Sequence+1 {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	}
 	if handoffMsg.KeyEvent.Sequence != handoffMsg.PasswordEvent.Sequence+1 {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			return nil, err
 		}
@@ -177,8 +177,8 @@ func (c *Conn) serve(ctx context.Context) {
 	for {
 		rs, err := c.rc.ReadMessageSlice()
 		if err != nil {
-			if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-				Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+			if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 			}); err != nil {
 				logrus.Fatal(err)
 			}
@@ -190,8 +190,8 @@ func (c *Conn) serve(ctx context.Context) {
 		for _, r := range rs {
 			msg, err := r.ReadChannelEvent()
 			if err != nil {
-				if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-					Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+				if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+					Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 				}); err != nil {
 					logrus.Fatal(err)
 				}
@@ -202,8 +202,8 @@ func (c *Conn) serve(ctx context.Context) {
 			}
 			logrus.Debugf("gateway: received message: %v", msg)
 			if msg.Sequence != c.lastSequence+1 {
-				if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-					Code: eventing.ErrorMessageCode_BAD_CASE,
+				if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+					Code: eventing.DialogErrorCode_BAD_CASE,
 				}); err != nil {
 					logrus.Fatal(err)
 				}

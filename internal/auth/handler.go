@@ -62,8 +62,8 @@ func (c *Conn) serve(ctx context.Context) {
 	defer span.End()
 	r, err := c.rc.ReadMessage()
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -74,8 +74,8 @@ func (c *Conn) serve(ctx context.Context) {
 	}
 	opcode, err := r.ReadOpCode()
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -100,8 +100,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	defer span.End()
 	m, err := r.ReadAuthLoginEvent()
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_BAD_CASE,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -120,8 +120,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		},
 	)
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -134,8 +134,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 
 	MemberList, err := c.cluster.MemberList(ctx, &fleet.MemberListRequest{})
 	if err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -149,8 +149,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	for _, m := range MemberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
-			if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-				Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+			if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 			}); err != nil {
 				logrus.Fatal(err)
 			}
@@ -178,8 +178,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 			Gateways: gateways,
 		},
 	); err != nil {
-		if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-			Code: eventing.ErrorMessageCode_UNEXPECTED_ERROR,
+		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
 		}); err != nil {
 			logrus.Fatal(err)
 		}
@@ -191,8 +191,8 @@ func (c *Conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 }
 
 func (c *Conn) handleFallback(opcode string) {
-	if err := c.wc.WriteErrorMessageEvent(&eventing.ErrorMessageEvent{
-		Code: eventing.ErrorMessageCode_BAD_CASE,
+	if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
+		Code: eventing.DialogErrorCode_BAD_CASE,
 	}); err != nil {
 		logrus.Fatal(err)
 	}

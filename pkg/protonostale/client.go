@@ -19,7 +19,7 @@ type Writer struct {
 	w *bufio.Writer
 }
 
-func (w *Writer) WriteErrorMessageEvent(msg *eventing.ErrorMessageEvent) error {
+func (w *Writer) WriteDialogErrorEvent(msg *eventing.DialogErrorEvent) error {
 	_, err := fmt.Fprintf(w.w, "failc %d", msg.Code)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (w *Writer) WriteErrorMessageEvent(msg *eventing.ErrorMessageEvent) error {
 	return err
 }
 
-func (w *Writer) WriteInfoMessageEvent(msg *eventing.InfoMessageEvent) error {
+func (w *Writer) WriteDialogInfoEvent(msg *eventing.DialogInfoEvent) error {
 	_, err := fmt.Fprintf(w.w, "info %s", msg.Content)
 	if err != nil {
 		return err

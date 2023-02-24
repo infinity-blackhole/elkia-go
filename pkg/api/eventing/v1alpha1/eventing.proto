@@ -3,7 +3,7 @@ package io.elkia.eventing.v1alpha1;
 
 option go_package = "pkg/api/eventing/v1alpha1";
 
-enum ErrorMessageCode {
+enum DialogErrorCode {
   OUTDATED_CLIENT = 0;
   UNEXPECTED_ERROR = 1;
   MAINTENANCE = 2;
@@ -15,9 +15,9 @@ enum ErrorMessageCode {
   BAD_CASE = 8;
 }
 
-message ErrorMessageEvent { ErrorMessageCode code = 1; }
+message DialogErrorEvent { DialogErrorCode code = 1; }
 
-message InfoMessageEvent { string content = 1; }
+message DialogInfoEvent { string content = 1; }
 
 message AuthLoginEvent {
   string identifier = 2;
