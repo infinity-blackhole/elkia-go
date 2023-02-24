@@ -41,6 +41,23 @@ message GatewayListEvent {
   repeated Gateway gateways = 2;
 }
 
+message AuthInteractRequest {
+  oneof payload { AuthLoginEvent login_event = 1; }
+}
+
+message AuthInteractResponse {
+  oneof payload {
+    DialogErrorEvent dialog_error_event = 1;
+    DialogInfoEvent dialog_info_event = 2;
+    GatewayListEvent gateway_list_event = 3;
+  }
+}
+
+service AuthBroker {
+  rpc AuthInteract(stream AuthInteractRequest)
+      returns (stream AuthInteractResponse);
+}
+
 message SyncEvent { uint32 sequence = 1; }
 
 message AuthHandoffKeyEvent {
@@ -75,4 +92,23 @@ message ChannelEvent {
   uint32 sequence = 1;
   string op_code = 2;
   oneof payload { bytes unknown_payload = 3; }
+}
+
+message ChannelInteractRequest {
+  oneof payload {
+    HandshakeEvent handshake_event = 1;
+    ChannelEvent channel_event = 2;
+  }
+}
+
+message ChannelInteractResponse {
+  oneof payload {
+    DialogErrorEvent dialog_error_event = 1;
+    DialogInfoEvent dialog_info_event = 2;
+  }
+}
+
+service GatewayBroker {
+  rpc ChannelInteract(stream ChannelInteractRequest)
+      returns (stream ChannelInteractResponse);
 }
