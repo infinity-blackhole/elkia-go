@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"regexp"
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -86,24 +85,12 @@ func (r *AuthEventReader) ReadPassword() (string, error) {
 	return string(result), nil
 }
 
-var versionRegex = regexp.MustCompile(`.+\v(\d+).(\d+).(\d+).(\d+)`)
-
 func (r *AuthEventReader) ReadVersion() (string, error) {
 	version, err := r.ReadField()
 	if err != nil {
 		return "", err
 	}
-	logrus.Debugf("version: %v", version)
-	matches := versionRegex.FindAllSubmatch(version, 1)
-	logrus.Debugf("version matches: %v", matches)
-	if len(matches) != 1 || len(matches[0]) != 5 {
-		return "", fmt.Errorf("invalid version format: %s", string(version))
-	}
-	major := matches[0][1]
-	minor := matches[0][2]
-	patch := matches[0][3]
-	build := matches[0][4]
-	return fmt.Sprintf("%s.%s.%s+%s", major, minor, patch, build), nil
+	return NewVersionReader(bytes.NewReader(version)).ReadVersion()
 }
 
 func NewAuthReader(r *bufio.Reader) *AuthReader {

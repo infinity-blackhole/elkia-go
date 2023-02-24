@@ -9,6 +9,12 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
+func NewEventReader(r io.Reader) *EventReader {
+	return &EventReader{
+		r: bufio.NewReader(r),
+	}
+}
+
 type EventReader struct {
 	r *bufio.Reader
 }
