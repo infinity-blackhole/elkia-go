@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -152,7 +151,7 @@ func (w *AuthWriter) WriteGateway(
 		"%s:%s:%d:%d.%d.%s",
 		msg.Host,
 		msg.Port,
-		int(math.Round(float64(msg.Population)/float64(msg.Capacity)*20)+1),
+		msg.Weight,
 		msg.WorldId,
 		msg.ChannelId,
 		msg.WorldName,

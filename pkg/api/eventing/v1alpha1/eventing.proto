@@ -29,11 +29,10 @@ message AuthLoginEvent {
 message Gateway {
   string host = 1;
   string port = 2;
-  uint32 population = 3;
-  uint32 capacity = 4;
-  uint32 world_id = 5;
-  uint32 channel_id = 6;
-  string world_name = 7;
+  uint32 weight = 3;
+  uint32 world_id = 4;
+  uint32 channel_id = 5;
+  string world_name = 6;
 }
 
 message GatewayListEvent {

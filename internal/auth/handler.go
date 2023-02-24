@@ -3,6 +3,7 @@ package auth
 import (
 	"bufio"
 	"context"
+	"math"
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -146,18 +147,14 @@ func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 			span.SetStatus(codes.Error, err.Error())
 			return
 		}
-		gateways = append(
-			gateways,
-			&eventing.Gateway{
-				Host:       host,
-				Port:       port,
-				Population: m.Population,
-				Capacity:   m.Capacity,
-				WorldId:    m.WorldId,
-				ChannelId:  m.ChannelId,
-				WorldName:  m.Name,
-			},
-		)
+		gateways = append(gateways, &eventing.Gateway{
+			Host:      host,
+			Port:      port,
+			Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
+			WorldId:   m.WorldId,
+			ChannelId: m.ChannelId,
+			WorldName: m.Name,
+		})
 	}
 	if err := c.wc.WriteGatewayListEvent(
 		&eventing.GatewayListEvent{
