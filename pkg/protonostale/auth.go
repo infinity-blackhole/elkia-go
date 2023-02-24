@@ -125,7 +125,7 @@ type AuthWriter struct {
 func (w *AuthWriter) WriteGatewayListEvent(
 	msg *eventing.GatewayListEvent,
 ) error {
-	_, err := fmt.Fprintf(w.w, "%s %d", "NsTeST", msg.Key)
+	_, err := fmt.Fprintf(w.w, "NsTeST %d ", msg.Key)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,12 @@
 package protonostale
 
 import (
+	"bufio"
 	"bytes"
 	"testing"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 )
 
 func TestParseAuthLoginEvent(t *testing.T) {
@@ -59,5 +61,45 @@ func TestReadVersion(t *testing.T) {
 	}
 	if result != expected {
 		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestWriteGatewayListEvent(t *testing.T) {
+	input := &eventing.GatewayListEvent{
+		Key: 1,
+		Gateways: []*eventing.Gateway{
+			{
+				Host:      "127.0.0.1",
+				Port:      "4124",
+				Weight:    0,
+				WorldId:   1,
+				ChannelId: 1,
+				WorldName: "Test",
+			},
+			{
+				Host:      "127.0.0.1",
+				Port:      "4125",
+				Weight:    0,
+				WorldId:   1,
+				ChannelId: 2,
+				WorldName: "Test",
+			},
+		},
+	}
+	var expected bytes.Buffer
+	if _, err := simplesubtitution.NewWriter(
+		bufio.NewWriter(&expected),
+	).Write([]byte(
+		"NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1",
+	)); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	var result bytes.Buffer
+	if err := NewAuthWriter(bufio.NewWriter(&result)).
+		WriteGatewayListEvent(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if !bytes.Equal(result.Bytes(), expected.Bytes()) {
+		t.Errorf("Expected %v, got %v", expected.Bytes(), result.Bytes())
 	}
 }

@@ -120,7 +120,7 @@ func (s *KubernetesClusterServer) getGatewayAddrFromService(
 	if err != nil {
 		return "", err
 	}
-	return net.JoinHostPort(ip, strconv.Itoa(int(port))), nil
+	return net.JoinHostPort(ip, port), nil
 }
 
 func (s *KubernetesClusterServer) getGatewayIpFromService(
@@ -144,9 +144,9 @@ func (s *KubernetesClusterServer) getGatewayIpFromService(
 
 func (s *KubernetesClusterServer) getGatewayPortFromService(
 	svc *corev1.Service,
-) (int32, error) {
+) (string, error) {
 	if len(svc.Spec.Ports) == 0 {
-		return 0, fmt.Errorf(
+		return "", fmt.Errorf(
 			"service %s/%s has no ports",
 			svc.Namespace,
 			svc.Name,
@@ -154,10 +154,10 @@ func (s *KubernetesClusterServer) getGatewayPortFromService(
 	}
 	for _, port := range svc.Spec.Ports {
 		if port.Name == "elkia" {
-			return port.Port, nil
+			return strconv.Itoa(int(port.Port)), nil
 		}
 	}
-	return 0, fmt.Errorf(
+	return "", fmt.Errorf(
 		"service %s/%s has no port named 'elkia'",
 		svc.Namespace,
 		svc.Name,
