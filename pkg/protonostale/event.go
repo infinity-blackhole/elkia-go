@@ -74,7 +74,10 @@ func (w *EventWriter) WriteDialogErrorEvent(msg *eventing.DialogErrorEvent) erro
 		return err
 	}
 	_, err = fmt.Fprint(w.w, "\n")
-	return err
+	if err != nil {
+		return err
+	}
+	return w.w.Flush()
 }
 
 func (w *EventWriter) WriteDialogInfoEvent(msg *eventing.DialogInfoEvent) error {
@@ -83,5 +86,8 @@ func (w *EventWriter) WriteDialogInfoEvent(msg *eventing.DialogInfoEvent) error 
 		return err
 	}
 	_, err = fmt.Fprint(w.w, "\n")
-	return err
+	if err != nil {
+		return err
+	}
+	return w.w.Flush()
 }
