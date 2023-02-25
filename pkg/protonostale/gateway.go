@@ -121,12 +121,12 @@ type GatewayWriter struct {
 
 func NewGatewayHandshakeReader(r *bufio.Reader) *GatewayHandshakeReader {
 	return &GatewayHandshakeReader{
-		r: monoalphabetic.NewReader(r),
+		r: monoalphabetic.NewPackedReader(monoalphabetic.NewReader(r)),
 	}
 }
 
 type GatewayHandshakeReader struct {
-	r *monoalphabetic.Reader
+	r *monoalphabetic.PackedReader
 }
 
 func (r *GatewayHandshakeReader) ReadMessageSlice() ([]*GatewayHandshakeEventReader, error) {
@@ -144,13 +144,15 @@ func (r *GatewayHandshakeReader) ReadMessageSlice() ([]*GatewayHandshakeEventRea
 
 func NewGatewayChannelReader(r *bufio.Reader, key uint32) *GatewayChannelReader {
 	return &GatewayChannelReader{
-		r:   monoalphabetic.NewReaderWithKey(r, key),
+		r: monoalphabetic.NewPackedReader(
+			monoalphabetic.NewReaderWithKey(r, key),
+		),
 		key: key,
 	}
 }
 
 type GatewayChannelReader struct {
-	r   *monoalphabetic.Reader
+	r   *monoalphabetic.PackedReader
 	key uint32
 }
 

@@ -8,11 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var charLookup = []string{
-	"\x00", " ", "-", ".", "0", "1", "2", "3", "4",
-	"5", "6", "7", "8", "9", "\n", "\x00",
-}
-
 func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
 		R: r,
@@ -31,38 +26,32 @@ type Reader struct {
 	key *uint32
 }
 
-// ReadMessageSlice reads a single message from r,
+// ReadMessage reads a single message from r,
 // eliding the final \n or \r\n from the returned string.
-func (r *Reader) ReadMessageSlice() ([]string, error) {
-	msgs, err := r.readMessageSlice()
-	results := make([]string, len(msgs))
-	for _, msg := range msgs {
-		logrus.Debugf("monoalphabetic decoded message: %s", msg)
-		results = append(results, string(msg))
-	}
-	return results, err
+func (r *Reader) ReadMessage() (string, error) {
+	msg, err := r.readMessageSlice()
+	logrus.Debugf("simple substitution decoded message: %s", msg)
+	return string(msg), err
 }
 
-// ReadMessageSliceBytes is like ReadMessageSlice but returns a [][]byte instead
-// of a string.
-func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
-	msgs, err := r.readMessageSlice()
-	results := make([][]byte, len(msgs))
-	for _, msg := range msgs {
+// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
+// string.
+func (r *Reader) ReadMessageBytes() ([]byte, error) {
+	msg, err := r.readMessageSlice()
+	if msg != nil {
 		buf := make([]byte, len(msg))
 		copy(buf, msg)
-		results = append(results, buf)
+		msg = buf
 	}
-	return results, err
+	return msg, err
 }
 
-func (r *Reader) readMessageSlice() ([][]byte, error) {
-	binary, err := r.R.ReadBytes(0xFF)
-	logrus.Debugf("monoalphabetic encoded message: %v", binary)
+func (r *Reader) readMessageSlice() ([]byte, error) {
+	msg, err := r.R.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err
 	}
-	return r.unpack(r.decryptMessage(binary)), nil
+	return r.decryptMessage(msg), nil
 }
 
 func (r *Reader) decryptMessage(msg []byte) []byte {
@@ -93,7 +82,57 @@ func (r *Reader) decryptByte(c byte) byte {
 	return (c - 0x0F) & 0xFF
 }
 
-func (r *Reader) unpack(data []byte) [][]byte {
+var lookup = []string{
+	"\x00", " ", "-", ".", "0", "1", "2", "3", "4",
+	"5", "6", "7", "8", "9", "\n", "\x00",
+}
+
+func NewPackedReader(r *Reader) *PackedReader {
+	return &PackedReader{
+		R:      r,
+		lookup: lookup,
+	}
+}
+
+type PackedReader struct {
+	R      *Reader
+	lookup []string
+}
+
+// ReadMessageSlice reads a single message from r,
+// eliding the final \n or \r\n from the returned string.
+func (r *PackedReader) ReadMessageSlice() ([]string, error) {
+	msgs, err := r.readMessageSlice()
+	results := make([]string, len(msgs))
+	for _, msg := range msgs {
+		results = append(results, string(msg))
+	}
+	return results, err
+}
+
+// ReadMessageSliceBytes is like ReadMessageSlice but returns a [][]byte instead
+// of a string.
+func (r *PackedReader) ReadMessageSliceBytes() ([][]byte, error) {
+	msgs, err := r.readMessageSlice()
+	results := make([][]byte, len(msgs))
+	for _, msg := range msgs {
+		buf := make([]byte, len(msg))
+		copy(buf, msg)
+		results = append(results, buf)
+	}
+	return results, err
+}
+
+func (r *PackedReader) readMessageSlice() ([][]byte, error) {
+	binary, err := r.R.ReadMessageBytes()
+	logrus.Debugf("monoalphabetic encoded message: %v", binary)
+	if err != nil {
+		return nil, err
+	}
+	return r.unpack(binary), nil
+}
+
+func (r *PackedReader) unpack(data []byte) [][]byte {
 	packets := make([][]byte, 0)
 	parts := bytes.Split(data, []byte{0xFF})
 	for _, part := range parts {
@@ -103,7 +142,7 @@ func (r *Reader) unpack(data []byte) [][]byte {
 	return packets
 }
 
-func (r *Reader) unpackPart(part []byte) [][]byte {
+func (r *PackedReader) unpackPart(part []byte) [][]byte {
 	result := make([][]byte, 0)
 	for len(part) != 0 {
 		byteVal := part[0]
@@ -129,13 +168,13 @@ func (r *Reader) unpackPart(part []byte) [][]byte {
 	return result
 }
 
-func (r *Reader) decodePackedChunk(chunk []byte) []byte {
+func (r *PackedReader) decodePackedChunk(chunk []byte) []byte {
 	result := make([]byte, 0)
-	for i := 0; i < len(chunk); i += 2 {
+	for i := 0; i < len(chunk); i += 1 {
 		h := int(chunk[i] >> 4)
 		l := int(chunk[i] & 0x0F)
-		leftByte := charLookup[h]
-		rightByte := charLookup[l]
+		leftByte := r.lookup[h]
+		rightByte := r.lookup[l]
 		if l != 0 {
 			result = append(result, leftByte...)
 			result = append(result, rightByte...)
@@ -146,8 +185,8 @@ func (r *Reader) decodePackedChunk(chunk []byte) []byte {
 	return result
 }
 
-func (r *Reader) decodeChunk(chunk []byte) []byte {
-	result := make([]byte, 0)
+func (r *PackedReader) decodeChunk(chunk []byte) []byte {
+	result := make([]byte, len(chunk))
 	for _, c := range chunk {
 		result = append(result, c^0xFF)
 	}

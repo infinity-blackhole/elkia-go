@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestReaderReadline(t *testing.T) {
+func TestWriterWrite(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
@@ -24,7 +24,7 @@ func TestReaderReadline(t *testing.T) {
 	}
 }
 
-func TestWriterWrite(t *testing.T) {
+func TestReaderRead(t *testing.T) {
 	input := []byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
