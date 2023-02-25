@@ -26,7 +26,7 @@ spec:
               value: "0.0.0.0"
           ports:
             - containerPort: 4124
-              name: elkia
+              name: nswp
           resources:
             requests:
               cpu: 10m

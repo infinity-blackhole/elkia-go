@@ -6,11 +6,13 @@ metadata:
   labels:
     app.kubernetes.io/name: elkia-auth
     app.kubernetes.io/instance: elkia-auth
+    fleet.elkia.io/port: nslp
+    fleet.elkia.io/component: auth
 spec:
   ports:
-    - name: elkia
+    - name: nslp
       port: 4123
-      targetPort: elkia
+      targetPort: nslp
   selector:
     app.kubernetes.io/name: elkia-auth
     app.kubernetes.io/instance: elkia-auth
