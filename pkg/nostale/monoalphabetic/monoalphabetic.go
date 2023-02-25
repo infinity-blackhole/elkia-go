@@ -58,7 +58,7 @@ func (r *Reader) ReadMessageSliceBytes() ([][]byte, error) {
 
 func (r *Reader) readMessageSlice() ([][]byte, error) {
 	binary, err := r.R.ReadBytes(0xFF)
-	logrus.Debugf("monoalphabetic encoded message: %s", binary)
+	logrus.Debugf("monoalphabetic encoded message: %v", binary)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (r *Reader) decryptMessage(msg []byte) []byte {
 }
 
 func (r *Reader) decryptByte(c byte) byte {
-	if r.key == nil {
+	if r.key != nil {
 		mode := *r.key & 0xFF
 		offset := (*r.key >> 6) & 3
 		switch mode {
