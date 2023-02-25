@@ -10,20 +10,24 @@ import (
 
 func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
-		R: r,
+		R:      r,
+		mode:   255,
+		offset: 4,
 	}
 }
 
 func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
 	return &Reader{
-		R:   r,
-		key: &key,
+		R:      r,
+		mode:   byte(key & 0xFF),
+		offset: byte((key >> 6) & 3),
 	}
 }
 
 type Reader struct {
-	R   *bufio.Reader
-	key *uint32
+	R      *bufio.Reader
+	mode   byte
+	offset byte
 }
 
 // ReadMessage reads a single message from r,
@@ -55,31 +59,26 @@ func (r *Reader) readMessageSlice() ([]byte, error) {
 }
 
 func (r *Reader) decryptMessage(msg []byte) []byte {
-	result := make([]byte, 0)
-	for _, c := range msg {
-		result = append(result, r.decryptByte(c))
+	result := make([]byte, len(msg))
+	for i, c := range msg {
+		result[i] = r.decryptByte(c)
 	}
 	return result
 }
 
 func (r *Reader) decryptByte(c byte) byte {
-	if r.key != nil {
-		mode := *r.key & 0xFF
-		offset := (*r.key >> 6) & 3
-		switch mode {
-		case 0:
-			return (c - byte(offset) - 0x40) & 0xFF
-		case 1:
-			return (c + byte(offset) + 0x40) & 0xFF
-		case 2:
-			return ((c - byte(offset) - 0x40) ^ 0xC3) & 0xFF
-		case 3:
-			return ((c + byte(offset) + 0x40) ^ 0xC3) & 0xFF
-		default:
-			return (c - 0x0F) & 0xFF
-		}
+	switch r.mode {
+	case 0:
+		return (c - r.offset - 0x40) & 0xFF
+	case 1:
+		return (c + r.offset + 0x40) & 0xFF
+	case 2:
+		return ((c - r.offset - 0x40) ^ 0xC3) & 0xFF
+	case 3:
+		return ((c + r.offset + 0x40) ^ 0xC3) & 0xFF
+	default:
+		return (c - 0x0F) & 0xFF
 	}
-	return (c - 0x0F) & 0xFF
 }
 
 var lookup = []string{
@@ -102,7 +101,7 @@ type PackedReader struct {
 // ReadMessageSlice reads a single message from r,
 // eliding the final \n or \r\n from the returned string.
 func (r *PackedReader) ReadMessageSlice() ([]string, error) {
-	msgs, err := r.readMessageSlice()
+	msgs, err := r.readMessageSlices()
 	results := make([]string, len(msgs))
 	for _, msg := range msgs {
 		results = append(results, string(msg))
@@ -113,7 +112,7 @@ func (r *PackedReader) ReadMessageSlice() ([]string, error) {
 // ReadMessageSliceBytes is like ReadMessageSlice but returns a [][]byte instead
 // of a string.
 func (r *PackedReader) ReadMessageSliceBytes() ([][]byte, error) {
-	msgs, err := r.readMessageSlice()
+	msgs, err := r.readMessageSlices()
 	results := make([][]byte, len(msgs))
 	for _, msg := range msgs {
 		buf := make([]byte, len(msg))
@@ -123,7 +122,7 @@ func (r *PackedReader) ReadMessageSliceBytes() ([][]byte, error) {
 	return results, err
 }
 
-func (r *PackedReader) readMessageSlice() ([][]byte, error) {
+func (r *PackedReader) readMessageSlices() ([][]byte, error) {
 	binary, err := r.R.ReadMessageBytes()
 	logrus.Debugf("monoalphabetic encoded message: %v", binary)
 	if err != nil {
