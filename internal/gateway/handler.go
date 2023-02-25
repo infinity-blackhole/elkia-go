@@ -38,9 +38,9 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	conn := h.newHandshaker(c)
-	logrus.Debugf("gateway: new connection from %s", c.RemoteAddr().String())
-	go conn.handshake(ctx)
+	handshaker := h.newHandshaker(c)
+	logrus.Debugf("gateway: new handshaker from %v", c.RemoteAddr())
+	go handshaker.handshake(ctx)
 }
 
 func (h *Handler) newHandshaker(c net.Conn) *handshaker {

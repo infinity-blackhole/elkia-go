@@ -36,7 +36,7 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	conn := h.newConn(c)
-	logrus.Debugf("auth: new connection from %s", c.RemoteAddr().String())
+	logrus.Debugf("auth: new connection from %v", c.RemoteAddr())
 	go conn.serve(ctx)
 }
 
