@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	endpoint := os.Getenv("ELKIA_AUTH_BROKER_ENDPOINT")
+	endpoint := os.Getenv("ELKIA_AUTH_ENDPOINT")
 	if endpoint == "" {
 		endpoint = "localhost:8080"
 	}
