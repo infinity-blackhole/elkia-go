@@ -3,6 +3,7 @@ package gateway
 import (
 	"bufio"
 	"context"
+	"errors"
 	"net"
 	"strconv"
 
@@ -85,7 +86,10 @@ func (c *handoffConn) handleHandoff(
 	scanner := bufio.NewScanner(c.rc)
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
-		return nil, scanner.Err()
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+		return nil, errors.New("gateway: handshake failed: no data")
 	}
 	sync, err := protonostale.ParseAuthHandoffSyncEvent(scanner.Text())
 	if err != nil {
@@ -106,7 +110,10 @@ func (c *handoffConn) handleHandoff(
 		return nil, err
 	}
 	if !scanner.Scan() {
-		return nil, scanner.Err()
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+		return nil, errors.New("gateway: handshake failed: no data")
 	}
 	login, err := protonostale.ParseAuthHandoffLoginEvent(scanner.Text())
 	if err != nil {

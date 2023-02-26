@@ -77,10 +77,11 @@ func (c *conn) serve(ctx context.Context) {
 		); err != nil {
 			logrus.Fatal(err)
 		}
-		err := scanner.Err()
-		logrus.Debugf("auth: read opcode: %v", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		if err := scanner.Err(); err != nil {
+			logrus.Debugf("auth: read opcode: %v", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
 		return
 	}
 	event, err := protonostale.ParseAuthEvent(scanner.Text())
