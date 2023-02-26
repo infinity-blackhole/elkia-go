@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/auth"
+	"github.com/infinity-blackhole/elkia/internal/authbroker"
+	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -33,11 +35,16 @@ func main() {
 	conn, err := grpc.Dial(
 		elkiaFleetEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("auth: connected to fleet at %s", elkiaFleetEndpoint)
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+	)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
@@ -46,18 +53,20 @@ func main() {
 	if port == "" {
 		port = "4123"
 	}
-	srv := nostale.NewServer(nostale.ServerConfig{
-		Addr: fmt.Sprintf("%s:%s", host, port),
-		Handler: auth.NewHandler(auth.HandlerConfig{
-			PresenceClient: fleet.NewPresenceClient(conn),
-			ClusterClient:  fleet.NewClusterClient(conn),
-		}),
-	})
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("auth: listening on %s:%s", host, port)
-	if err := srv.ListenAndServe(); err != nil {
+	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
+	eventing.RegisterAuthBrokerServer(
+		srv,
+		authbroker.NewServer(authbroker.ServerConfig{
+			PresenceClient: fleet.NewPresenceClient(conn),
+			ClusterClient:  fleet.NewClusterClient(conn),
+		}),
+	)
+	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
+	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}
 }

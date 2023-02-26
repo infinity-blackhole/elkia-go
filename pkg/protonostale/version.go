@@ -1,48 +1,31 @@
 package protonostale
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"strconv"
+	"strings"
 )
 
-func ReadVersion(r *bufio.Reader) (string, error) {
-	if _, err := ReadVersionPrefix(r); err != nil {
-		return "", err
+func ParseVersion(s string) (string, error) {
+	parts := strings.Split(s, ".")
+	if len(parts) != 4 {
+		return "", fmt.Errorf("invalid version format")
 	}
-	major, err := ReadVersionDigit(r)
+	major, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid major version: %w", err)
 	}
-	minor, err := ReadVersionDigit(r)
+	minor, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid minor version: %w", err)
 	}
-	patch, err := ReadVersionDigit(r)
+	patch, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid patch version: %w", err)
 	}
-	build, err := ReadVersionDigit(r)
+	build, err := strconv.Atoi(parts[3])
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid build version: %w", err)
 	}
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
-}
-
-func ReadVersionPrefix(r *bufio.Reader) ([]byte, error) {
-	return r.ReadBytes('\v')
-}
-
-func ReadVersionDigit(r *bufio.Reader) (int, error) {
-	digit, err := r.ReadBytes('.')
-	offset := len(digit) - 1
-	if err != nil {
-		if err != io.EOF {
-			return 0, err
-		} else {
-			offset = len(digit)
-		}
-	}
-	return strconv.Atoi(string(digit[:offset]))
 }

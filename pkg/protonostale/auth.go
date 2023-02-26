@@ -1,40 +1,54 @@
 package protonostale
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/sirupsen/logrus"
 )
 
 var (
 	HandoffOpCode = "NoS0575"
 )
 
-func ReadAuthLoginEvent(r *bufio.Reader) (*eventing.AuthLoginEvent, error) {
-	_, err := ReadString(r)
+func ParseAuthEvent(s string) (*eventing.AuthInteractRequest, error) {
+	fields := strings.Fields(s)
+	if len(fields) != 2 {
+		return nil, fmt.Errorf("invalid auth event: %s", s)
+	}
+	switch fields[1] {
+	case HandoffOpCode:
+		authLoginEvent, err := ParseAuthLoginEvent(s)
+		if err != nil {
+			return nil, err
+		}
+		return &eventing.AuthInteractRequest{
+			Payload: &eventing.AuthInteractRequest_AuthLoginEvent{
+				AuthLoginEvent: authLoginEvent,
+			},
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown auth event: %s", s)
+	}
+}
+
+func ParseAuthLoginEvent(s string) (*eventing.AuthLoginEvent, error) {
+	fields := strings.Fields(s)
+	if len(fields) != 5 {
+		return nil, fmt.Errorf("invalid auth login event: %s", s)
+	}
+	identifier := fields[1]
+	pwd, err := ParsePassword(fields[2])
 	if err != nil {
 		return nil, err
 	}
-	identifier, err := ReadString(r)
+	clientVersion, err := ParseVersion(fields[4])
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("read identifier %s", identifier)
-	pwd, err := ReadPassword(r)
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("read password %s", pwd)
-	clientVersion, err := ReadVersion(r)
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("read client version %s", clientVersion)
 	return &eventing.AuthLoginEvent{
 		Identifier:    identifier,
 		Password:      pwd,
@@ -42,22 +56,19 @@ func ReadAuthLoginEvent(r *bufio.Reader) (*eventing.AuthLoginEvent, error) {
 	}, nil
 }
 
-func ReadPassword(r *bufio.Reader) (string, error) {
-	pwd, err := ReadField(r)
-	if err != nil {
-		return "", err
-	}
-	if len(pwd)%2 == 0 {
-		pwd = pwd[3:]
+func ParsePassword(s string) (string, error) {
+	b := []byte(s)
+	if len(b)%2 == 0 {
+		b = b[3:]
 	} else {
-		pwd = pwd[4:]
+		b = b[4:]
 	}
-	chunks := bytesChunkEvery(pwd, 2)
-	pwd = make([]byte, 0, len(chunks))
+	chunks := bytesChunkEvery(b, 2)
+	b = make([]byte, 0, len(chunks))
 	for i := 0; i < len(chunks); i++ {
-		pwd = append(pwd, chunks[i][0])
+		b = append(b, chunks[i][0])
 	}
-	chunks = bytesChunkEvery(pwd, 2)
+	chunks = bytesChunkEvery(b, 2)
 	var result []byte
 	for _, chunk := range chunks {
 		value, err := strconv.ParseInt(string(chunk), 16, 64)

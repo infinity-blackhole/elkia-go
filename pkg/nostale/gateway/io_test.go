@@ -1,9 +1,10 @@
-package monoalphabetic
+package gateway
 
 import (
 	"bufio"
 	"bytes"
 	"testing"
+	"testing/iotest"
 )
 
 func TestReaderRead(t *testing.T) {
@@ -15,7 +16,10 @@ func TestReaderRead(t *testing.T) {
 		135, 138, 156, 177, 64, 255, 183, 187, 205, 242, 55, 190, 199, 205,
 		193, 202, 193, 181, 248, 197, 58, 240,
 	}
-	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
+	r := iotest.NewReadLogger(
+		t.Name(),
+		NewReader(bufio.NewReader(bytes.NewReader(input))),
+	)
 	result := make([]byte, len(expected))
 	n, err := r.Read(result)
 	if err != nil {

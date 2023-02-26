@@ -1,6 +1,7 @@
-package simplesubtitution
+package auth
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"testing"
@@ -15,7 +16,10 @@ func TestWriterWrite(t *testing.T) {
 		130, 131, 25, 216,
 	}
 	var buf bytes.Buffer
-	w := iotest.NewWriteLogger(t.Name(), NewWriter(&buf))
+	w := iotest.NewWriteLogger(
+		t.Name(),
+		NewWriter(bufio.NewWriter(&buf)),
+	)
 	n, err := fmt.Fprint(w, input)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
@@ -50,7 +54,10 @@ func TestReaderRead(t *testing.T) {
 			"C9C7B4E3055D4F9F09BA015 0039E3DC\v0.9.3.3071 0 C7D2503BD257F5" +
 			"BAE0870F40C2DA3666",
 	)
-	r := iotest.NewReadLogger(t.Name(), NewReader(bytes.NewReader(input)))
+	r := iotest.NewReadLogger(
+		t.Name(),
+		NewReader(bufio.NewReader(bytes.NewReader(input))),
+	)
 	result := make([]byte, len(expected))
 	n, err := r.Read(result)
 	if err != nil {
@@ -67,7 +74,7 @@ func TestReaderRead(t *testing.T) {
 func TestServerAsymmetricEncoding(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	var b bytes.Buffer
-	w := NewWriter(&b)
+	w := NewWriter(bufio.NewWriter(&b))
 	n, err := w.Write(input)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
@@ -75,7 +82,7 @@ func TestServerAsymmetricEncoding(t *testing.T) {
 	if n != len(input) {
 		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
-	r := NewReader(&b)
+	r := NewReader(bufio.NewReader(&b))
 	result := make([]byte, len(input)+2)
 	n, err = r.Read(result)
 	if err != nil {

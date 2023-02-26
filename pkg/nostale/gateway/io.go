@@ -1,15 +1,14 @@
-package monoalphabetic
+package gateway
 
 import (
 	"bufio"
 	"bytes"
-	"io"
 	"math"
 
 	"github.com/sirupsen/logrus"
 )
 
-func NewReader(r io.ByteReader) *Reader {
+func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
 		r:      r,
 		mode:   255,
@@ -17,7 +16,7 @@ func NewReader(r io.ByteReader) *Reader {
 	}
 }
 
-func NewReaderWithKey(r io.ByteReader, key uint32) *Reader {
+func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
 	return &Reader{
 		r:      r,
 		mode:   byte(key & 0xFF),
@@ -26,7 +25,7 @@ func NewReaderWithKey(r io.ByteReader, key uint32) *Reader {
 }
 
 type Reader struct {
-	r      io.ByteReader
+	r      *bufio.Reader
 	mode   byte
 	offset byte
 }
@@ -105,7 +104,7 @@ func (r *PackedReader) readMessageSlices() ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("monoalphabetic encoded message: %v", binary)
+	logrus.Debugf("gatewayio encoded message: %v", binary)
 	return r.unpack(binary), nil
 }
 
@@ -167,35 +166,10 @@ func (r *PackedReader) unpackPart(binary []byte) [][]byte {
 	return result
 }
 
-func (r *PackedReader) decodePackedChunk(chunk []byte) []byte {
-	result := make([]byte, len(chunk))
-	for i := 0; i < len(chunk); i += 1 {
-		h := int(chunk[i] >> 4)
-		l := int(chunk[i] & 0x0F)
-		leftByte := r.lookup[h]
-		rightByte := r.lookup[l]
-		if l != 0 {
-			result = append(result, leftByte)
-			result = append(result, rightByte)
-		} else {
-			result = append(result, leftByte)
-		}
-	}
-	return result
-}
-
-func (r *PackedReader) decodeChunk(chunk []byte) []byte {
-	result := make([]byte, len(chunk))
-	for _, c := range chunk {
-		result = append(result, c^0xFF)
-	}
-	return result
-}
-
 // A Writer implements convenience methods for reading messages
 // from a NosTale protocol network connection.
 type Writer struct {
-	w io.ByteWriter
+	w *bufio.Writer
 }
 
 // NewWriter returns a new Writer reading from r.
@@ -203,13 +177,13 @@ type Writer struct {
 // To avoid denial of service attacks, the provided bufio.Writer
 // should be reading from an io.LimitWriter or similar Writer to bound
 // the size of responses.
-func NewWriter(w io.ByteWriter) *Writer {
+func NewWriter(w *bufio.Writer) *Writer {
 	return &Writer{
 		w: w,
 	}
 }
 
-// WriteMessage writes the formatted message.
+// Write writes the formatted message.
 func (w *Writer) Write(msg []byte) (nn int, err error) {
 	for i, b := range msg {
 		if i%0x7e != 0 {

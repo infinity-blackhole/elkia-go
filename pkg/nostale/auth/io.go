@@ -1,7 +1,7 @@
-package simplesubtitution
+package auth
 
 import (
-	"io"
+	"bufio"
 )
 
 // NewReader returns a new Reader reading from r.
@@ -9,7 +9,7 @@ import (
 // To avoid denial of service attacks, the provided bufio.Reader
 // should be reading from an io.LimitReader or similar Reader to bound
 // the size of responses.
-func NewReader(r io.ByteReader) *Reader {
+func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{
 		r: r,
 	}
@@ -18,7 +18,7 @@ func NewReader(r io.ByteReader) *Reader {
 // A Reader implements convenience methods for reading messages
 // from a NosTale protocol network connection.
 type Reader struct {
-	r io.ByteReader
+	r *bufio.Reader
 }
 
 func (r *Reader) Read(p []byte) (n int, err error) {
@@ -45,17 +45,17 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 // A Writer implements convenience methods for writing
 // messages to a NosTale protocol network connection.
 type Writer struct {
-	w io.ByteWriter
+	w *bufio.Writer
 }
 
 // NewWriter returns a new Writer writing to w.
-func NewWriter(w io.ByteWriter) *Writer {
+func NewWriter(w *bufio.Writer) *Writer {
 	return &Writer{
 		w: w,
 	}
 }
 
-// WriteMessage writes the formatted message.
+// Write writes the formatted message.
 func (w *Writer) Write(p []byte) (n int, err error) {
 	for n = 0; n < len(p); n++ {
 		if err := w.w.WriteByte((p[n] + 15) & 0xFF); err != nil {
@@ -68,5 +68,5 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	if err := w.w.WriteByte(0xD8); err != nil {
 		return n, err
 	}
-	return n, nil
+	return n, w.w.Flush()
 }

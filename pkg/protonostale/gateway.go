@@ -2,79 +2,108 @@ package protonostale
 
 import (
 	"bufio"
+	"bytes"
+	"fmt"
+	"strings"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func ReadSyncEvent(r *bufio.Reader) (*eventing.SyncEvent, error) {
-	sn, err := ReadSequence(r)
+func ParseAuthHandoffSyncEvent(
+	s string,
+) (*eventing.AuthHandoffSyncEvent, error) {
+	sn, err := ParseUint(s)
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.SyncEvent{Sequence: sn}, nil
+	return &eventing.AuthHandoffSyncEvent{Sequence: sn}, nil
 }
 
-func ReadAuthHandoffEvent(r *bufio.Reader) (*eventing.AuthHandoffEvent, error) {
-	keyMsg, err := ReadAuthHandoffKeyEvent(r)
+func ParseAuthHandoffLoginEvent(
+	r string,
+) (*eventing.AuthHandoffLoginEvent, error) {
+	fields := strings.Fields(r)
+	keyMsg, err := ParseAuthHandoffLoginKeyEvent(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	pwdMsg, err := ReadAuthHandoffPasswordEvent(r)
+	pwdMsg, err := ParseAuthHandoffLoginPasswordEvent(fields[1])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffEvent{
+	return &eventing.AuthHandoffLoginEvent{
 		KeyEvent:      keyMsg,
 		PasswordEvent: pwdMsg,
 	}, nil
 }
 
-func ReadAuthHandoffKeyEvent(r *bufio.Reader) (*eventing.AuthHandoffKeyEvent, error) {
-	sn, err := ReadSequence(r)
+func ParseAuthHandoffLoginKeyEvent(
+	s string,
+) (*eventing.AuthHandoffLoginKeyEvent, error) {
+	fields := strings.Fields(s)
+	sn, err := ParseUint(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	key, err := ReadUint32(r)
+	key, err := ParseUint(fields[1])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffKeyEvent{
+	return &eventing.AuthHandoffLoginKeyEvent{
 		Sequence: sn,
 		Key:      key,
 	}, nil
 }
 
-func ReadAuthHandoffPasswordEvent(r *bufio.Reader) (*eventing.AuthHandoffPasswordEvent, error) {
-	sn, err := ReadSequence(r)
+func ParseAuthHandoffLoginPasswordEvent(
+	s string,
+) (*eventing.AuthHandoffLoginPasswordEvent, error) {
+	fields := strings.Fields(s)
+	sn, err := ParseUint(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	password, err := ReadString(r)
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.AuthHandoffPasswordEvent{
+	return &eventing.AuthHandoffLoginPasswordEvent{
 		Sequence: sn,
-		Password: password,
+		Password: fields[1],
 	}, nil
 }
 
 func ReadChannelEvent(r *bufio.Reader) (*eventing.ChannelEvent, error) {
-	sn, err := ReadSequence(r)
+	s := bufio.NewScanner(r)
+	s.Split(bufio.ScanWords)
+	if !s.Scan() {
+		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
+	}
+	sn, err := ParseUint(s.Text())
 	if err != nil {
 		return nil, err
 	}
-	opcode, err := ReadOpCode(r)
-	if err != nil {
-		return nil, err
+	if !s.Scan() {
+		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
 	}
-	payload, err := ReadPayload(r)
-	if err != nil {
-		return nil, err
+	_ = s.Text()
+	if !s.Scan() {
+		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
 	}
+	payload := s.Bytes()
 	return &eventing.ChannelEvent{
 		Sequence: sn,
-		OpCode:   opcode,
 		Payload:  &eventing.ChannelEvent_UnknownPayload{UnknownPayload: payload},
 	}, nil
+}
+
+func ScanPackedEvents(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexByte(data, 0xFF); i >= 0 {
+		return i + 1, data[0:i], nil
+	}
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), data, nil
+	}
+	// Request more data.
+	return 0, nil, nil
 }

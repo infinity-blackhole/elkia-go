@@ -41,7 +41,7 @@ message GatewayListEvent {
 }
 
 message AuthInteractRequest {
-  oneof payload { AuthLoginEvent login_event = 1; }
+  oneof payload { AuthLoginEvent auth_login_event = 1; }
 }
 
 message AuthInteractResponse {
@@ -53,51 +53,53 @@ message AuthInteractResponse {
 }
 
 service AuthBroker {
+  // AuthInteract is a bi-directional stream that is used to interact with the
+  // auth server
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
+
+  // AuthLoginProduce send a login event to the auth server and returns a
+  // stream of events
+  rpc AuthLoginProduce(AuthLoginEvent) returns (stream AuthInteractResponse);
 }
 
-message SyncEvent { uint32 sequence = 1; }
+message AuthHandoffSyncEvent { uint32 sequence = 1; }
 
-message AuthHandoffKeyEvent {
+message AuthHandoffLoginKeyEvent {
   uint32 sequence = 1;
   uint32 key = 2;
 }
 
-message AuthHandoffPasswordEvent {
+message AuthHandoffLoginPasswordEvent {
   uint32 sequence = 1;
   string password = 2;
 }
 
-message AuthHandoffEvent {
-  AuthHandoffKeyEvent key_event = 1;
-  AuthHandoffPasswordEvent password_event = 2;
+message AuthHandoffLoginEvent {
+  AuthHandoffLoginKeyEvent key_event = 1;
+  AuthHandoffLoginPasswordEvent password_event = 2;
 }
 
-message AuthHandoffSuccessEvent {
-  uint32 key = 1;
-  uint32 sequence = 2;
-}
-
-message HandshakeEvent {
+message AuthHandoffInteractRequest {
   oneof payload {
-    bytes fallback_event = 1;
-    SyncEvent sync_event = 3;
-    AuthHandoffEvent auth_handoff_event = 4;
+    AuthHandoffSyncEvent sync_event = 1;
+    AuthHandoffLoginEvent login_event = 2;
   }
+}
+
+message AuthHandoffLoginSuccessEvent { uint32 key = 1; }
+
+message AuthHandoffInteractResponse {
+  oneof payload { AuthHandoffLoginSuccessEvent login_success_event = 1; }
 }
 
 message ChannelEvent {
   uint32 sequence = 1;
-  string op_code = 2;
-  oneof payload { bytes unknown_payload = 3; }
+  oneof payload { bytes unknown_payload = 2; }
 }
 
 message ChannelInteractRequest {
-  oneof payload {
-    HandshakeEvent handshake_event = 1;
-    ChannelEvent channel_event = 2;
-  }
+  oneof payload { ChannelEvent channel_event = 1; }
 }
 
 message ChannelInteractResponse {
@@ -108,6 +110,13 @@ message ChannelInteractResponse {
 }
 
 service GatewayBroker {
+  // AuthHandoffInteract is a bi-directional stream that is used to handoff
+  // the auth server
+  rpc AuthHandoffInteract(stream AuthHandoffInteractRequest)
+      returns (stream AuthHandoffInteractResponse);
+
+  // ChannelInteract is a bi-directional stream that is used to interact with
+  // the channel server
   rpc ChannelInteract(stream ChannelInteractRequest)
       returns (stream ChannelInteractResponse);
 }

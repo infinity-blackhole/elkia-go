@@ -1,9 +1,7 @@
 package protonostale
 
 import (
-	"bufio"
 	"bytes"
-	"strings"
 	"testing"
 	"testing/iotest"
 
@@ -17,10 +15,7 @@ func TestParseAuthLoginEvent(t *testing.T) {
 		Password:      "s3cr3t",
 		ClientVersion: "0.9.3+3086",
 	}
-	r := bufio.NewReader(
-		iotest.NewReadLogger(t.Name(), strings.NewReader(input)),
-	)
-	result, err := ReadAuthLoginEvent(r)
+	result, err := ParseAuthLoginEvent(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -38,10 +33,7 @@ func TestParseAuthLoginEvent(t *testing.T) {
 func TestReadPassword(t *testing.T) {
 	input := "2EB6A196E4B60D96A9267E"
 	expected := "admin"
-	r := bufio.NewReader(
-		iotest.NewReadLogger(t.Name(), strings.NewReader(input)),
-	)
-	result, err := ReadPassword(r)
+	result, err := ParsePassword(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -51,10 +43,7 @@ func TestReadPassword(t *testing.T) {
 
 	input = "1BE97B527A306B597A2"
 	expected = "user"
-	r = bufio.NewReader(
-		iotest.NewReadLogger(t.Name(), strings.NewReader(input)),
-	)
-	result, err = ReadPassword(r)
+	result, err = ParsePassword(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -64,15 +53,9 @@ func TestReadPassword(t *testing.T) {
 }
 
 func TestReadVersion(t *testing.T) {
-	input := []byte{
-		48, 48, 57, 55, 54, 55, 69, 67, 11, 48, 46, 57, 46, 51, 46, 51, 48,
-		56, 54,
-	}
+	input := "0.9.3.3086"
 	expected := "0.9.3+3086"
-	r := bufio.NewReader(
-		iotest.NewReadLogger(t.Name(), bytes.NewBuffer(input)),
-	)
-	result, err := ReadVersion(r)
+	result, err := ParseVersion(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

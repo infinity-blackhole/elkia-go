@@ -25,10 +25,10 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build \
     -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
-    -o /usr/local/bin/elkia-gateway \
-    ./cmd/elkia-gateway
+    -o /usr/local/bin/elkia-auth-proxy \
+    ./cmd/elkia-auth-proxy
 
-CMD ["/usr/local/bin/elkia-gateway"]
+CMD ["/usr/local/bin/elkia-auth-proxy"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
@@ -36,9 +36,9 @@ FROM gcr.io/distroless/base-debian11:nonroot
 LABEL org.opencontainers.image.source https://github.com/infinity-blackhole/elkia-go
 
 # Copy binary
-COPY --from=build /usr/local/bin/elkia-gateway /usr/local/bin/elkia-gateway
+COPY --from=build /usr/local/bin/elkia-auth-proxy /usr/local/bin/elkia-auth-proxy
 
-# gRPC API
-EXPOSE 8080
+# NosTale Auth
+EXPOSE 4123
 
-ENTRYPOINT ["elkia-gateway"]
+ENTRYPOINT ["elkia-auth-proxy"]
