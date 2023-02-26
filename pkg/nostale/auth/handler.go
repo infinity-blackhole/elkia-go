@@ -3,6 +3,7 @@ package auth
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -72,11 +73,13 @@ func (c *conn) handleMessages(ctx context.Context) {
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_BAD_CASE,
-				"failed to read auth event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to read auth event: %v",
+					err,
+				),
 			)
 			return
 		}
@@ -89,11 +92,13 @@ func (c *conn) handleMessages(ctx context.Context) {
 	}
 	event, err := protonostale.ParseAuthEvent(scanner.Text())
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
-			"failed to parse auth event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to parse auth event: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -109,30 +114,36 @@ func (c *conn) handleAuthLogin(
 	defer span.End()
 	stream, err := c.auth.AuthInteract(ctx)
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to create auth interact stream: %v",
-			err,
+			fmt.Sprintf(
+				"failed to create auth interact stream: %v",
+				err,
+			),
 		)
 		return
 	}
 	if err := stream.Send(event); err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to send login request: %v",
-			err,
+			fmt.Sprintf(
+				"failed to send login request: %v",
+				err,
+			),
 		)
 		return
 	}
 	m, err := stream.Recv()
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to receive login response: %v",
-			err,
+			fmt.Sprintf(
+				"failed to receive login response: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -142,11 +153,13 @@ func (c *conn) handleAuthLogin(
 			c.wc,
 			m.GetEndpointListEvent(),
 		); err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"failed to write endpoint list event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to write endpoint list event: %v",
+					err,
+				),
 			)
 			return
 		}

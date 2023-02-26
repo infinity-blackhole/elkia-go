@@ -3,6 +3,7 @@ package gateway
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"net"
 	"strconv"
 
@@ -71,11 +72,13 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 	defer span.End()
 	stream, err := c.gateway.AuthHandoffInteract(ctx)
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to create auth handoff interact stream: %v",
-			err,
+			fmt.Sprintf(
+				"failed to create auth handoff interact stream: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -83,15 +86,17 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"failed to read handshake event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to read handshake event: %v",
+					err,
+				),
 			)
 			return
 		}
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
 			"failed to read handshake event: EOF",
@@ -100,11 +105,13 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 	}
 	sync, err := protonostale.ParseAuthHandoffSyncEvent(scanner.Text())
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
-			"failed to parse auth handoff sync event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to parse auth handoff sync event: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -113,25 +120,29 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 			SyncEvent: sync,
 		},
 	}); err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to send auth handoff sync event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to send auth handoff sync event: %v",
+				err,
+			),
 		)
 		return
 	}
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_BAD_CASE,
-				"failed to read auth handoff login event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to read auth handoff login event: %v",
+					err,
+				),
 			)
 			return
 		}
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
 			"failed to read auth handoff login event: EOF",
@@ -140,11 +151,13 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 	}
 	login, err := protonostale.ParseAuthHandoffLoginEvent(scanner.Text())
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
-			"failed to parse auth handoff login event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to parse auth handoff login event: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -153,31 +166,37 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 			LoginEvent: login,
 		},
 	}); err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to send auth handoff login event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to send auth handoff login event: %v",
+				err,
+			),
 		)
 		return
 	}
 	m, err := stream.Recv()
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to receive auth handoff login success event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to receive auth handoff login success event: %v",
+				err,
+			),
 		)
 		return
 	}
 	ack := m.GetLoginSuccessEvent()
 	if ack == nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
-			"failed to receive auth handoff login success event: %v",
-			err,
+			fmt.Sprintf(
+				"failed to receive auth handoff login success event: %v",
+				err,
+			),
 		)
 		return
 	}
@@ -232,21 +251,25 @@ func (c *channelConn) handleMessages(ctx context.Context) {
 	)
 	stream, err := c.gateway.ChannelInteract(ctx)
 	if err != nil {
-		utils.WriteErrorf(
+		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to create channel interact stream: %v",
-			err,
+			fmt.Sprintf(
+				"failed to create channel interact stream: %v",
+				err,
+			),
 		)
 	}
 	for {
 		m, err := protonostale.ReadChannelEvent(c.rc)
 		if err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"failed to read channel event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to read channel event: %v",
+					err,
+				),
 			)
 		}
 		if err := stream.Send(&eventing.ChannelInteractRequest{
@@ -254,11 +277,13 @@ func (c *channelConn) handleMessages(ctx context.Context) {
 				ChannelEvent: m,
 			},
 		}); err != nil {
-			utils.WriteErrorf(
+			utils.WriteError(
 				c.wc,
 				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"failed to send channel event: %v",
-				err,
+				fmt.Sprintf(
+					"failed to send channel event: %v",
+					err,
+				),
 			)
 		}
 	}

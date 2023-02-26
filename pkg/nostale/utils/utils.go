@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
@@ -34,8 +33,4 @@ func WriteError(w *bufio.Writer, code eventing.DialogErrorCode, msg string) (n i
 		return n, err
 	}
 	return n, nil
-}
-
-func WriteErrorf(w *bufio.Writer, code eventing.DialogErrorCode, msg string, a ...any) (n int, err error) {
-	return WriteError(w, code, fmt.Sprintf(msg, a...))
 }
