@@ -10,12 +10,12 @@ build:
       docker:
         target: build
         dockerfile: cmd/elkia-auth/Dockerfile
-    - image: ghcr.io/infinity-blackhole-proxy/elkia-auth-proxy
+    - image: ghcr.io/infinity-blackhole/elkia-auth-proxy
       context: .
       runtimeType: go
       docker:
         target: build
-        dockerfile: cmd/elkia-auth/Dockerfile
+        dockerfile: cmd/elkia-auth-proxy/Dockerfile
     - image: ghcr.io/infinity-blackhole/elkia-gateway
       context: .
       runtimeType: go
