@@ -6,7 +6,10 @@ import (
 	"context"
 	"net"
 	"testing"
+	"testing/iotest"
 
+	"github.com/infinity-blackhole/elkia/internal/auth"
+	"github.com/infinity-blackhole/elkia/internal/auth/authtest"
 	"github.com/infinity-blackhole/elkia/internal/cluster"
 	"github.com/infinity-blackhole/elkia/internal/cluster/clustertest"
 	"github.com/infinity-blackhole/elkia/internal/presence"
@@ -28,7 +31,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		Seed: 1,
 	})
 	wg.Go(fakePresence.Serve)
-	_, err := fakePresence.Dial(ctx)
+	fakePresenceClient, err := fakePresence.Dial(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,27 +76,45 @@ func TestHandlerServeNosTale(t *testing.T) {
 		},
 	})
 	wg.Go(fakeCluster.Serve)
-	_, err = fakeCluster.Dial(ctx)
+	fakeClusterClient, err := fakeCluster.Dial(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// TODO: Fix this test
-	handler := NewHandler(HandlerConfig{})
-	server, client := net.Pipe()
-	defer client.Close()
-	defer server.Close()
-	handler.ServeNosTale(server)
+	fakeAuth := authtest.NewFakeAuth(auth.ServerConfig{
+		PresenceClient: fakePresenceClient,
+		ClusterClient:  fakeClusterClient,
+	})
+	wg.Go(fakeAuth.Serve)
+	fakeAuthClient, err := fakeAuth.Dial(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := NewHandler(HandlerConfig{
+		AuthClient: fakeAuthClient,
+	})
+	serverConn, clientConn := net.Pipe()
+	clientWriter := bufio.NewWriter(
+		iotest.NewWriteLogger(t.Name(), clientConn),
+	)
+	clientReader := bufio.NewReader(
+		iotest.NewReadLogger(t.Name(), NewReader(bufio.NewReader(clientConn))),
+	)
+	defer clientConn.Close()
+	defer serverConn.Close()
+	handler.ServeNosTale(serverConn)
 	input := []byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 1, 2, 1, 5, 6, 4, 9, 9, 242, 177, 182,
 		189, 185, 188, 242, 1, 1, 10, 6, 3, 255, 255, 1, 255, 5, 255, 255, 4,
 		6, 255, 6, 3, 5, 0, 0, 255, 5, 255, 6, 3, 144, 6, 242, 2, 2, 255, 0,
 		145, 2, 9, 2, 215, 2, 252, 9, 252, 255, 252, 255, 2, 10, 4, 216,
 	}
-	if _, err := client.Write(input); err != nil {
+	if _, err := clientWriter.Write(input); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
 	}
-	rc := bufio.NewReader(NewReader(bufio.NewReader(client)))
-	result, err := rc.ReadBytes('\x0a')
+	if err := clientWriter.Flush(); err != nil {
+		t.Fatalf("Failed to flush message: %v", err)
+	}
+	result, err := clientReader.ReadBytes('\n')
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}

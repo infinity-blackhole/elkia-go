@@ -109,4 +109,20 @@ func (c *conn) serve(ctx context.Context) {
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}
+	m, err := stream.Recv()
+	if err != nil {
+		logrus.Debugf("auth: recv event: %v", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return
+	}
+	switch m.Payload.(type) {
+	case *eventing.AuthInteractResponse_EndpointListEvent:
+		if _, err := protonostale.WriteEndpointListEvent(
+			c.wc,
+			m.GetEndpointListEvent(),
+		); err != nil {
+			logrus.Fatal(err)
+		}
+	}
 }

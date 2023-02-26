@@ -92,8 +92,8 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		if err != nil {
 			return err
 		}
-		switch m.Payload {
-		case &eventing.ChannelInteractRequest_ChannelEvent{}:
+		switch m.Payload.(type) {
+		case *eventing.ChannelInteractRequest_ChannelEvent:
 			m := m.GetChannelEvent()
 			if sequence != m.Sequence {
 				return errors.New("channel: handshake sync protocol error")

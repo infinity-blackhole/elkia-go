@@ -1,9 +1,9 @@
 package protonostale
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
@@ -11,17 +11,17 @@ import (
 )
 
 var (
-	HandoffOpCode = "NoS0575"
+	AuthLoginOpCode = "NoS0575"
 )
 
 func ParseAuthEvent(s string) (*eventing.AuthInteractRequest, error) {
-	fields := strings.Fields(s)
+	fields := strings.SplitN(s, " ", 2)
 	if len(fields) != 2 {
 		return nil, fmt.Errorf("invalid auth event: %s", s)
 	}
-	switch fields[1] {
-	case HandoffOpCode:
-		authLoginEvent, err := ParseAuthLoginEvent(s)
+	switch fields[0] {
+	case AuthLoginOpCode:
+		authLoginEvent, err := ParseAuthLoginEvent(fields[1])
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +81,7 @@ func ParsePassword(s string) (string, error) {
 }
 
 func WriteEndpointListEvent(
-	w io.Writer,
+	w *bufio.Writer,
 	msg *eventing.EndpointListEvent,
 ) (n int, err error) {
 	var b bytes.Buffer
@@ -89,7 +89,7 @@ func WriteEndpointListEvent(
 		return n, err
 	}
 	for _, m := range msg.Endpoints {
-		if _, err := WriteEndpoint(&b, m); err != nil {
+		if _, err := WriteEndpoint(bufio.NewWriter(&b), m); err != nil {
 			return n, err
 		}
 		if err := b.WriteByte(' '); err != nil {
@@ -100,11 +100,15 @@ func WriteEndpointListEvent(
 	if err != nil {
 		return n, err
 	}
-	return w.Write(b.Bytes())
+	n, err = w.Write(b.Bytes())
+	if err != nil {
+		return n, err
+	}
+	return n, w.Flush()
 }
 
-func WriteEndpoint(w io.Writer, m *eventing.Endpoint) (int, error) {
-	return fmt.Fprintf(
+func WriteEndpoint(w *bufio.Writer, m *eventing.Endpoint) (int, error) {
+	n, err := fmt.Fprintf(
 		w,
 		"%s:%s:%d:%d.%d.%s",
 		m.Host,
@@ -114,4 +118,8 @@ func WriteEndpoint(w io.Writer, m *eventing.Endpoint) (int, error) {
 		m.ChannelId,
 		m.WorldName,
 	)
+	if err != nil {
+		return n, err
+	}
+	return n, w.Flush()
 }

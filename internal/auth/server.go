@@ -7,6 +7,8 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ServerConfig struct {
@@ -29,21 +31,21 @@ type Server struct {
 
 func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	for {
-		event, err := stream.Recv()
+		m, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		switch event.Payload {
-		case &eventing.AuthInteractRequest_AuthLoginEvent{}:
+		switch m.Payload.(type) {
+		case *eventing.AuthInteractRequest_AuthLoginEvent:
 			logrus.Debugf("auth: handle handoff")
 			if err := s.AuthLoginProduce(
-				event.GetAuthLoginEvent(),
+				m.GetAuthLoginEvent(),
 				stream,
 			); err != nil {
 				return err
 			}
 		default:
-			logrus.Debugf("auth: unimplemented event: %v", event)
+			return status.Newf(codes.Unimplemented, "unimplemented event type: %T", m.Payload).Err()
 		}
 	}
 }
