@@ -63,6 +63,7 @@ func (c *conn) serve(ctx context.Context) {
 			)
 		}
 	}()
+	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
 	c.handleMessages(ctx)
 }
 
@@ -90,6 +91,7 @@ func (c *conn) handleMessages(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("auth: read message: %v", scanner.Text())
 	event, err := protonostale.ParseAuthEvent(scanner.Text())
 	if err != nil {
 		utils.WriteError(
@@ -102,7 +104,7 @@ func (c *conn) handleMessages(ctx context.Context) {
 		)
 		return
 	}
-	logrus.Debugf("auth: read opcode: %v", event)
+	logrus.Debugf("auth: read event: %v", event)
 	c.handleAuthLogin(ctx, event)
 }
 
@@ -124,6 +126,7 @@ func (c *conn) handleAuthLogin(
 		)
 		return
 	}
+	logrus.Debugf("auth: created auth interact stream")
 	if err := stream.Send(event); err != nil {
 		utils.WriteError(
 			c.wc,
@@ -135,6 +138,7 @@ func (c *conn) handleAuthLogin(
 		)
 		return
 	}
+	logrus.Debug("auth: sent login request")
 	m, err := stream.Recv()
 	if err != nil {
 		utils.WriteError(
@@ -147,6 +151,7 @@ func (c *conn) handleAuthLogin(
 		)
 		return
 	}
+	logrus.Debugf("auth: received login response: %v", m)
 	switch m.Payload.(type) {
 	case *eventing.AuthInteractResponse_EndpointListEvent:
 		if _, err := protonostale.WriteEndpointListEvent(
@@ -163,5 +168,16 @@ func (c *conn) handleAuthLogin(
 			)
 			return
 		}
+		logrus.Debug("auth: wrote endpoint list event")
+	default:
+		utils.WriteError(
+			c.wc,
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			fmt.Sprintf(
+				"unexpected login response: %v",
+				m,
+			),
+		)
+		logrus.Errorf("auth: unexpected login response: %v", m)
 	}
 }

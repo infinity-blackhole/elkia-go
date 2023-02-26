@@ -64,6 +64,7 @@ func (c *handoffConn) serve(ctx context.Context) {
 			)
 		}
 	}()
+	logrus.Debugf("gateway: new auth handoff from %v", c.rwc.RemoteAddr())
 	c.handleAuthHandoff(ctx)
 }
 
@@ -82,6 +83,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: created auth handoff interact stream")
 	scanner := bufio.NewScanner(c.rc)
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
@@ -103,6 +105,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: read message: %s", scanner.Text())
 	sync, err := protonostale.ParseAuthHandoffSyncEvent(scanner.Text())
 	if err != nil {
 		utils.WriteError(
@@ -115,6 +118,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: read event: %v", sync)
 	if err := stream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_SyncEvent{
 			SyncEvent: sync,
@@ -130,6 +134,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: sent sync event")
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
 			utils.WriteError(
@@ -149,6 +154,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: read message: %s", scanner.Text())
 	login, err := protonostale.ParseAuthHandoffLoginEvent(scanner.Text())
 	if err != nil {
 		utils.WriteError(
@@ -161,6 +167,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: read event: %v", login)
 	if err := stream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_LoginEvent{
 			LoginEvent: login,
@@ -176,6 +183,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: sent login event")
 	m, err := stream.Recv()
 	if err != nil {
 		utils.WriteError(
@@ -188,6 +196,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: received login success event")
 	ack := m.GetLoginSuccessEvent()
 	if ack == nil {
 		utils.WriteError(
@@ -200,6 +209,7 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
+	logrus.Debugf("gateway: received login success event: %v", ack)
 	conn := c.newChannelConn(ack.Key, login.PasswordEvent.Sequence)
 	go conn.serve(ctx)
 }

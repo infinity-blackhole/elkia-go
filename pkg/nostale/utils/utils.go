@@ -5,22 +5,12 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/sirupsen/logrus"
 )
-
-func TranslateError(err error) eventing.DialogErrorCode {
-	if err, ok := status.FromError(err); ok {
-		switch err.Code() {
-		case codes.InvalidArgument:
-			return eventing.DialogErrorCode_BAD_CASE
-		}
-	}
-	return eventing.DialogErrorCode_UNEXPECTED_ERROR
-}
 
 func WriteError(w *bufio.Writer, code eventing.DialogErrorCode, msg string) (n int, err error) {
 	if msg != "" {
+		logrus.Errorf("error: %s", msg)
 		if n, err = protonostale.WriteDialogInfoEvent(w, &eventing.DialogInfoEvent{
 			Content: msg,
 		}); err != nil {
