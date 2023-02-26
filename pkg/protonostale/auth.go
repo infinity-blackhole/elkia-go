@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,34 +15,22 @@ var (
 	HandoffOpCode = "NoS0575"
 )
 
-func NewAuthEventReader(r io.Reader) *AuthEventReader {
-	return &AuthEventReader{
-		EventReader: EventReader{
-			r: bufio.NewReader(r),
-		},
-	}
-}
-
-type AuthEventReader struct {
-	EventReader
-}
-
-func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error) {
-	_, err := r.ReadString()
+func ReadAuthLoginEvent(r *bufio.Reader) (*eventing.AuthLoginEvent, error) {
+	_, err := ReadString(r)
 	if err != nil {
 		return nil, err
 	}
-	identifier, err := r.ReadString()
+	identifier, err := ReadString(r)
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("read identifier %s", identifier)
-	pwd, err := r.ReadPassword()
+	pwd, err := ReadPassword(r)
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("read password %s", pwd)
-	clientVersion, err := r.ReadVersion()
+	clientVersion, err := ReadVersion(r)
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +42,8 @@ func (r *AuthEventReader) ReadAuthLoginEvent() (*eventing.AuthLoginEvent, error)
 	}, nil
 }
 
-func (r *AuthEventReader) ReadPassword() (string, error) {
-	pwd, err := r.ReadField()
+func ReadPassword(r *bufio.Reader) (string, error) {
+	pwd, err := ReadField(r)
 	if err != nil {
 		return "", err
 	}
@@ -79,75 +66,35 @@ func (r *AuthEventReader) ReadPassword() (string, error) {
 		}
 		result = append(result, byte(value))
 	}
-
 	return string(result), nil
 }
 
-func (r *AuthEventReader) ReadVersion() (string, error) {
-	version, err := r.ReadField()
-	if err != nil {
-		return "", err
-	}
-	return NewVersionReader(bytes.NewReader(version)).ReadVersion()
-}
-
-func NewAuthReader(r *bufio.Reader) *AuthReader {
-	return &AuthReader{
-		r: simplesubtitution.NewReader(r),
-	}
-}
-
-type AuthReader struct {
-	r *simplesubtitution.Reader
-}
-
-func (r *AuthReader) ReadMessage() (*AuthEventReader, error) {
-	buff, err := r.r.ReadMessageBytes()
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("auth: read %s messages", string(buff))
-	return NewAuthEventReader(bytes.NewReader(buff)), nil
-}
-
-func NewAuthWriter(w *bufio.Writer) *AuthWriter {
-	return &AuthWriter{
-		EventWriter: EventWriter{
-			w: bufio.NewWriter(simplesubtitution.NewWriter(w)),
-		},
-	}
-}
-
-type AuthWriter struct {
-	EventWriter
-}
-
-func (w *AuthWriter) WriteGatewayListEvent(
+func WriteGatewayListEvent(
+	w io.Writer,
 	msg *eventing.GatewayListEvent,
-) error {
-	_, err := fmt.Fprintf(w.w, "NsTeST %d ", msg.Key)
-	if err != nil {
-		return err
+) (n int, err error) {
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "NsTeST %d ", msg.Key); err != nil {
+		return n, err
 	}
 	for _, g := range msg.Gateways {
-		if err := w.WriteGateway(g); err != nil {
-			return err
+		if _, err := WriteGateway(&b, g); err != nil {
+			return n, err
 		}
-		if err := w.w.WriteByte(' '); err != nil {
-			return err
+		if err := b.WriteByte(' '); err != nil {
+			return n, err
 		}
 	}
-	if _, err = w.w.WriteString("-1:-1:-1:10000.10000.1"); err != nil {
-		return err
+	_, err = b.WriteString("-1:-1:-1:10000.10000.1")
+	if err != nil {
+		return n, err
 	}
-	return w.w.Flush()
+	return w.Write(b.Bytes())
 }
 
-func (w *AuthWriter) WriteGateway(
-	msg *eventing.Gateway,
-) error {
-	_, err := fmt.Fprintf(
-		w.w,
+func WriteGateway(w io.Writer, msg *eventing.Gateway) (int, error) {
+	return fmt.Fprintf(
+		w,
 		"%s:%s:%d:%d.%d.%s",
 		msg.Host,
 		msg.Port,
@@ -156,5 +103,4 @@ func (w *AuthWriter) WriteGateway(
 		msg.ChannelId,
 		msg.WorldName,
 	)
-	return err
 }

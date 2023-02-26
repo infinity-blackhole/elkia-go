@@ -1,22 +1,27 @@
 package simplesubtitution
 
 import (
-	"bufio"
 	"bytes"
+	"fmt"
 	"testing"
+	"testing/iotest"
 )
 
 func TestWriterWrite(t *testing.T) {
-	input := []byte("fail Hello. This is a basic test")
+	input := "fail Hello. This is a basic test"
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
 		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
 		130, 131, 25, 216,
 	}
 	var buf bytes.Buffer
-	w := NewWriter(bufio.NewWriter(&buf))
-	if _, err := w.Write(input); err != nil {
+	w := iotest.NewWriteLogger(t.Name(), NewWriter(&buf))
+	n, err := fmt.Fprint(w, input)
+	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
+	}
+	if n != len(input) {
+		t.Errorf("Expected %d bytes written, got %d", len(input), n)
 	}
 	result := buf.Bytes()
 	if !bytes.Equal(result, expected) {
@@ -42,32 +47,44 @@ func TestReaderRead(t *testing.T) {
 	expected := []byte(
 		"NoS0575 3614038 a 5AE625665F3E0BD0A065ED07A41989E4025B79D139" +
 			"30A2A8C57D6B4325226707D956A082D1E91B4D96A793562DF98FD03C9DCF743" +
-			"C9C7B4E3055D4F9F09BA015 0039E3DC\x0B0.9.3.3071 0 C7D2503BD257F5" +
-			"BAE0870F40C2DA3666\\n",
+			"C9C7B4E3055D4F9F09BA015 0039E3DC\v0.9.3.3071 0 C7D2503BD257F5" +
+			"BAE0870F40C2DA3666",
 	)
-	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
-	result, err := r.ReadMessageBytes()
+	r := iotest.NewReadLogger(t.Name(), NewReader(bytes.NewReader(input)))
+	result := make([]byte, len(expected))
+	n, err := r.Read(result)
 	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
-	if bytes.Equal(result, expected) {
-		t.Errorf("Expected %s, got %s", expected, string(result))
+	if !bytes.Equal(result, expected) {
+		t.Errorf("Expected %s, got %s", expected, result)
+	}
+	if n != len(expected) {
+		t.Errorf("Expected %d bytes, got %d", len(expected), n)
 	}
 }
 
 func TestServerAsymmetricEncoding(t *testing.T) {
 	input := []byte("fail Hello. This is a basic test")
 	var b bytes.Buffer
-	w := NewWriter(bufio.NewWriter(&b))
-	if _, err := w.Write(input); err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	r := NewReader(bufio.NewReader(&b))
-	result, err := r.ReadMessageBytes()
+	w := NewWriter(&b)
+	n, err := w.Write(input)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if bytes.Equal(result, input) {
-		t.Errorf("Expected %v, got %v", input, b)
+	if n != len(input) {
+		t.Errorf("Expected %d bytes, got %d", len(input), n)
+	}
+	r := NewReader(&b)
+	result := make([]byte, len(input)+2)
+	n, err = r.Read(result)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if bytes.Equal(result[:1], input) {
+		t.Errorf("Expected %s, got %s", input, result)
+	}
+	if n != len(input)+2 {
+		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
 }

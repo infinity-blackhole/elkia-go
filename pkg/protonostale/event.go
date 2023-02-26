@@ -2,6 +2,7 @@ package protonostale
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -9,34 +10,24 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func NewEventReader(r io.Reader) *EventReader {
-	return &EventReader{
-		r: bufio.NewReader(r),
-	}
+func ReadSequence(r *bufio.Reader) (uint32, error) {
+	return ReadUint32(r)
 }
 
-type EventReader struct {
-	r *bufio.Reader
+func ReadOpCode(r *bufio.Reader) (string, error) {
+	return ReadString(r)
 }
 
-func (r *EventReader) ReadSequence() (uint32, error) {
-	return r.ReadUint32()
-}
-
-func (r *EventReader) ReadOpCode() (string, error) {
-	return r.ReadString()
-}
-
-func (r *EventReader) ReadString() (string, error) {
-	rf, err := r.ReadField()
+func ReadString(r *bufio.Reader) (string, error) {
+	rf, err := ReadField(r)
 	if err != nil {
 		return "", err
 	}
 	return string(rf), nil
 }
 
-func (r *EventReader) ReadUint32() (uint32, error) {
-	rf, err := r.ReadField()
+func ReadUint32(r *bufio.Reader) (uint32, error) {
+	rf, err := ReadField(r)
 	if err != nil {
 		return 0, err
 	}
@@ -47,8 +38,8 @@ func (r *EventReader) ReadUint32() (uint32, error) {
 	return uint32(key), nil
 }
 
-func (r *EventReader) ReadField() ([]byte, error) {
-	b, err := r.r.ReadBytes(' ')
+func ReadField(r *bufio.Reader) ([]byte, error) {
+	b, err := r.ReadBytes(' ')
 	if err != nil {
 		if err == io.EOF {
 			return b, nil
@@ -58,42 +49,38 @@ func (r *EventReader) ReadField() ([]byte, error) {
 	return b[:len(b)-1], nil
 }
 
-func (r *EventReader) ReadPayload() ([]byte, error) {
-	b, err := r.r.ReadBytes('\n')
+func ReadPayload(r *bufio.Reader) ([]byte, error) {
+	b, err := r.ReadBytes('\n')
 	if err != nil {
 		return nil, err
 	}
 	return b[:len(b)-1], nil
 }
 
-func (r *EventReader) Discard(n int) (int, error) {
-	return r.r.Discard(n)
+func WriteDialogErrorEvent(
+	w io.Writer,
+	msg *eventing.DialogErrorEvent,
+) (n int, err error) {
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "failc %d", msg.Code); err != nil {
+		return n, err
+	}
+	if err = b.WriteByte('\n'); err != nil {
+		return n, err
+	}
+	return w.Write(b.Bytes())
 }
 
-type EventWriter struct {
-	w *bufio.Writer
-}
-
-func (w *EventWriter) WriteDialogErrorEvent(msg *eventing.DialogErrorEvent) error {
-	_, err := fmt.Fprintf(w.w, "failc %d", msg.Code)
-	if err != nil {
-		return err
+func WriteDialogInfoEvent(
+	w io.Writer,
+	msg *eventing.DialogInfoEvent,
+) (n int, err error) {
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "info %s", msg.Content); err != nil {
+		return n, err
 	}
-	_, err = fmt.Fprint(w.w, "\n")
-	if err != nil {
-		return err
+	if err = b.WriteByte('\n'); err != nil {
+		return n, err
 	}
-	return w.w.Flush()
-}
-
-func (w *EventWriter) WriteDialogInfoEvent(msg *eventing.DialogInfoEvent) error {
-	_, err := fmt.Fprintf(w.w, "info %s", msg.Content)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprint(w.w, "\n")
-	if err != nil {
-		return err
-	}
-	return w.w.Flush()
+	return w.Write(b.Bytes())
 }

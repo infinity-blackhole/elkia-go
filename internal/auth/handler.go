@@ -8,6 +8,7 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/simplesubtitution"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -42,9 +43,11 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 
 func (h *Handler) newConn(c net.Conn) *conn {
 	return &conn{
-		rwc:      c,
-		rc:       protonostale.NewAuthReader(bufio.NewReader(c)),
-		wc:       protonostale.NewAuthWriter(bufio.NewWriter(c)),
+		rwc: c,
+		rc: bufio.NewReader(
+			simplesubtitution.NewReader(bufio.NewReader(c)),
+		),
+		wc:       bufio.NewWriter(simplesubtitution.NewWriter(bufio.NewWriter(c))),
 		presence: h.presence,
 		cluster:  h.cluster,
 	}
@@ -52,8 +55,8 @@ func (h *Handler) newConn(c net.Conn) *conn {
 
 type conn struct {
 	rwc      net.Conn
-	rc       *protonostale.AuthReader
-	wc       *protonostale.AuthWriter
+	rc       *bufio.Reader
+	wc       *bufio.Writer
 	presence fleet.PresenceClient
 	cluster  fleet.ClusterClient
 }
@@ -61,25 +64,26 @@ type conn struct {
 func (c *conn) serve(ctx context.Context) {
 	go func() {
 		if err := recover(); err != nil {
-			c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-				Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			})
+			if _, err := protonostale.WriteDialogErrorEvent(
+				c.wc,
+				&eventing.DialogErrorEvent{
+					Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
+				},
+			); err != nil {
+				logrus.Fatal(err)
+			}
 		}
 	}()
 	ctx, span := otel.Tracer(name).Start(ctx, "Serve")
 	defer span.End()
-	r, err := c.rc.ReadMessage()
+	opcode, err := protonostale.ReadOpCode(c.rc)
 	if err != nil {
-		logrus.Debugf("auth: read message: %v", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return
-	}
-	opcode, err := r.ReadOpCode()
-	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_BAD_CASE,
-		}); err != nil {
+		if _, err := protonostale.WriteDialogErrorEvent(
+			c.wc,
+			&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_BAD_CASE,
+			},
+		); err != nil {
 			logrus.Fatal(err)
 		}
 		logrus.Debugf("auth: read opcode: %v", err)
@@ -91,21 +95,24 @@ func (c *conn) serve(ctx context.Context) {
 	switch opcode {
 	case protonostale.HandoffOpCode:
 		logrus.Debugf("auth: handle handoff")
-		c.handleHandoff(ctx, r)
+		c.handleHandoff(ctx)
 	default:
 		logrus.Debugf("auth: handle fallback")
 		c.handleFallback(opcode)
 	}
 }
 
-func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReader) {
+func (c *conn) handleHandoff(ctx context.Context) {
 	ctx, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	m, err := r.ReadAuthLoginEvent()
+	m, err := protonostale.ReadAuthLoginEvent(c.rc)
 	if err != nil {
-		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-			Code: eventing.DialogErrorCode_BAD_CASE,
-		}); err != nil {
+		if _, err := protonostale.WriteDialogErrorEvent(
+			c.wc,
+			&eventing.DialogErrorEvent{
+				Code: eventing.DialogErrorCode_BAD_CASE,
+			},
+		); err != nil {
 			logrus.Fatal(err)
 		}
 		logrus.Debugf("auth: read handoff: %v", err)
@@ -156,7 +163,8 @@ func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 			WorldName: m.Name,
 		})
 	}
-	if err := c.wc.WriteGatewayListEvent(
+	if _, err := protonostale.WriteGatewayListEvent(
+		c.wc,
 		&eventing.GatewayListEvent{
 			Key:      handoff.Key,
 			Gateways: gateways,
@@ -166,12 +174,21 @@ func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 		span.SetStatus(codes.Error, err.Error())
 		logrus.Fatal(err)
 	}
+
+	if err := c.wc.Flush(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		logrus.Fatal(err)
+	}
 }
 
 func (c *conn) handleFallback(opcode string) {
-	if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
-		Code: eventing.DialogErrorCode_BAD_CASE,
-	}); err != nil {
+	if _, err := protonostale.WriteDialogErrorEvent(
+		c.wc,
+		&eventing.DialogErrorEvent{
+			Code: eventing.DialogErrorCode_BAD_CASE,
+		},
+	); err != nil {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("unknown opcode: %s", opcode)

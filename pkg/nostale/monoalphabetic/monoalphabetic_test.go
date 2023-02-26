@@ -16,9 +16,13 @@ func TestReaderRead(t *testing.T) {
 		193, 202, 193, 181, 248, 197, 58, 240,
 	}
 	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
-	result, err := r.ReadMessageBytes()
+	result := make([]byte, len(expected))
+	n, err := r.Read(result)
 	if err != nil {
 		t.Errorf("Error reading line: %s", err)
+	}
+	if n != len(expected) {
+		t.Errorf("Expected %d bytes, got %d", len(expected), n)
 	}
 	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)

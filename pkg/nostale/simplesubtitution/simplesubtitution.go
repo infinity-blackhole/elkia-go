@@ -1,91 +1,72 @@
 package simplesubtitution
 
 import (
-	"bufio"
-
-	"github.com/sirupsen/logrus"
+	"io"
 )
-
-// A Reader implements convenience methods for reading messages
-// from a NosTale protocol network connection.
-type Reader struct {
-	R *bufio.Reader
-}
 
 // NewReader returns a new Reader reading from r.
 //
 // To avoid denial of service attacks, the provided bufio.Reader
 // should be reading from an io.LimitReader or similar Reader to bound
 // the size of responses.
-func NewReader(r *bufio.Reader) *Reader {
+func NewReader(r io.ByteReader) *Reader {
 	return &Reader{
-		R: r,
+		r: r,
 	}
 }
 
-// ReadMessage reads a single message from r,
-// eliding the final \n or \r\n from the returned string.
-func (r *Reader) ReadMessage() (string, error) {
-	msg, err := r.readMessageSlice()
-	logrus.Debugf("simple substitution decoded message: %s", msg)
-	return string(msg), err
+// A Reader implements convenience methods for reading messages
+// from a NosTale protocol network connection.
+type Reader struct {
+	r io.ByteReader
 }
 
-// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
-// string.
-func (r *Reader) ReadMessageBytes() ([]byte, error) {
-	msg, err := r.readMessageSlice()
-	if msg != nil {
-		buf := make([]byte, len(msg))
-		copy(buf, msg)
-		msg = buf
-	}
-	return msg, err
-}
-
-func (r *Reader) readMessageSlice() ([]byte, error) {
-	msg, err := r.R.ReadBytes(0xD8)
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("simple substitution encoded message: %v", msg)
-	buf := make([]byte, 0, len(msg))
-	for _, b := range msg {
-		if b > 14 {
-			buf = append(buf, (b-15)^195)
+func (r *Reader) Read(p []byte) (n int, err error) {
+	for n = 0; n < len(p); n++ {
+		// read the next byte
+		c, err := r.r.ReadByte()
+		if err != nil {
+			return n, err
+		}
+		// write the decrypted byte to the output
+		if c > 14 {
+			p[n] = (c - 15) ^ 195
 		} else {
-			buf = append(buf, (255-(14-b))^195)
+			p[n] = (255 - (14 - c)) ^ 195
+		}
+		// if this is the end of a message, return the bytes read so far
+		if c == 0xD8 {
+			return n + 1, nil
 		}
 	}
-	return buf, nil
+	return n, nil
 }
 
 // A Writer implements convenience methods for writing
 // messages to a NosTale protocol network connection.
 type Writer struct {
-	W *bufio.Writer
+	w io.ByteWriter
 }
 
 // NewWriter returns a new Writer writing to w.
-func NewWriter(w *bufio.Writer) *Writer {
+func NewWriter(w io.ByteWriter) *Writer {
 	return &Writer{
-		W: w,
+		w: w,
 	}
 }
 
 // WriteMessage writes the formatted message.
-func (w *Writer) Write(msg []byte) (nn int, err error) {
-	for _, b := range msg {
-		if err := w.W.WriteByte((b + 15) & 0xFF); err != nil {
-			return nn, err
+func (w *Writer) Write(p []byte) (n int, err error) {
+	for n = 0; n < len(p); n++ {
+		if err := w.w.WriteByte((p[n] + 15) & 0xFF); err != nil {
+			return n, err
 		}
-		nn++
 	}
-	if err := w.W.WriteByte(0x19); err != nil {
-		return nn, err
+	if err := w.w.WriteByte(0x19); err != nil {
+		return n, err
 	}
-	if err := w.W.WriteByte(0xD8); err != nil {
-		return nn, err
+	if err := w.w.WriteByte(0xD8); err != nil {
+		return n, err
 	}
-	return nn, w.W.Flush()
+	return n, nil
 }

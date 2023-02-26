@@ -3,99 +3,77 @@ package monoalphabetic
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"math"
 
 	"github.com/sirupsen/logrus"
 )
 
-func NewReader(r *bufio.Reader) *Reader {
+func NewReader(r io.ByteReader) *Reader {
 	return &Reader{
-		R:      r,
+		r:      r,
 		mode:   255,
 		offset: 4,
 	}
 }
 
-func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
+func NewReaderWithKey(r io.ByteReader, key uint32) *Reader {
 	return &Reader{
-		R:      r,
+		r:      r,
 		mode:   byte(key & 0xFF),
 		offset: byte((key >> 6) & 3),
 	}
 }
 
 type Reader struct {
-	R      *bufio.Reader
+	r      io.ByteReader
 	mode   byte
 	offset byte
 }
 
-// ReadMessage reads a single message from r,
-// eliding the final \n or \r\n from the returned string.
-func (r *Reader) ReadMessage() (string, error) {
-	msg, err := r.readMessageSlice()
-	logrus.Debugf("simple substitution decoded message: %s", msg)
-	return string(msg), err
-}
-
-// ReadMessageBytes is like ReadMessage but returns a []byte instead of a
-// string.
-func (r *Reader) ReadMessageBytes() ([]byte, error) {
-	msg, err := r.readMessageSlice()
-	if msg != nil {
-		buf := make([]byte, len(msg))
-		copy(buf, msg)
-		msg = buf
+func (r *Reader) Read(p []byte) (n int, err error) {
+	for n = 0; n < len(p); n++ {
+		// read the next byte
+		c, err := r.r.ReadByte()
+		if err != nil {
+			return n, err
+		}
+		// write the decrypted byte to the output
+		switch r.mode {
+		case 0:
+			p[n] = (c - r.offset - 0x40) & 0xFF
+		case 1:
+			p[n] = (c + r.offset + 0x40) & 0xFF
+		case 2:
+			p[n] = ((c - r.offset - 0x40) ^ 0xC3) & 0xFF
+		case 3:
+			p[n] = ((c + r.offset + 0x40) ^ 0xC3) & 0xFF
+		default:
+			p[n] = (c - 0x0F) & 0xFF
+		}
+		// if this is the end of a message, return the bytes read so far
+		if c == 0xFF {
+			return n + 1, nil
+		}
 	}
-	return msg, err
+	return n, nil
 }
 
-func (r *Reader) readMessageSlice() ([]byte, error) {
-	msg, err := r.R.ReadBytes(0xFF)
-	if err != nil {
-		return nil, err
-	}
-	return r.decryptMessage(msg), nil
+var lookup = []byte{
+	'\x00', ' ', '-', '.', '0', '1', '2', '3', '4',
+	'5', '6', '7', '8', '9', '\n', '\x00',
 }
 
-func (r *Reader) decryptMessage(msg []byte) []byte {
-	result := make([]byte, len(msg))
-	for i, c := range msg {
-		result[i] = r.decryptByte(c)
-	}
-	return result
-}
-
-func (r *Reader) decryptByte(c byte) byte {
-	switch r.mode {
-	case 0:
-		return (c - r.offset - 0x40) & 0xFF
-	case 1:
-		return (c + r.offset + 0x40) & 0xFF
-	case 2:
-		return ((c - r.offset - 0x40) ^ 0xC3) & 0xFF
-	case 3:
-		return ((c + r.offset + 0x40) ^ 0xC3) & 0xFF
-	default:
-		return (c - 0x0F) & 0xFF
-	}
-}
-
-var lookup = []string{
-	"\x00", " ", "-", ".", "0", "1", "2", "3", "4",
-	"5", "6", "7", "8", "9", "\n", "\x00",
-}
-
-func NewPackedReader(r *Reader) *PackedReader {
+func NewPackedReader(r *bufio.Reader) *PackedReader {
 	return &PackedReader{
-		R:      r,
+		r:      r,
 		lookup: lookup,
 	}
 }
 
 type PackedReader struct {
-	R      *Reader
-	lookup []string
+	r      *bufio.Reader
+	lookup []byte
 }
 
 // ReadMessageSlice reads a single message from r,
@@ -123,62 +101,84 @@ func (r *PackedReader) ReadMessageSliceBytes() ([][]byte, error) {
 }
 
 func (r *PackedReader) readMessageSlices() ([][]byte, error) {
-	binary, err := r.R.ReadMessageBytes()
-	logrus.Debugf("monoalphabetic encoded message: %v", binary)
+	binary, err := r.r.ReadBytes(0xFF)
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("monoalphabetic encoded message: %v", binary)
 	return r.unpack(binary), nil
 }
 
 func (r *PackedReader) unpack(data []byte) [][]byte {
-	packets := make([][]byte, 0)
 	parts := bytes.Split(data, []byte{0xFF})
-	for _, part := range parts {
-		result := r.unpackPart(part)
-		packets = append(packets, bytes.Join(result, []byte{}))
+	packets := make([][]byte, len(parts))
+	for i, part := range parts {
+		packets[i] = bytes.Join(r.unpackPart(part), []byte{})
 	}
 	return packets
 }
 
-func (r *PackedReader) unpackPart(part []byte) [][]byte {
-	result := make([][]byte, 0)
-	for len(part) != 0 {
-		byteVal := part[0]
-		rest := part[1:]
-		isPacked := (byteVal & 0x80) > 0
-		tmpLen := byteVal & 0x7F
-		var length int
+func (r *PackedReader) unpackPart(binary []byte) [][]byte {
+	var result [][]byte
+	for len(binary) > 0 {
+		head := binary[0]
+		binary = binary[1:]
+		isPacked := head&0x80 > 0
+		tmpLen := head & 0x7F
+		var partLen int
 		if isPacked {
-			length = int(math.Ceil(float64(tmpLen) / 2))
+			partLen = int(math.Ceil(float64(tmpLen) / 2))
 		} else {
-			length = int(tmpLen)
+			partLen = int(tmpLen)
 		}
-		chunk := rest[:length]
-		part = rest[length:]
-		var decodedChunk []byte
+
+		if partLen == 0 {
+			continue
+		}
+
+		var chunk []byte
+		if partLen <= len(r.lookup) {
+			chunk = append(chunk, r.lookup[partLen-1])
+		} else {
+			chunk = make([]byte, partLen)
+			for i := 0; i < partLen; i++ {
+				chunk[i] = byte(0xFF)
+			}
+		}
+
 		if isPacked {
-			decodedChunk = r.decodePackedChunk(chunk)
-		} else {
-			decodedChunk = r.decodeChunk(chunk)
+			var decodedChunk []byte
+			for i := 0; i < partLen/2; i++ {
+				b := binary[0]
+				binary = binary[1:]
+				hi := (b >> 4) & 0xF
+				lo := b & 0xF
+				decodedChunk = append(decodedChunk, chunk[hi], chunk[lo])
+			}
+			if partLen%2 == 1 {
+				decodedChunk = append(decodedChunk, chunk[binary[0]>>4])
+			}
+			chunk = decodedChunk
 		}
-		result = append(result, decodedChunk)
+
+		result = append(result, chunk)
 	}
+
 	return result
 }
 
 func (r *PackedReader) decodePackedChunk(chunk []byte) []byte {
-	result := make([]byte, 0)
+	result := make([]byte, len(chunk))
 	for i := 0; i < len(chunk); i += 1 {
 		h := int(chunk[i] >> 4)
 		l := int(chunk[i] & 0x0F)
 		leftByte := r.lookup[h]
 		rightByte := r.lookup[l]
 		if l != 0 {
-			result = append(result, leftByte...)
-			result = append(result, rightByte...)
+			result = append(result, leftByte)
+			result = append(result, rightByte)
 		} else {
-			result = append(result, leftByte...)
+			result = append(result, leftByte)
 		}
 	}
 	return result
@@ -195,7 +195,7 @@ func (r *PackedReader) decodeChunk(chunk []byte) []byte {
 // A Writer implements convenience methods for reading messages
 // from a NosTale protocol network connection.
 type Writer struct {
-	w *bufio.Writer
+	w io.ByteWriter
 }
 
 // NewWriter returns a new Writer reading from r.
@@ -203,7 +203,7 @@ type Writer struct {
 // To avoid denial of service attacks, the provided bufio.Writer
 // should be reading from an io.LimitWriter or similar Writer to bound
 // the size of responses.
-func NewWriter(w *bufio.Writer) *Writer {
+func NewWriter(w io.ByteWriter) *Writer {
 	return &Writer{
 		w: w,
 	}
@@ -235,9 +235,8 @@ func (w *Writer) Write(msg []byte) (nn int, err error) {
 			nn++
 		}
 	}
-	if err := w.w.WriteByte(0xff); err != nil {
+	if err := w.w.WriteByte(0xFF); err != nil {
 		return nn, err
 	}
-	nn++
-	return nn, w.w.Flush()
+	return nn + 1, nil
 }

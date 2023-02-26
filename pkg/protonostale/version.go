@@ -7,57 +7,42 @@ import (
 	"strconv"
 )
 
-func NewVersionReader(r io.Reader) *VersionReader {
-	return &VersionReader{
-		r: bufio.NewReader(r),
-	}
-}
-
-type VersionReader struct {
-	r *bufio.Reader
-}
-
-func (r *VersionReader) ReadVersion() (string, error) {
-	if err := r.DiscardPrefix(); err != nil {
+func ReadVersion(r *bufio.Reader) (string, error) {
+	if _, err := ReadVersionPrefix(r); err != nil {
 		return "", err
 	}
-	major, err := r.ReadDigit()
+	major, err := ReadVersionDigit(r)
 	if err != nil {
 		return "", err
 	}
-	minor, err := r.ReadDigit()
+	minor, err := ReadVersionDigit(r)
 	if err != nil {
 		return "", err
 	}
-	patch, err := r.ReadDigit()
+	patch, err := ReadVersionDigit(r)
 	if err != nil {
 		return "", err
 	}
-	build, err := r.ReadDigit()
+	build, err := ReadVersionDigit(r)
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
 }
 
-func (R *VersionReader) DiscardPrefix() error {
-	if _, err := R.r.ReadBytes('\v'); err != nil {
-		return err
-	}
-	return nil
+func ReadVersionPrefix(r *bufio.Reader) ([]byte, error) {
+	return r.ReadBytes('\v')
 }
 
-func (r *VersionReader) ReadDigit() (int, error) {
-	var result int
-	digit, err := r.r.ReadBytes('.')
+func ReadVersionDigit(r *bufio.Reader) (int, error) {
+	digit, err := r.ReadBytes('.')
+	offset := len(digit) - 1
 	if err != nil {
 		if err != io.EOF {
 			return 0, err
+		} else {
+			offset = len(digit)
 		}
 	}
-	result, err = strconv.Atoi(string(digit[:len(digit)-1]))
-	if err != nil {
-		return 0, err
-	}
-	return result, nil
+	return strconv.Atoi(string(digit[:offset]))
 }

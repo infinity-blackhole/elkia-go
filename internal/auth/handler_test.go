@@ -95,8 +95,8 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if _, err := client.Write(input); err != nil {
 		t.Fatalf("Failed to write message: %v", err)
 	}
-	rc := simplesubtitution.NewReader(bufio.NewReader(client))
-	result, err := rc.ReadMessageBytes()
+	rc := bufio.NewReader(simplesubtitution.NewReader(bufio.NewReader(client)))
+	result, err := rc.ReadBytes('\x0a')
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
