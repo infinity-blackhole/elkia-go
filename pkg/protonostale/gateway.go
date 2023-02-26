@@ -73,18 +73,27 @@ func ReadChannelEvent(r *bufio.Reader) (*eventing.ChannelEvent, error) {
 	s := bufio.NewScanner(r)
 	s.Split(bufio.ScanWords)
 	if !s.Scan() {
-		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read channel event: %w", err)
+		}
+		return nil, fmt.Errorf("failed to read channel event: EOF")
 	}
 	sn, err := ParseUint(s.Text())
 	if err != nil {
 		return nil, err
 	}
 	if !s.Scan() {
-		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read channel event: %w", err)
+		}
+		return nil, fmt.Errorf("failed to read channel event: EOF")
 	}
 	_ = s.Text()
 	if !s.Scan() {
-		return nil, fmt.Errorf("failed to read channel event: %w", s.Err())
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read channel event: %w", err)
+		}
+		return nil, fmt.Errorf("failed to read channel event: EOF")
 	}
 	payload := s.Bytes()
 	return &eventing.ChannelEvent{

@@ -6,10 +6,11 @@ import (
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const name = "github.com/infinity-blackhole/elkia/internal/auth"
@@ -54,67 +55,85 @@ type conn struct {
 func (c *conn) serve(ctx context.Context) {
 	go func() {
 		if err := recover(); err != nil {
-			if _, err := protonostale.WriteDialogErrorEvent(
+			utils.WriteError(
 				c.wc,
-				&eventing.DialogErrorEvent{
-					Code: eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				},
-			); err != nil {
-				logrus.Fatal(err)
-			}
+				eventing.DialogErrorCode_UNEXPECTED_ERROR,
+				"An unexpected error occurred, please try again later",
+			)
 		}
 	}()
-	_, span := otel.Tracer(name).Start(ctx, "Serve")
+	c.handleMessages(ctx)
+}
+
+func (c *conn) handleMessages(ctx context.Context) {
+	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	scanner := bufio.NewScanner(c.rc)
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
-		if _, err := protonostale.WriteDialogErrorEvent(
-			c.wc,
-			&eventing.DialogErrorEvent{
-				Code: eventing.DialogErrorCode_BAD_CASE,
-			},
-		); err != nil {
-			logrus.Fatal(err)
-		}
 		if err := scanner.Err(); err != nil {
-			logrus.Debugf("auth: read opcode: %v", err)
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
+			utils.WriteErrorf(
+				c.wc,
+				eventing.DialogErrorCode_BAD_CASE,
+				"failed to read auth event: %v",
+				err,
+			)
+			return
 		}
+		utils.WriteError(
+			c.wc,
+			eventing.DialogErrorCode_BAD_CASE,
+			"failed to read auth event: EOF",
+		)
 		return
 	}
 	event, err := protonostale.ParseAuthEvent(scanner.Text())
 	if err != nil {
-		if _, err := protonostale.WriteDialogErrorEvent(
+		utils.WriteErrorf(
 			c.wc,
-			&eventing.DialogErrorEvent{
-				Code: eventing.DialogErrorCode_BAD_CASE,
-			},
-		); err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.Debugf("auth: read opcode: %v", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+			eventing.DialogErrorCode_BAD_CASE,
+			"failed to parse auth event: %v",
+			err,
+		)
 		return
 	}
 	logrus.Debugf("auth: read opcode: %v", event)
+	c.handleAuthLogin(ctx, event)
+}
+
+func (c *conn) handleAuthLogin(
+	ctx context.Context,
+	event *eventing.AuthInteractRequest,
+) {
+	span := trace.SpanFromContext(ctx)
+	defer span.End()
 	stream, err := c.auth.AuthInteract(ctx)
 	if err != nil {
-		logrus.Fatal(err)
+		utils.WriteErrorf(
+			c.wc,
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			"failed to create auth interact stream: %v",
+			err,
+		)
+		return
 	}
 	if err := stream.Send(event); err != nil {
-		logrus.Debugf("auth: send event: %v", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		utils.WriteErrorf(
+			c.wc,
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			"failed to send login request: %v",
+			err,
+		)
 		return
 	}
 	m, err := stream.Recv()
 	if err != nil {
-		logrus.Debugf("auth: recv event: %v", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
+		utils.WriteErrorf(
+			c.wc,
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			"failed to receive login response: %v",
+			err,
+		)
 		return
 	}
 	switch m.Payload.(type) {
@@ -123,7 +142,13 @@ func (c *conn) serve(ctx context.Context) {
 			c.wc,
 			m.GetEndpointListEvent(),
 		); err != nil {
-			logrus.Fatal(err)
+			utils.WriteErrorf(
+				c.wc,
+				eventing.DialogErrorCode_UNEXPECTED_ERROR,
+				"failed to write endpoint list event: %v",
+				err,
+			)
+			return
 		}
 	}
 }
