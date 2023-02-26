@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	endpoint := os.Getenv("ELKIA_GATEWAY_BROKER_ENDPOINT")
+	endpoint := os.Getenv("ELKIA_GATEWAY_ENDPOINT")
 	if endpoint == "" {
 		endpoint = "localhost:8080"
 	}
@@ -47,7 +47,7 @@ func main() {
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "4123"
+		port = "4124"
 	}
 	srv := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),

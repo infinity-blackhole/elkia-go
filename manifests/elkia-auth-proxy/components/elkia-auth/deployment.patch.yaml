@@ -10,4 +10,4 @@ spec:
         - name: elkia-auth-proxy
           env:
             - name: ELKIA_AUTH_ENDPOINT
-              value: elkia-fleet:80
+              value: elkia-auth:80
