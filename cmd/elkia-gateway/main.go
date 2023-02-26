@@ -85,7 +85,7 @@ func main() {
 			KafkaConsumer:  kc,
 		}),
 	)
-	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
+	logrus.Debugf("auth server: listening on %s:%s", host, port)
 	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}

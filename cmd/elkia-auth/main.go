@@ -57,7 +57,6 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
 	eventing.RegisterAuthServer(
 		srv,
 		auth.NewServer(auth.ServerConfig{
@@ -65,7 +64,7 @@ func main() {
 			ClusterClient:  fleet.NewClusterClient(conn),
 		}),
 	)
-	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
+	logrus.Debugf("auth server: listening on %s:%s", host, port)
 	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}

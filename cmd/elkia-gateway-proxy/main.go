@@ -30,7 +30,7 @@ func main() {
 	if endpoint == "" {
 		endpoint = "localhost:8080"
 	}
-	logrus.Debugf("auth: connecting to auth broker at %s", endpoint)
+	logrus.Debugf("auth: connecting to auth at %s", endpoint)
 	conn, err := grpc.Dial(
 		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("auth: connected to auth broker at %s", endpoint)
+	logrus.Debugf("auth: connected to auth at %s", endpoint)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
