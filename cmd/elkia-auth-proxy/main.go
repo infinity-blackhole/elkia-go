@@ -6,7 +6,7 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/gateway"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/auth"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	endpoint := os.Getenv("ELKIA_GATEWAY_BROKER_ENDPOINT")
+	endpoint := os.Getenv("ELKIA_AUTH_BROKER_ENDPOINT")
 	if endpoint == "" {
 		endpoint = "localhost:8080"
 	}
@@ -51,8 +51,8 @@ func main() {
 	}
 	srv := nostale.NewServer(nostale.ServerConfig{
 		Addr: fmt.Sprintf("%s:%s", host, port),
-		Handler: gateway.NewHandler(gateway.HandlerConfig{
-			GatewayBrokerClient: eventing.NewGatewayBrokerClient(conn),
+		Handler: auth.NewHandler(auth.HandlerConfig{
+			AuthClient: eventing.NewAuthClient(conn),
 		}),
 	})
 	logrus.Debugf("auth: listening on %s:%s", host, port)

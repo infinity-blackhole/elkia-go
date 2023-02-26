@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-gateway-proxy
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-gateway-proxy
+          env:
+            - name: ELKIA_GATEWAY_ENDPOINT
+              value: elkia-gateway:8080

@@ -15,17 +15,17 @@ import (
 const name = "github.com/infinity-blackhole/elkia/internal/auth"
 
 type HandlerConfig struct {
-	AuthBrokerClient eventing.AuthBrokerClient
+	AuthClient eventing.AuthClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		auth: cfg.AuthBrokerClient,
+		auth: cfg.AuthClient,
 	}
 }
 
 type Handler struct {
-	auth eventing.AuthBrokerClient
+	auth eventing.AuthClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -48,7 +48,7 @@ type conn struct {
 	rwc  net.Conn
 	rc   *bufio.Reader
 	wc   *bufio.Writer
-	auth eventing.AuthBrokerClient
+	auth eventing.AuthClient
 }
 
 func (c *conn) serve(ctx context.Context) {

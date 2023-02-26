@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/internal/gateway"
+	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -59,24 +61,32 @@ func main() {
 	}
 	logrus.Debugf("gateway: subscribing to kafka topics %v", kafkaTopics)
 	kc.SubscribeTopics(kafkaTopics, nil)
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+	)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "4124"
+		port = "8080"
 	}
-	s := nostale.NewServer(nostale.ServerConfig{
-		Addr: fmt.Sprintf("%s:%s", host, port),
-		Handler: gateway.NewHandler(gateway.HandlerConfig{
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	eventing.RegisterGatewayServer(
+		srv,
+		gateway.NewServer(gateway.ServerConfig{
 			PresenceClient: fleet.NewPresenceClient(conn),
 			KafkaProducer:  kp,
 			KafkaConsumer:  kc,
 		}),
-	})
-	logrus.Debugf("gateway: listening on %s:%s", host, port)
-	if err := s.ListenAndServe(); err != nil {
+	)
+	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
+	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}
 }

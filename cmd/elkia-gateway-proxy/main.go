@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/authbroker"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/gateway"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -27,13 +26,13 @@ func init() {
 }
 
 func main() {
-	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if elkiaFleetEndpoint == "" {
-		elkiaFleetEndpoint = "localhost:8080"
+	endpoint := os.Getenv("ELKIA_GATEWAY_BROKER_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "localhost:8080"
 	}
-	logrus.Debugf("auth: connecting to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("auth: connecting to auth broker at %s", endpoint)
 	conn, err := grpc.Dial(
-		elkiaFleetEndpoint,
+		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
@@ -41,10 +40,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
-	)
+	logrus.Debugf("auth: connected to auth broker at %s", endpoint)
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
@@ -53,20 +49,14 @@ func main() {
 	if port == "" {
 		port = "4123"
 	}
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
-	eventing.RegisterAuthBrokerServer(
-		srv,
-		authbroker.NewServer(authbroker.ServerConfig{
-			PresenceClient: fleet.NewPresenceClient(conn),
-			ClusterClient:  fleet.NewClusterClient(conn),
+	srv := nostale.NewServer(nostale.ServerConfig{
+		Addr: fmt.Sprintf("%s:%s", host, port),
+		Handler: gateway.NewHandler(gateway.HandlerConfig{
+			GatewayClient: eventing.NewGatewayClient(conn),
 		}),
-	)
-	logrus.Debugf("auth broker server: listening on %s:%s", host, port)
-	if err := srv.Serve(lis); err != nil {
+	})
+	logrus.Debugf("auth: listening on %s:%s", host, port)
+	if err := srv.ListenAndServe(); err != nil {
 		logrus.Fatal(err)
 	}
 }

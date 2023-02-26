@@ -26,7 +26,7 @@ message AuthLoginEvent {
   string client_checksum = 7;
 }
 
-message Gateway {
+message Endpoint {
   string host = 1;
   string port = 2;
   uint32 weight = 3;
@@ -35,9 +35,9 @@ message Gateway {
   string world_name = 6;
 }
 
-message GatewayListEvent {
+message EndpointListEvent {
   uint32 key = 1;
-  repeated Gateway gateways = 2;
+  repeated Endpoint endpoints = 2;
 }
 
 message AuthInteractRequest {
@@ -48,11 +48,11 @@ message AuthInteractResponse {
   oneof payload {
     DialogErrorEvent dialog_error_event = 1;
     DialogInfoEvent dialog_info_event = 2;
-    GatewayListEvent gateway_list_event = 3;
+    EndpointListEvent endpoint_list_event = 3;
   }
 }
 
-service AuthBroker {
+service Auth {
   // AuthInteract is a bi-directional stream that is used to interact with the
   // auth server
   rpc AuthInteract(stream AuthInteractRequest)
@@ -109,7 +109,7 @@ message ChannelInteractResponse {
   }
 }
 
-service GatewayBroker {
+service Gateway {
   // AuthHandoffInteract is a bi-directional stream that is used to handoff
   // the auth server
   rpc AuthHandoffInteract(stream AuthHandoffInteractRequest)

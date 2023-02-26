@@ -80,16 +80,16 @@ func ParsePassword(s string) (string, error) {
 	return string(result), nil
 }
 
-func WriteGatewayListEvent(
+func WriteEndpointListEvent(
 	w io.Writer,
-	msg *eventing.GatewayListEvent,
+	msg *eventing.EndpointListEvent,
 ) (n int, err error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "NsTeST %d ", msg.Key); err != nil {
 		return n, err
 	}
-	for _, g := range msg.Gateways {
-		if _, err := WriteGateway(&b, g); err != nil {
+	for _, m := range msg.Endpoints {
+		if _, err := WriteEndpoint(&b, m); err != nil {
 			return n, err
 		}
 		if err := b.WriteByte(' '); err != nil {
@@ -103,15 +103,15 @@ func WriteGatewayListEvent(
 	return w.Write(b.Bytes())
 }
 
-func WriteGateway(w io.Writer, msg *eventing.Gateway) (int, error) {
+func WriteEndpoint(w io.Writer, m *eventing.Endpoint) (int, error) {
 	return fmt.Fprintf(
 		w,
 		"%s:%s:%d:%d.%d.%s",
-		msg.Host,
-		msg.Port,
-		msg.Weight,
-		msg.WorldId,
-		msg.ChannelId,
-		msg.WorldName,
+		m.Host,
+		m.Port,
+		m.Weight,
+		m.WorldId,
+		m.ChannelId,
+		m.WorldName,
 	)
 }

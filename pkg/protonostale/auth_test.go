@@ -64,10 +64,10 @@ func TestReadVersion(t *testing.T) {
 	}
 }
 
-func TestWriteGatewayListEvent(t *testing.T) {
-	input := &eventing.GatewayListEvent{
+func TestWriteEndpointListEvent(t *testing.T) {
+	input := &eventing.EndpointListEvent{
 		Key: 1,
-		Gateways: []*eventing.Gateway{
+		Endpoints: []*eventing.Endpoint{
 			{
 				Host:      "127.0.0.1",
 				Port:      "4124",
@@ -89,7 +89,7 @@ func TestWriteGatewayListEvent(t *testing.T) {
 	expected := "NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1"
 	var result bytes.Buffer
 	w := iotest.NewWriteLogger(t.Name(), &result)
-	n, err := WriteGatewayListEvent(w, input)
+	n, err := WriteEndpointListEvent(w, input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

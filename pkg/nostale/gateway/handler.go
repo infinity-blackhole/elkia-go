@@ -17,17 +17,17 @@ import (
 var name = "github.com/infinity-blackhole/elkia/internal/gateway"
 
 type HandlerConfig struct {
-	GatewayBrokerClient eventing.GatewayBrokerClient
+	GatewayClient eventing.GatewayClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		gateway: cfg.GatewayBrokerClient,
+		gateway: cfg.GatewayClient,
 	}
 }
 
 type Handler struct {
-	gateway eventing.GatewayBrokerClient
+	gateway eventing.GatewayClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -50,7 +50,7 @@ type handoffConn struct {
 	rwc     net.Conn
 	rc      *bufio.Reader
 	wc      *bufio.Writer
-	gateway eventing.GatewayBrokerClient
+	gateway eventing.GatewayClient
 }
 
 func (c *handoffConn) serve(ctx context.Context) {
@@ -80,7 +80,7 @@ func (c *handoffConn) serve(ctx context.Context) {
 
 func (c *handoffConn) handleHandoff(
 	ctx context.Context,
-	stream eventing.GatewayBroker_AuthHandoffInteractClient,
+	stream eventing.Gateway_AuthHandoffInteractClient,
 ) (*channelConn, error) {
 	scanner := bufio.NewScanner(c.rc)
 	scanner.Split(bufio.ScanLines)
@@ -159,7 +159,7 @@ type channelConn struct {
 	rwc      net.Conn
 	rc       *bufio.Reader
 	wc       *bufio.Writer
-	gateway  eventing.GatewayBrokerClient
+	gateway  eventing.GatewayClient
 	key      uint32
 	sequence uint32
 }

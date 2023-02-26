@@ -1,4 +1,4 @@
-package authbroker
+package auth
 
 import (
 	"math"
@@ -22,12 +22,12 @@ func NewServer(cfg ServerConfig) *Server {
 }
 
 type Server struct {
-	eventing.UnimplementedAuthBrokerServer
+	eventing.UnimplementedAuthServer
 	presence fleet.PresenceClient
 	cluster  fleet.ClusterClient
 }
 
-func (s *Server) AuthInteract(stream eventing.AuthBroker_AuthInteractServer) error {
+func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	for {
 		event, err := stream.Recv()
 		if err != nil {
@@ -50,7 +50,7 @@ func (s *Server) AuthInteract(stream eventing.AuthBroker_AuthInteractServer) err
 
 func (s *Server) AuthLoginProduce(
 	m *eventing.AuthLoginEvent,
-	stream eventing.AuthBroker_AuthLoginProduceServer,
+	stream eventing.Auth_AuthLoginProduceServer,
 ) error {
 	handoff, err := s.presence.AuthLogin(
 		stream.Context(),
@@ -72,13 +72,13 @@ func (s *Server) AuthLoginProduce(
 		return err
 	}
 	logrus.Debugf("auth: list members: %v", MemberList)
-	gateways := []*eventing.Gateway{}
+	ms := []*eventing.Endpoint{}
 	for _, m := range MemberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
 			return err
 		}
-		gateways = append(gateways, &eventing.Gateway{
+		ms = append(ms, &eventing.Endpoint{
 			Host:      host,
 			Port:      port,
 			Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
@@ -88,10 +88,10 @@ func (s *Server) AuthLoginProduce(
 		})
 	}
 	return stream.Send(&eventing.AuthInteractResponse{
-		Payload: &eventing.AuthInteractResponse_GatewayListEvent{
-			GatewayListEvent: &eventing.GatewayListEvent{
-				Key:      handoff.Key,
-				Gateways: gateways,
+		Payload: &eventing.AuthInteractResponse_EndpointListEvent{
+			EndpointListEvent: &eventing.EndpointListEvent{
+				Key:       handoff.Key,
+				Endpoints: ms,
 			},
 		},
 	})

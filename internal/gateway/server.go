@@ -25,20 +25,20 @@ func NewServer(cfg ServerConfig) *Server {
 }
 
 type ChannelServer struct {
-	eventing.GatewayBroker_ChannelInteractServer
+	eventing.Gateway_ChannelInteractServer
 	Sequence uint32
 	Key      uint32
 }
 
 type Server struct {
-	eventing.UnimplementedGatewayBrokerServer
+	eventing.UnimplementedGatewayServer
 	presence      fleet.PresenceClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
 }
 
 func (s *Server) AuthHandoffInteract(
-	stream eventing.GatewayBroker_AuthHandoffInteractServer,
+	stream eventing.Gateway_AuthHandoffInteractServer,
 ) error {
 	m, err := stream.Recv()
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *Server) AuthHandoffInteract(
 	})
 }
 
-func (s *Server) ChannelInteract(stream eventing.GatewayBroker_ChannelInteractServer) error {
+func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
 	md, ok := metadata.FromIncomingContext(stream.Context())
 	if !ok {
 		return errors.New("channel: handshake metadata error")

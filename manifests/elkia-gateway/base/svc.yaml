@@ -6,18 +6,11 @@ metadata:
   labels:
     app.kubernetes.io/name: elkia-gateway
     app.kubernetes.io/instance: elkia-gateway
-    fleet.elkia.io/managed: "true"
-    fleet.elkia.io/world-id: "1"
-    fleet.elkia.io/world-name: Elkia
-    fleet.elkia.io/channel-id: "1"
-    fleet.elkia.io/population: "0"
-    fleet.elkia.io/capacity: "3000"
-    fleet.elkia.io/port: nswp
 spec:
   ports:
-    - name: nswp
-      port: 4124
-      targetPort: nswp
+    - name: http
+      port: 80
+      targetPort: http
   selector:
     app.kubernetes.io/name: elkia-gateway
     app.kubernetes.io/instance: elkia-gateway
