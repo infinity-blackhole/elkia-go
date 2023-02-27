@@ -90,7 +90,7 @@ message AuthHandoffInteractRequest {
   }
 }
 
-message AuthHandoffLoginSuccessEvent { uint32 key = 1; }
+message AuthHandoffLoginSuccessEvent { string token = 1; }
 
 message AuthHandoffInteractResponse {
   oneof payload { AuthHandoffLoginSuccessEvent login_success_event = 1; }

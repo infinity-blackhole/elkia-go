@@ -65,25 +65,12 @@ func (c *handoffConn) serve(ctx context.Context) {
 		}
 	}()
 	logrus.Debugf("gateway: new auth handoff from %v", c.rwc.RemoteAddr())
-	c.handleAuthHandoff(ctx)
+	c.handoff(ctx)
 }
 
-func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
+func (c *handoffConn) handoff(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	stream, err := c.gateway.AuthHandoffInteract(ctx)
-	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to create auth handoff interact stream: %v",
-				err,
-			),
-		)
-		return
-	}
-	logrus.Debugf("gateway: created auth handoff interact stream")
 	scanner := bufio.NewScanner(c.rc)
 	scanner.Split(bufio.ScanLines)
 	if !scanner.Scan() {
@@ -118,10 +105,70 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
-	logrus.Debugf("gateway: read event: %v", sync)
+	conn := c.newChannelConn(sync)
+	go conn.serve(ctx)
+}
+
+func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *channelConn {
+	return &channelConn{
+		rwc: h.rwc,
+		rc: bufio.NewReader(
+			NewReader(bufio.NewReader(h.rwc), sync.Key),
+		),
+		wc: bufio.NewWriter(
+			NewWriter(bufio.NewWriter(h.rwc)),
+		),
+		gateway:  h.gateway,
+		key:      sync.Key,
+		sequence: sync.Sequence,
+	}
+}
+
+type channelConn struct {
+	rwc      net.Conn
+	rc       *bufio.Reader
+	wc       *bufio.Writer
+	gateway  eventing.GatewayClient
+	key      uint32
+	sequence uint32
+}
+
+func (c *channelConn) serve(ctx context.Context) {
+	go func() {
+		if err := recover(); err != nil {
+			utils.WriteError(
+				c.wc,
+				eventing.DialogErrorCode_UNEXPECTED_ERROR,
+				"An unexpected error occurred, please try again later",
+			)
+		}
+	}()
+	logrus.Debugf("gateway: new channel from %v", c.rwc.RemoteAddr())
+	c.upgrade(ctx)
+}
+
+func (c *channelConn) upgrade(ctx context.Context) {
+	scanner := bufio.NewScanner(c.rc)
+	scanner.Split(bufio.ScanLines)
+	stream, err := c.gateway.AuthHandoffInteract(ctx)
+	if err != nil {
+		utils.WriteError(
+			c.wc,
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			fmt.Sprintf(
+				"failed to create auth handoff interact stream: %v",
+				err,
+			),
+		)
+		return
+	}
+	logrus.Debugf("gateway: created auth handoff interact stream")
 	if err := stream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_SyncEvent{
-			SyncEvent: sync,
+			SyncEvent: &eventing.AuthHandoffSyncEvent{
+				Sequence: c.sequence,
+				Key:      c.key,
+			},
 		},
 	}); err != nil {
 		utils.WriteError(
@@ -134,7 +181,6 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
-	logrus.Debugf("gateway: sent sync event")
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
 			utils.WriteError(
@@ -197,8 +243,8 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		return
 	}
 	logrus.Debugf("gateway: received login success event")
-	ack := m.GetLoginSuccessEvent()
-	if ack == nil {
+	loginSuccess := m.GetLoginSuccessEvent()
+	if loginSuccess == nil {
 		utils.WriteError(
 			c.wc,
 			eventing.DialogErrorCode_BAD_CASE,
@@ -209,55 +255,18 @@ func (c *handoffConn) handleAuthHandoff(ctx context.Context) {
 		)
 		return
 	}
-	logrus.Debugf("gateway: received login success event: %v", ack)
-	conn := c.newChannelConn(ack.Key, login.PasswordEvent.Sequence)
-	go conn.serve(ctx)
+	logrus.Debugf("gateway: received login success event: %v", loginSuccess)
+	c.handleMessages(ctx, loginSuccess.Token)
 }
 
-func (h *handoffConn) newChannelConn(sequence, key uint32) *channelConn {
-	return &channelConn{
-		rwc: h.rwc,
-		rc: bufio.NewReader(
-			NewReader(bufio.NewReader(h.rwc), key),
-		),
-		wc: bufio.NewWriter(
-			NewWriter(bufio.NewWriter(h.rwc)),
-		),
-		gateway:  h.gateway,
-		key:      key,
-		sequence: sequence,
-	}
-}
-
-type channelConn struct {
-	rwc      net.Conn
-	rc       *bufio.Reader
-	wc       *bufio.Writer
-	gateway  eventing.GatewayClient
-	key      uint32
-	sequence uint32
-}
-
-func (c *channelConn) serve(ctx context.Context) {
-	go func() {
-		if err := recover(); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"An unexpected error occurred, please try again later",
-			)
-		}
-	}()
-	c.handleMessages(ctx)
-}
-
-func (c *channelConn) handleMessages(ctx context.Context) {
+func (c *channelConn) handleMessages(ctx context.Context, token string) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	ctx = metadata.AppendToOutgoingContext(
 		ctx,
 		"sequence", strconv.FormatUint(uint64(c.sequence), 10),
 		"key", strconv.FormatUint(uint64(c.key), 10),
+		"session", token,
 	)
 	stream, err := c.gateway.ChannelInteract(ctx)
 	if err != nil {
