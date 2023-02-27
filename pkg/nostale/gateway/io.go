@@ -184,33 +184,27 @@ func NewWriter(w *bufio.Writer) *Writer {
 }
 
 // Write writes the formatted message.
-func (w *Writer) Write(msg []byte) (nn int, err error) {
-	for i, b := range msg {
-		if i%0x7e != 0 {
-			if err := w.w.WriteByte(b); err != nil {
-				return nn, err
+func (w *Writer) Write(msg []byte) (n int, err error) {
+	for n = 0; n < len(msg); n++ {
+		if (n % 0x7E) != 0 {
+			if err := w.w.WriteByte(^msg[n]); err != nil {
+				return n, err
 			}
-			nn++
 		} else {
-			if len(msg)-i > 0x7e {
-				if err := w.w.WriteByte(0x7e); err != nil {
-					return nn, err
-				}
-				nn++
-			} else {
-				if err := w.w.WriteByte(byte(len(msg) - i)); err != nil {
-					return nn, err
-				}
-				nn++
+			remaining := byte(len(msg) - n)
+			if remaining > 0x7E {
+				remaining = 0x7E
 			}
-			if err := w.w.WriteByte(b); err != nil {
-				return nn, err
+			if err := w.w.WriteByte(remaining); err != nil {
+				return n, err
 			}
-			nn++
+			if err := w.w.WriteByte(^msg[n]); err != nil {
+				return n, err
+			}
 		}
 	}
 	if err := w.w.WriteByte(0xFF); err != nil {
-		return nn, err
+		return n, err
 	}
-	return nn + 1, nil
+	return n, w.w.Flush()
 }
