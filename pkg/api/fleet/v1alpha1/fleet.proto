@@ -76,7 +76,8 @@ message AuthRefreshLoginResponse { uint32 key = 1; }
 
 message AuthHandoffRequest {
   uint32 key = 1;
-  string password = 2;
+  string identifier = 2;
+  string password = 3;
 }
 
 message AuthHandoffResponse {}
@@ -87,8 +88,7 @@ message AuthLogoutResponse {}
 
 message Session {
   string id = 1;
-  string identifier = 2;
-  string token = 3;
+  string token = 2;
 }
 
 message SessionGetRequest { uint32 key = 1; }

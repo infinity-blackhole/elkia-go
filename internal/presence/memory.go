@@ -57,9 +57,8 @@ func (s *MemoryPresenceServer) AuthLogin(
 	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         strconv.Itoa(s.rand.Int()),
-			Identifier: in.Identifier,
-			Token:      sessionToken,
+			Id:    strconv.Itoa(s.rand.Int()),
+			Token: sessionToken,
 		},
 	})
 	if err != nil {
@@ -94,18 +93,14 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if identity == nil {
 		return nil, errors.New("invalid credentials")
 	}
-	if session.Identifier != in.Identifier {
-		return nil, errors.New("invalid credentials")
-	}
 	sessionToken, err := s.generateSecureToken(16)
 	if err != nil {
 		return nil, err
 	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         strconv.Itoa(s.rand.Int()),
-			Identifier: in.Identifier,
-			Token:      sessionToken,
+			Id:    strconv.Itoa(s.rand.Int()),
+			Token: sessionToken,
 		},
 	})
 	if err != nil {

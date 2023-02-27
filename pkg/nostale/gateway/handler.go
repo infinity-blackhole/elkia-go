@@ -41,7 +41,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		rc:      bufio.NewReader(NewReader(bufio.NewReader(c))),
+		rc:      bufio.NewReader(NewHandoffReader(bufio.NewReader(c))),
 		wc:      bufio.NewWriter(NewWriter(bufio.NewWriter(c))),
 		gateway: h.gateway,
 	}
@@ -218,7 +218,7 @@ func (h *handoffConn) newChannelConn(sequence, key uint32) *channelConn {
 	return &channelConn{
 		rwc: h.rwc,
 		rc: bufio.NewReader(
-			NewReaderWithKey(bufio.NewReader(h.rwc), key),
+			NewReader(bufio.NewReader(h.rwc), key),
 		),
 		wc: bufio.NewWriter(
 			NewWriter(bufio.NewWriter(h.rwc)),

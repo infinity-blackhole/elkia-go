@@ -12,35 +12,7 @@ import (
 func ParseAuthHandoffSyncEvent(
 	s string,
 ) (*eventing.AuthHandoffSyncEvent, error) {
-	sn, err := ParseUint(s)
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.AuthHandoffSyncEvent{Sequence: sn}, nil
-}
-
-func ParseAuthHandoffLoginEvent(
-	r string,
-) (*eventing.AuthHandoffLoginEvent, error) {
-	fields := strings.Fields(r)
-	keyMsg, err := ParseAuthHandoffLoginKeyEvent(fields[0])
-	if err != nil {
-		return nil, err
-	}
-	pwdMsg, err := ParseAuthHandoffLoginPasswordEvent(fields[1])
-	if err != nil {
-		return nil, err
-	}
-	return &eventing.AuthHandoffLoginEvent{
-		KeyEvent:      keyMsg,
-		PasswordEvent: pwdMsg,
-	}, nil
-}
-
-func ParseAuthHandoffLoginKeyEvent(
-	s string,
-) (*eventing.AuthHandoffLoginKeyEvent, error) {
-	fields := strings.Fields(s)
+	fields := strings.Fields(s[2:])
 	sn, err := ParseUint(fields[0])
 	if err != nil {
 		return nil, err
@@ -49,9 +21,41 @@ func ParseAuthHandoffLoginKeyEvent(
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffLoginKeyEvent{
+	return &eventing.AuthHandoffSyncEvent{
 		Sequence: sn,
 		Key:      key,
+	}, nil
+}
+
+func ParseAuthHandoffLoginEvent(
+	r string,
+) (*eventing.AuthHandoffLoginEvent, error) {
+	fields := strings.Fields(r)
+	idMsg, err := ParseAuthHandoffLoginIdentifierEvent(fields[0])
+	if err != nil {
+		return nil, err
+	}
+	pwdMsg, err := ParseAuthHandoffLoginPasswordEvent(fields[1])
+	if err != nil {
+		return nil, err
+	}
+	return &eventing.AuthHandoffLoginEvent{
+		IdentifierEvent: idMsg,
+		PasswordEvent:   pwdMsg,
+	}, nil
+}
+
+func ParseAuthHandoffLoginIdentifierEvent(
+	s string,
+) (*eventing.AuthHandoffLoginIdentifierEvent, error) {
+	fields := strings.Fields(s)
+	sn, err := ParseUint(fields[0])
+	if err != nil {
+		return nil, err
+	}
+	return &eventing.AuthHandoffLoginIdentifierEvent{
+		Sequence:   sn,
+		Identifier: fields[1],
 	}, nil
 }
 

@@ -52,15 +52,16 @@ func (s *Server) AuthHandoffInteract(
 	if login == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.KeyEvent.Sequence != sync.Sequence+1 {
+	if login.IdentifierEvent.Sequence != sync.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.PasswordEvent.Sequence != login.KeyEvent.Sequence+1 {
+	if login.PasswordEvent.Sequence != login.IdentifierEvent.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	_, err = s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
-		Key:      login.KeyEvent.Key,
-		Password: login.PasswordEvent.Password,
+		Key:        sync.Key,
+		Identifier: login.IdentifierEvent.Identifier,
+		Password:   login.PasswordEvent.Password,
 	})
 	if err != nil {
 		return err
@@ -68,7 +69,7 @@ func (s *Server) AuthHandoffInteract(
 	return stream.Send(&eventing.AuthHandoffInteractResponse{
 		Payload: &eventing.AuthHandoffInteractResponse_LoginSuccessEvent{
 			LoginSuccessEvent: &eventing.AuthHandoffLoginSuccessEvent{
-				Key: login.KeyEvent.Key,
+				Key: sync.Key,
 			},
 		},
 	})

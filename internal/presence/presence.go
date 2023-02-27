@@ -62,9 +62,8 @@ func (i *PresenceServer) AuthLogin(
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
 	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         successLogin.Session.Id,
-			Identifier: in.Identifier,
-			Token:      *successLogin.SessionToken,
+			Id:    successLogin.Session.Id,
+			Token: *successLogin.SessionToken,
 		},
 	})
 	if err != nil {
@@ -108,9 +107,8 @@ func (s *PresenceServer) AuthRefreshLogin(
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
-			Id:         successLogin.Session.Id,
-			Identifier: in.Identifier,
-			Token:      *successLogin.SessionToken,
+			Id:    successLogin.Session.Id,
+			Token: *successLogin.SessionToken,
 		},
 	})
 	if err != nil {
@@ -135,7 +133,7 @@ func (s *PresenceServer) AuthHandoff(
 	_, err = s.AuthRefreshLogin(
 		ctx,
 		&fleet.AuthRefreshLoginRequest{
-			Identifier: sessionGet.Session.Identifier,
+			Identifier: in.Identifier,
 			Password:   in.Password,
 			Token:      sessionGet.Session.Token,
 		},

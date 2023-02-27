@@ -8,15 +8,58 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewReader(r *bufio.Reader) *Reader {
-	return &Reader{
-		r:      r,
-		mode:   255,
-		offset: 4,
+func NewHandoffReader(r *bufio.Reader) *HandoffReader {
+	return &HandoffReader{
+		r: r,
 	}
 }
 
-func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
+type HandoffReader struct {
+	r *bufio.Reader
+}
+
+func (r *HandoffReader) Read(p []byte) (n int, err error) {
+	for n = 0; len(p) > n*2; n++ {
+		char, err := r.r.ReadByte()
+		if err != nil {
+			return n, err
+		}
+
+		first_byte := char - 0xF
+		second_byte := first_byte & 0xF0
+
+		second_key := second_byte >> 0x4
+		switch second_key {
+		case 0, 1:
+			p[n*2] = ' '
+		case 2:
+			p[n*2] = '-'
+		case 3:
+			p[n*2] = '.'
+		default:
+			p[n*2] = 0x2C + byte(second_key)
+		}
+
+		first_key := first_byte - second_byte
+		switch first_key {
+		case 0, 1:
+			p[n*2+1] = ' '
+		case 2:
+			p[n*2+1] = '-'
+		case 3:
+			p[n*2+1] = '.'
+		default:
+			p[n*2+1] = 0x2C + byte(first_key)
+		}
+
+		if char == 0xFF {
+			return n, nil
+		}
+	}
+	return n, nil
+}
+
+func NewReader(r *bufio.Reader, key uint32) *Reader {
 	return &Reader{
 		r:      r,
 		mode:   byte(key & 0xFF),
@@ -37,6 +80,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 		if err != nil {
 			return n, err
 		}
+		logrus.Debugf("gateway: reading byte %v", c)
 		// write the decrypted byte to the output
 		switch r.mode {
 		case 0:
@@ -52,6 +96,7 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 		}
 		// if this is the end of a message, return the bytes read so far
 		if c == 0xFF {
+			logrus.Debugf("gateway: read %v bytes", n)
 			return n + 1, nil
 		}
 	}

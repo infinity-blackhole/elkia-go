@@ -7,32 +7,6 @@ import (
 	"testing/iotest"
 )
 
-func TestReaderRead(t *testing.T) {
-	input := []byte{
-		150, 153, 171, 192, 79, 14, 198, 202, 220, 1, 70, 205, 214, 220, 208,
-		217, 208, 196, 7, 212, 73, 255,
-	}
-	expected := []byte{
-		135, 138, 156, 177, 64, 255, 183, 187, 205, 242, 55, 190, 199, 205,
-		193, 202, 193, 181, 248, 197, 58, 240,
-	}
-	r := iotest.NewReadLogger(
-		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input))),
-	)
-	result := make([]byte, len(expected))
-	n, err := r.Read(result)
-	if err != nil {
-		t.Errorf("Error reading line: %s", err)
-	}
-	if !bytes.Equal(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
-	}
-	if n != len(expected) {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n)
-	}
-}
-
 // key:3324008792
 
 func TestReaderReadSyncEvent(t *testing.T) {
@@ -40,10 +14,10 @@ func TestReaderReadSyncEvent(t *testing.T) {
 		150, 156, 122, 80, 79, 14, 198, 205, 171, 145, 70, 205, 214, 220, 208,
 		217, 208, 196, 7, 212, 73, 255,
 	}
-	expected := []byte("0")
+	expected := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6; ")
 	r := iotest.NewReadLogger(
 		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input))),
+		NewHandoffReader(bufio.NewReader(bytes.NewReader(input))),
 	)
 	result := make([]byte, len(expected))
 	n, err := r.Read(result)
@@ -53,8 +27,8 @@ func TestReaderReadSyncEvent(t *testing.T) {
 	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
-	if n != len(expected) {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n)
+	if n*2+2 != len(expected) {
+		t.Errorf("Expected %d bytes, got %d", len(expected), n*2+2)
 	}
 }
 
@@ -67,7 +41,7 @@ func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
 	expected := []byte("49272 9hibwiwiG2e6Nr")
 	r := iotest.NewReadLogger(
 		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input))),
+		NewReader(bufio.NewReader(bytes.NewReader(input)), 0),
 	)
 	result := make([]byte, len(expected))
 	n, err := r.Read(result)
@@ -89,7 +63,7 @@ func TestReaderReadeHeartbeatEvent(t *testing.T) {
 	expected := []byte("49277 0")
 	r := iotest.NewReadLogger(
 		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input))),
+		NewReader(bufio.NewReader(bytes.NewReader(input)), 0),
 	)
 	result := make([]byte, len(expected))
 	n, err := r.Read(result)
