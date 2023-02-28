@@ -39,9 +39,6 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 			return n, err
 		}
 		p[n] = c
-		if c == 0x0A {
-			return n + 1, nil
-		}
 	}
 	return n, nil
 }
@@ -65,12 +62,6 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		if err := w.w.WriteByte((p[n] + 15) & 0xFF); err != nil {
 			return n, err
 		}
-	}
-	if err := w.w.WriteByte(0x19); err != nil {
-		return n, err
-	}
-	if err := w.w.WriteByte(0xD8); err != nil {
-		return n, err
 	}
 	return n, w.w.Flush()
 }

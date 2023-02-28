@@ -13,7 +13,7 @@ func TestWriterWrite(t *testing.T) {
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
 		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
-		130, 131, 25, 216,
+		130, 131,
 	}
 	var buf bytes.Buffer
 	w := iotest.NewWriteLogger(
@@ -24,12 +24,25 @@ func TestWriterWrite(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if n != len(input) {
+	if len(input) != n {
 		t.Errorf("Expected %d bytes written, got %d", len(input), n)
 	}
 	result := buf.Bytes()
-	if !bytes.Equal(result, expected) {
+	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestReaderReadEof(t *testing.T) {
+	input := []byte{}
+	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
+	result := make([]byte, 1)
+	n, err := r.Read(result)
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+	if n != 0 {
+		t.Errorf("Expected 0 bytes read, got %d", n)
 	}
 }
 
@@ -63,19 +76,19 @@ func TestReaderRead(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
-	if !bytes.Equal(result, expected) {
+	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %s, got %s", expected, result)
 	}
-	if n != len(expected) {
+	if len(expected) != n {
 		t.Errorf("Expected %d bytes, got %d", len(expected), n)
 	}
 }
 
 func TestServerAsymmetricEncoding(t *testing.T) {
-	input := []byte("fail Hello. This is a basic test")
+	input := "fail Hello. This is a basic test"
 	var b bytes.Buffer
 	w := NewWriter(bufio.NewWriter(&b))
-	n, err := w.Write(input)
+	n, err := fmt.Fprint(w, input)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -83,15 +96,16 @@ func TestServerAsymmetricEncoding(t *testing.T) {
 		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
 	r := NewReader(bufio.NewReader(&b))
-	result := make([]byte, len(input)+2)
-	n, err = r.Read(result)
+	buff := make([]byte, len(input))
+	n, err = r.Read(buff)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if bytes.Equal(result[:1], input) {
-		t.Errorf("Expected %s, got %s", input, result)
+	result := string(buff)
+	if input == result {
+		t.Errorf("Expected different from %s, got %s", input, result)
 	}
-	if n != len(input)+2 {
+	if len(input) != n {
 		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
 }

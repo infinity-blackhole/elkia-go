@@ -100,7 +100,7 @@ func WriteEndpointListEvent(
 	if err != nil {
 		return n, err
 	}
-	n, err = w.Write(b.Bytes())
+	n, err = fmt.Fprintln(w, b.String())
 	if err != nil {
 		return n, err
 	}

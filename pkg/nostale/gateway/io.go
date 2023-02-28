@@ -31,9 +31,6 @@ func (r *HandoffReader) Read(p []byte) (n int, err error) {
 		}
 		p[n*2] = first
 		p[n*2+1] = second
-		if c == 0xFF {
-			return n, nil
-		}
 	}
 	return n, nil
 }
@@ -99,9 +96,6 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 			return n, err
 		}
 		p[n] = c
-		if c == 0xFF {
-			return n + 1, nil
-		}
 	}
 	return n, nil
 }
@@ -250,9 +244,6 @@ func (w *Writer) Write(msg []byte) (n int, err error) {
 				return n, err
 			}
 		}
-	}
-	if err := w.w.WriteByte(0xFF); err != nil {
-		return n, err
 	}
 	return n, w.w.Flush()
 }

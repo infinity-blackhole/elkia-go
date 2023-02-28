@@ -3,6 +3,7 @@ package gateway
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"testing"
 	"testing/iotest"
 )
@@ -12,9 +13,9 @@ import (
 func TestReaderReadSyncEvent(t *testing.T) {
 	input := []byte{
 		150, 156, 122, 80, 79, 14, 198, 205, 171, 145, 70, 205, 214, 220, 208,
-		217, 208, 196, 7, 212, 73, 255,
+		217, 208, 196, 7, 212, 73,
 	}
-	expected := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6; ")
+	expected := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6")
 	r := iotest.NewReadLogger(
 		t.Name(),
 		NewHandoffReader(bufio.NewReader(bytes.NewReader(input))),
@@ -24,11 +25,11 @@ func TestReaderReadSyncEvent(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
-	if !bytes.Equal(result, expected) {
+	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
-	if n*2+2 != len(expected) {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n*2+2)
+	if len(expected) != n*2 {
+		t.Errorf("Expected %d bytes, got %d", len(expected), n*2)
 	}
 }
 
@@ -97,25 +98,23 @@ func TestReaderReadeHeartbeatEvent(t *testing.T) {
 }
 
 func TestWriterWrite(t *testing.T) {
-	input := []byte{
-		102, 111, 111,
-	}
+	input := "foo"
 	expected := []byte{
-		3, 153, 144, 144, 255,
+		3, 153, 144, 144,
 	}
 	var result bytes.Buffer
 	w := iotest.NewWriteLogger(
 		t.Name(),
 		NewWriter(bufio.NewWriter(&result)),
 	)
-	n, err := w.Write(input)
+	n, err := fmt.Fprint(w, input)
 	if err != nil {
 		t.Errorf("Error writing line: %s", err)
 	}
-	if !bytes.Equal(result.Bytes(), expected) {
+	if !bytes.Equal(expected, result.Bytes()) {
 		t.Errorf("Expected %v, got %v", expected, result.Bytes())
 	}
-	if n != len(input) {
+	if len(input) != n {
 		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
 }

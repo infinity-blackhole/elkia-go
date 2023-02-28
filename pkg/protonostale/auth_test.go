@@ -87,7 +87,7 @@ func TestWriteEndpointListEvent(t *testing.T) {
 			},
 		},
 	}
-	expected := "NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1"
+	expected := "NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1\n"
 	var result bytes.Buffer
 	w := bufio.NewWriter(iotest.NewWriteLogger(t.Name(), &result))
 	n, err := WriteEndpointListEvent(w, input)
