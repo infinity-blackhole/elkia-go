@@ -21,21 +21,25 @@ type Reader struct {
 	r *bufio.Reader
 }
 
+func (r *Reader) ReadByte() (byte, error) {
+	c, err := r.r.ReadByte()
+	if err != nil {
+		return c, err
+	}
+	if c > 14 {
+		return (c - 15) ^ 195, nil
+	}
+	return (255 - (14 - c)) ^ 195, nil
+}
+
 func (r *Reader) Read(p []byte) (n int, err error) {
 	for n = 0; n < len(p); n++ {
-		// read the next byte
-		c, err := r.r.ReadByte()
+		c, err := r.ReadByte()
 		if err != nil {
 			return n, err
 		}
-		// write the decrypted byte to the output
-		if c > 14 {
-			p[n] = (c - 15) ^ 195
-		} else {
-			p[n] = (255 - (14 - c)) ^ 195
-		}
-		// if this is the end of a message, return the bytes read so far
-		if c == 0xD8 {
+		p[n] = c
+		if c == 0x0A {
 			return n + 1, nil
 		}
 	}

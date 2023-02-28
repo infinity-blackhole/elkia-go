@@ -21,43 +21,42 @@ type HandoffReader struct {
 
 func (r *HandoffReader) Read(p []byte) (n int, err error) {
 	for n = 0; len(p) > n*2; n++ {
-		char, err := r.r.ReadByte()
+		c, err := r.r.ReadByte()
 		if err != nil {
 			return n, err
 		}
-
-		first_byte := char - 0xF
-		second_byte := first_byte & 0xF0
-
-		second_key := second_byte >> 0x4
-		switch second_key {
-		case 0, 1:
-			p[n*2] = ' '
-		case 2:
-			p[n*2] = '-'
-		case 3:
-			p[n*2] = '.'
-		default:
-			p[n*2] = 0x2C + byte(second_key)
+		first, second, err := r.decodeBytePair(c)
+		if err != nil {
+			return n, err
 		}
-
-		first_key := first_byte - second_byte
-		switch first_key {
-		case 0, 1:
-			p[n*2+1] = ' '
-		case 2:
-			p[n*2+1] = '-'
-		case 3:
-			p[n*2+1] = '.'
-		default:
-			p[n*2+1] = 0x2C + byte(first_key)
-		}
-
-		if char == 0xFF {
+		p[n*2] = first
+		p[n*2+1] = second
+		if c == 0xFF {
 			return n, nil
 		}
 	}
 	return n, nil
+}
+
+func (r *HandoffReader) decodeBytePair(b byte) (byte, byte, error) {
+	first_byte := b - 0xF
+	second_byte := first_byte & 0xF0
+	second_key := second_byte >> 0x4
+	first_key := first_byte - second_byte
+	return r.decodeByte(second_key), r.decodeByte(first_key), nil
+}
+
+func (*HandoffReader) decodeByte(b byte) byte {
+	switch b {
+	case 0, 1:
+		return ' '
+	case 2:
+		return '-'
+	case 3:
+		return '.'
+	default:
+		return 0x2C + b
+	}
 }
 
 func NewReader(r *bufio.Reader, key uint32) *Reader {
@@ -74,27 +73,32 @@ type Reader struct {
 	offset byte
 }
 
+func (r *Reader) ReadByte() (byte, error) {
+	c, err := r.r.ReadByte()
+	if err != nil {
+		return c, err
+	}
+	switch r.mode {
+	case 0:
+		return c - r.offset, nil
+	case 1:
+		return c + r.offset, nil
+	case 2:
+		return (c - r.offset) ^ 0xC3, nil
+	case 3:
+		return (c + r.offset) ^ 0xC3, nil
+	default:
+		return c, errors.New("invalid mode")
+	}
+}
+
 func (r *Reader) Read(p []byte) (n int, err error) {
 	for n = 0; n < len(p); n++ {
-		// read the next byte
-		c, err := r.r.ReadByte()
+		c, err := r.ReadByte()
 		if err != nil {
 			return n, err
 		}
-		// write the decrypted byte to the output
-		switch r.mode {
-		case 0:
-			p[n] = c - r.offset
-		case 1:
-			p[n] = c + r.offset
-		case 2:
-			p[n] = (c - r.offset) ^ 0xC3
-		case 3:
-			p[n] = (c + r.offset) ^ 0xC3
-		default:
-			return n, errors.New("invalid mode")
-		}
-		// if this is the end of a message, return the bytes read so far
+		p[n] = c
 		if c == 0xFF {
 			return n + 1, nil
 		}
