@@ -56,6 +56,24 @@ func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
 	}
 }
 
+func TestReaderReadKeyDerivation(t *testing.T) {
+	var buff bytes.Buffer
+	r := NewReader(bufio.NewReader(&buff), 100)
+	if r.mode != 1 {
+		t.Errorf("Expected mode 74, got %d", r.mode)
+	}
+	if r.offset != 164 {
+		t.Errorf("Expected offset 0, got %d", r.offset)
+	}
+	r = NewReader(bufio.NewReader(&buff), 1)
+	if r.mode != 0 {
+		t.Errorf("Expected mode 0, got %d", r.mode)
+	}
+	if r.offset != 65 {
+		t.Errorf("Expected offset 65, got %d", r.offset)
+	}
+}
+
 func TestReaderReadeHeartbeatEvent(t *testing.T) {
 	input := []byte{
 		199, 205, 171, 241, 128, 63,

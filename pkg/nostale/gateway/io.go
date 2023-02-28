@@ -3,6 +3,7 @@ package gateway
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"math"
 
 	"github.com/sirupsen/logrus"
@@ -62,8 +63,8 @@ func (r *HandoffReader) Read(p []byte) (n int, err error) {
 func NewReader(r *bufio.Reader, key uint32) *Reader {
 	return &Reader{
 		r:      r,
-		mode:   byte(key & 0xFF),
-		offset: byte((key >> 6) & 3),
+		mode:   byte(key >> 6 & 0x03),
+		offset: byte(key&0xFF + 0x40&0xFF),
 	}
 }
 
@@ -80,23 +81,21 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 		if err != nil {
 			return n, err
 		}
-		logrus.Debugf("gateway: reading byte %v", c)
 		// write the decrypted byte to the output
 		switch r.mode {
 		case 0:
-			p[n] = (c - r.offset - 0x40) & 0xFF
+			p[n] = c - r.offset
 		case 1:
-			p[n] = (c + r.offset + 0x40) & 0xFF
+			p[n] = c + r.offset
 		case 2:
-			p[n] = ((c - r.offset - 0x40) ^ 0xC3) & 0xFF
+			p[n] = (c - r.offset) ^ 0xC3
 		case 3:
-			p[n] = ((c + r.offset + 0x40) ^ 0xC3) & 0xFF
+			p[n] = (c + r.offset) ^ 0xC3
 		default:
-			p[n] = (c - 0x0F) & 0xFF
+			return n, errors.New("invalid mode")
 		}
 		// if this is the end of a message, return the bytes read so far
 		if c == 0xFF {
-			logrus.Debugf("gateway: read %v bytes", n)
 			return n + 1, nil
 		}
 	}
