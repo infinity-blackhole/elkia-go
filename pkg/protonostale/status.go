@@ -8,8 +8,8 @@ import (
 
 func NewStatus(code eventing.DialogErrorCode) *Status {
 	return &Status{
-		s: DialogErrorEvent{
-			DialogErrorEvent: eventing.DialogErrorEvent{
+		s: DialogErrorFrame{
+			DialogErrorFrame: eventing.DialogErrorFrame{
 				Code: code,
 			},
 		},
@@ -17,7 +17,7 @@ func NewStatus(code eventing.DialogErrorCode) *Status {
 }
 
 type Status struct {
-	s DialogErrorEvent
+	s DialogErrorFrame
 }
 
 func (s *Status) Error() string {

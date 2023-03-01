@@ -15,7 +15,7 @@ var (
 	DialogInfoOpCode  = "info"
 )
 
-func ParseAuthEvent(b []byte) (*eventing.AuthInteractRequest, error) {
+func ParseAuthFrame(b []byte) (*eventing.AuthInteractRequest, error) {
 	fields := bytes.SplitN(b, []byte(" "), 2)
 	if len(fields) != 2 {
 		return nil, fmt.Errorf("invalid auth event: %s", b)
@@ -23,13 +23,13 @@ func ParseAuthEvent(b []byte) (*eventing.AuthInteractRequest, error) {
 	opcode := string(fields[0])
 	switch opcode {
 	case AuthLoginOpCode:
-		authLoginEvent, err := DecodeAuthLoginEvent(fields[1])
+		authLoginFrame, err := DecodeAuthLoginFrame(fields[1])
 		if err != nil {
 			return nil, err
 		}
 		return &eventing.AuthInteractRequest{
-			Payload: &eventing.AuthInteractRequest_AuthLoginEvent{
-				AuthLoginEvent: authLoginEvent,
+			Payload: &eventing.AuthInteractRequest_AuthLoginFrame{
+				AuthLoginFrame: authLoginFrame,
 			},
 		}, nil
 	default:
@@ -37,7 +37,7 @@ func ParseAuthEvent(b []byte) (*eventing.AuthInteractRequest, error) {
 	}
 }
 
-func DecodeAuthLoginEvent(s []byte) (*eventing.AuthLoginEvent, error) {
+func DecodeAuthLoginFrame(s []byte) (*eventing.AuthLoginFrame, error) {
 	fields := bytes.Fields(s)
 	if len(fields) != 5 {
 		return nil, fmt.Errorf("invalid auth login event: %s", s)
@@ -51,7 +51,7 @@ func DecodeAuthLoginEvent(s []byte) (*eventing.AuthLoginEvent, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthLoginEvent{
+	return &eventing.AuthLoginFrame{
 		Identifier:    identifier,
 		Password:      pwd,
 		ClientVersion: clientVersion,
@@ -82,9 +82,9 @@ func ParsePassword(s []byte) (string, error) {
 	return string(result), nil
 }
 
-func WriteEndpointListEvent(
+func WriteEndpointListFrame(
 	w io.Writer,
-	msg *eventing.EndpointListEvent,
+	msg *eventing.EndpointListFrame,
 ) (n int, err error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "NsTeST %d ", msg.Code); err != nil {

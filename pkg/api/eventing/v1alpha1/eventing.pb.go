@@ -87,7 +87,7 @@ func (DialogErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{0}
 }
 
-type DialogErrorEvent struct {
+type DialogErrorFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -95,8 +95,8 @@ type DialogErrorEvent struct {
 	Code DialogErrorCode `protobuf:"varint,1,opt,name=code,proto3,enum=io.elkia.eventing.v1alpha1.DialogErrorCode" json:"code,omitempty"`
 }
 
-func (x *DialogErrorEvent) Reset() {
-	*x = DialogErrorEvent{}
+func (x *DialogErrorFrame) Reset() {
+	*x = DialogErrorFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -104,13 +104,13 @@ func (x *DialogErrorEvent) Reset() {
 	}
 }
 
-func (x *DialogErrorEvent) String() string {
+func (x *DialogErrorFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DialogErrorEvent) ProtoMessage() {}
+func (*DialogErrorFrame) ProtoMessage() {}
 
-func (x *DialogErrorEvent) ProtoReflect() protoreflect.Message {
+func (x *DialogErrorFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -122,19 +122,19 @@ func (x *DialogErrorEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DialogErrorEvent.ProtoReflect.Descriptor instead.
-func (*DialogErrorEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use DialogErrorFrame.ProtoReflect.Descriptor instead.
+func (*DialogErrorFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *DialogErrorEvent) GetCode() DialogErrorCode {
+func (x *DialogErrorFrame) GetCode() DialogErrorCode {
 	if x != nil {
 		return x.Code
 	}
 	return DialogErrorCode_OUTDATED_CLIENT
 }
 
-type DialogInfoEvent struct {
+type DialogInfoFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -142,8 +142,8 @@ type DialogInfoEvent struct {
 	Content string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 }
 
-func (x *DialogInfoEvent) Reset() {
-	*x = DialogInfoEvent{}
+func (x *DialogInfoFrame) Reset() {
+	*x = DialogInfoFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -151,13 +151,13 @@ func (x *DialogInfoEvent) Reset() {
 	}
 }
 
-func (x *DialogInfoEvent) String() string {
+func (x *DialogInfoFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DialogInfoEvent) ProtoMessage() {}
+func (*DialogInfoFrame) ProtoMessage() {}
 
-func (x *DialogInfoEvent) ProtoReflect() protoreflect.Message {
+func (x *DialogInfoFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -169,19 +169,19 @@ func (x *DialogInfoEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DialogInfoEvent.ProtoReflect.Descriptor instead.
-func (*DialogInfoEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use DialogInfoFrame.ProtoReflect.Descriptor instead.
+func (*DialogInfoFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *DialogInfoEvent) GetContent() string {
+func (x *DialogInfoFrame) GetContent() string {
 	if x != nil {
 		return x.Content
 	}
 	return ""
 }
 
-type AuthLoginEvent struct {
+type AuthLoginFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -192,8 +192,8 @@ type AuthLoginEvent struct {
 	ClientChecksum string `protobuf:"bytes,7,opt,name=client_checksum,json=clientChecksum,proto3" json:"client_checksum,omitempty"`
 }
 
-func (x *AuthLoginEvent) Reset() {
-	*x = AuthLoginEvent{}
+func (x *AuthLoginFrame) Reset() {
+	*x = AuthLoginFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -201,13 +201,13 @@ func (x *AuthLoginEvent) Reset() {
 	}
 }
 
-func (x *AuthLoginEvent) String() string {
+func (x *AuthLoginFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthLoginEvent) ProtoMessage() {}
+func (*AuthLoginFrame) ProtoMessage() {}
 
-func (x *AuthLoginEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthLoginFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -219,33 +219,33 @@ func (x *AuthLoginEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthLoginEvent.ProtoReflect.Descriptor instead.
-func (*AuthLoginEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthLoginFrame.ProtoReflect.Descriptor instead.
+func (*AuthLoginFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AuthLoginEvent) GetIdentifier() string {
+func (x *AuthLoginFrame) GetIdentifier() string {
 	if x != nil {
 		return x.Identifier
 	}
 	return ""
 }
 
-func (x *AuthLoginEvent) GetPassword() string {
+func (x *AuthLoginFrame) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-func (x *AuthLoginEvent) GetClientVersion() string {
+func (x *AuthLoginFrame) GetClientVersion() string {
 	if x != nil {
 		return x.ClientVersion
 	}
 	return ""
 }
 
-func (x *AuthLoginEvent) GetClientChecksum() string {
+func (x *AuthLoginFrame) GetClientChecksum() string {
 	if x != nil {
 		return x.ClientChecksum
 	}
@@ -339,7 +339,7 @@ func (x *Endpoint) GetWorldName() string {
 	return ""
 }
 
-type EndpointListEvent struct {
+type EndpointListFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -348,8 +348,8 @@ type EndpointListEvent struct {
 	Endpoints []*Endpoint `protobuf:"bytes,2,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
 }
 
-func (x *EndpointListEvent) Reset() {
-	*x = EndpointListEvent{}
+func (x *EndpointListFrame) Reset() {
+	*x = EndpointListFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -357,13 +357,13 @@ func (x *EndpointListEvent) Reset() {
 	}
 }
 
-func (x *EndpointListEvent) String() string {
+func (x *EndpointListFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EndpointListEvent) ProtoMessage() {}
+func (*EndpointListFrame) ProtoMessage() {}
 
-func (x *EndpointListEvent) ProtoReflect() protoreflect.Message {
+func (x *EndpointListFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -375,19 +375,19 @@ func (x *EndpointListEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use EndpointListEvent.ProtoReflect.Descriptor instead.
-func (*EndpointListEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use EndpointListFrame.ProtoReflect.Descriptor instead.
+func (*EndpointListFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *EndpointListEvent) GetCode() uint32 {
+func (x *EndpointListFrame) GetCode() uint32 {
 	if x != nil {
 		return x.Code
 	}
 	return 0
 }
 
-func (x *EndpointListEvent) GetEndpoints() []*Endpoint {
+func (x *EndpointListFrame) GetEndpoints() []*Endpoint {
 	if x != nil {
 		return x.Endpoints
 	}
@@ -401,7 +401,7 @@ type AuthInteractRequest struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*AuthInteractRequest_AuthLoginEvent
+	//	*AuthInteractRequest_AuthLoginFrame
 	Payload isAuthInteractRequest_Payload `protobuf_oneof:"payload"`
 }
 
@@ -444,9 +444,9 @@ func (m *AuthInteractRequest) GetPayload() isAuthInteractRequest_Payload {
 	return nil
 }
 
-func (x *AuthInteractRequest) GetAuthLoginEvent() *AuthLoginEvent {
-	if x, ok := x.GetPayload().(*AuthInteractRequest_AuthLoginEvent); ok {
-		return x.AuthLoginEvent
+func (x *AuthInteractRequest) GetAuthLoginFrame() *AuthLoginFrame {
+	if x, ok := x.GetPayload().(*AuthInteractRequest_AuthLoginFrame); ok {
+		return x.AuthLoginFrame
 	}
 	return nil
 }
@@ -455,11 +455,11 @@ type isAuthInteractRequest_Payload interface {
 	isAuthInteractRequest_Payload()
 }
 
-type AuthInteractRequest_AuthLoginEvent struct {
-	AuthLoginEvent *AuthLoginEvent `protobuf:"bytes,1,opt,name=auth_login_event,json=authLoginEvent,proto3,oneof"`
+type AuthInteractRequest_AuthLoginFrame struct {
+	AuthLoginFrame *AuthLoginFrame `protobuf:"bytes,1,opt,name=auth_login_frame,json=authLoginFrame,proto3,oneof"`
 }
 
-func (*AuthInteractRequest_AuthLoginEvent) isAuthInteractRequest_Payload() {}
+func (*AuthInteractRequest_AuthLoginFrame) isAuthInteractRequest_Payload() {}
 
 type AuthInteractResponse struct {
 	state         protoimpl.MessageState
@@ -468,9 +468,9 @@ type AuthInteractResponse struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*AuthInteractResponse_DialogErrorEvent
-	//	*AuthInteractResponse_DialogInfoEvent
-	//	*AuthInteractResponse_EndpointListEvent
+	//	*AuthInteractResponse_DialogErrorFrame
+	//	*AuthInteractResponse_DialogInfoFrame
+	//	*AuthInteractResponse_EndpointListFrame
 	Payload isAuthInteractResponse_Payload `protobuf_oneof:"payload"`
 }
 
@@ -513,23 +513,23 @@ func (m *AuthInteractResponse) GetPayload() isAuthInteractResponse_Payload {
 	return nil
 }
 
-func (x *AuthInteractResponse) GetDialogErrorEvent() *DialogErrorEvent {
-	if x, ok := x.GetPayload().(*AuthInteractResponse_DialogErrorEvent); ok {
-		return x.DialogErrorEvent
+func (x *AuthInteractResponse) GetDialogErrorFrame() *DialogErrorFrame {
+	if x, ok := x.GetPayload().(*AuthInteractResponse_DialogErrorFrame); ok {
+		return x.DialogErrorFrame
 	}
 	return nil
 }
 
-func (x *AuthInteractResponse) GetDialogInfoEvent() *DialogInfoEvent {
-	if x, ok := x.GetPayload().(*AuthInteractResponse_DialogInfoEvent); ok {
-		return x.DialogInfoEvent
+func (x *AuthInteractResponse) GetDialogInfoFrame() *DialogInfoFrame {
+	if x, ok := x.GetPayload().(*AuthInteractResponse_DialogInfoFrame); ok {
+		return x.DialogInfoFrame
 	}
 	return nil
 }
 
-func (x *AuthInteractResponse) GetEndpointListEvent() *EndpointListEvent {
-	if x, ok := x.GetPayload().(*AuthInteractResponse_EndpointListEvent); ok {
-		return x.EndpointListEvent
+func (x *AuthInteractResponse) GetEndpointListFrame() *EndpointListFrame {
+	if x, ok := x.GetPayload().(*AuthInteractResponse_EndpointListFrame); ok {
+		return x.EndpointListFrame
 	}
 	return nil
 }
@@ -538,25 +538,25 @@ type isAuthInteractResponse_Payload interface {
 	isAuthInteractResponse_Payload()
 }
 
-type AuthInteractResponse_DialogErrorEvent struct {
-	DialogErrorEvent *DialogErrorEvent `protobuf:"bytes,1,opt,name=dialog_error_event,json=dialogErrorEvent,proto3,oneof"`
+type AuthInteractResponse_DialogErrorFrame struct {
+	DialogErrorFrame *DialogErrorFrame `protobuf:"bytes,1,opt,name=dialog_error_frame,json=dialogErrorFrame,proto3,oneof"`
 }
 
-type AuthInteractResponse_DialogInfoEvent struct {
-	DialogInfoEvent *DialogInfoEvent `protobuf:"bytes,2,opt,name=dialog_info_event,json=dialogInfoEvent,proto3,oneof"`
+type AuthInteractResponse_DialogInfoFrame struct {
+	DialogInfoFrame *DialogInfoFrame `protobuf:"bytes,2,opt,name=dialog_info_frame,json=dialogInfoFrame,proto3,oneof"`
 }
 
-type AuthInteractResponse_EndpointListEvent struct {
-	EndpointListEvent *EndpointListEvent `protobuf:"bytes,3,opt,name=endpoint_list_event,json=endpointListEvent,proto3,oneof"`
+type AuthInteractResponse_EndpointListFrame struct {
+	EndpointListFrame *EndpointListFrame `protobuf:"bytes,3,opt,name=endpoint_list_frame,json=endpointListFrame,proto3,oneof"`
 }
 
-func (*AuthInteractResponse_DialogErrorEvent) isAuthInteractResponse_Payload() {}
+func (*AuthInteractResponse_DialogErrorFrame) isAuthInteractResponse_Payload() {}
 
-func (*AuthInteractResponse_DialogInfoEvent) isAuthInteractResponse_Payload() {}
+func (*AuthInteractResponse_DialogInfoFrame) isAuthInteractResponse_Payload() {}
 
-func (*AuthInteractResponse_EndpointListEvent) isAuthInteractResponse_Payload() {}
+func (*AuthInteractResponse_EndpointListFrame) isAuthInteractResponse_Payload() {}
 
-type AuthHandoffSyncEvent struct {
+type AuthHandoffSyncFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -565,8 +565,8 @@ type AuthHandoffSyncEvent struct {
 	Code     uint32 `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
 }
 
-func (x *AuthHandoffSyncEvent) Reset() {
-	*x = AuthHandoffSyncEvent{}
+func (x *AuthHandoffSyncFrame) Reset() {
+	*x = AuthHandoffSyncFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -574,13 +574,13 @@ func (x *AuthHandoffSyncEvent) Reset() {
 	}
 }
 
-func (x *AuthHandoffSyncEvent) String() string {
+func (x *AuthHandoffSyncFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffSyncEvent) ProtoMessage() {}
+func (*AuthHandoffSyncFrame) ProtoMessage() {}
 
-func (x *AuthHandoffSyncEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffSyncFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -592,26 +592,26 @@ func (x *AuthHandoffSyncEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffSyncEvent.ProtoReflect.Descriptor instead.
-func (*AuthHandoffSyncEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffSyncFrame.ProtoReflect.Descriptor instead.
+func (*AuthHandoffSyncFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *AuthHandoffSyncEvent) GetSequence() uint32 {
+func (x *AuthHandoffSyncFrame) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (x *AuthHandoffSyncEvent) GetCode() uint32 {
+func (x *AuthHandoffSyncFrame) GetCode() uint32 {
 	if x != nil {
 		return x.Code
 	}
 	return 0
 }
 
-type AuthHandoffLoginIdentifierEvent struct {
+type AuthHandoffLoginIdentifierFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -620,8 +620,8 @@ type AuthHandoffLoginIdentifierEvent struct {
 	Identifier string `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
 }
 
-func (x *AuthHandoffLoginIdentifierEvent) Reset() {
-	*x = AuthHandoffLoginIdentifierEvent{}
+func (x *AuthHandoffLoginIdentifierFrame) Reset() {
+	*x = AuthHandoffLoginIdentifierFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -629,13 +629,13 @@ func (x *AuthHandoffLoginIdentifierEvent) Reset() {
 	}
 }
 
-func (x *AuthHandoffLoginIdentifierEvent) String() string {
+func (x *AuthHandoffLoginIdentifierFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffLoginIdentifierEvent) ProtoMessage() {}
+func (*AuthHandoffLoginIdentifierFrame) ProtoMessage() {}
 
-func (x *AuthHandoffLoginIdentifierEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffLoginIdentifierFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -647,26 +647,26 @@ func (x *AuthHandoffLoginIdentifierEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffLoginIdentifierEvent.ProtoReflect.Descriptor instead.
-func (*AuthHandoffLoginIdentifierEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffLoginIdentifierFrame.ProtoReflect.Descriptor instead.
+func (*AuthHandoffLoginIdentifierFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *AuthHandoffLoginIdentifierEvent) GetSequence() uint32 {
+func (x *AuthHandoffLoginIdentifierFrame) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (x *AuthHandoffLoginIdentifierEvent) GetIdentifier() string {
+func (x *AuthHandoffLoginIdentifierFrame) GetIdentifier() string {
 	if x != nil {
 		return x.Identifier
 	}
 	return ""
 }
 
-type AuthHandoffLoginPasswordEvent struct {
+type AuthHandoffLoginPasswordFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -675,8 +675,8 @@ type AuthHandoffLoginPasswordEvent struct {
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
-func (x *AuthHandoffLoginPasswordEvent) Reset() {
-	*x = AuthHandoffLoginPasswordEvent{}
+func (x *AuthHandoffLoginPasswordFrame) Reset() {
+	*x = AuthHandoffLoginPasswordFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -684,13 +684,13 @@ func (x *AuthHandoffLoginPasswordEvent) Reset() {
 	}
 }
 
-func (x *AuthHandoffLoginPasswordEvent) String() string {
+func (x *AuthHandoffLoginPasswordFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffLoginPasswordEvent) ProtoMessage() {}
+func (*AuthHandoffLoginPasswordFrame) ProtoMessage() {}
 
-func (x *AuthHandoffLoginPasswordEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffLoginPasswordFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -702,36 +702,36 @@ func (x *AuthHandoffLoginPasswordEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffLoginPasswordEvent.ProtoReflect.Descriptor instead.
-func (*AuthHandoffLoginPasswordEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffLoginPasswordFrame.ProtoReflect.Descriptor instead.
+func (*AuthHandoffLoginPasswordFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *AuthHandoffLoginPasswordEvent) GetSequence() uint32 {
+func (x *AuthHandoffLoginPasswordFrame) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (x *AuthHandoffLoginPasswordEvent) GetPassword() string {
+func (x *AuthHandoffLoginPasswordFrame) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-type AuthHandoffLoginEvent struct {
+type AuthHandoffLoginFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	IdentifierEvent *AuthHandoffLoginIdentifierEvent `protobuf:"bytes,1,opt,name=identifier_event,json=identifierEvent,proto3" json:"identifier_event,omitempty"`
-	PasswordEvent   *AuthHandoffLoginPasswordEvent   `protobuf:"bytes,2,opt,name=password_event,json=passwordEvent,proto3" json:"password_event,omitempty"`
+	IdentifierFrame *AuthHandoffLoginIdentifierFrame `protobuf:"bytes,1,opt,name=identifier_frame,json=identifierFrame,proto3" json:"identifier_frame,omitempty"`
+	PasswordFrame   *AuthHandoffLoginPasswordFrame   `protobuf:"bytes,2,opt,name=password_frame,json=passwordFrame,proto3" json:"password_frame,omitempty"`
 }
 
-func (x *AuthHandoffLoginEvent) Reset() {
-	*x = AuthHandoffLoginEvent{}
+func (x *AuthHandoffLoginFrame) Reset() {
+	*x = AuthHandoffLoginFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -739,13 +739,13 @@ func (x *AuthHandoffLoginEvent) Reset() {
 	}
 }
 
-func (x *AuthHandoffLoginEvent) String() string {
+func (x *AuthHandoffLoginFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffLoginEvent) ProtoMessage() {}
+func (*AuthHandoffLoginFrame) ProtoMessage() {}
 
-func (x *AuthHandoffLoginEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffLoginFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -757,21 +757,21 @@ func (x *AuthHandoffLoginEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffLoginEvent.ProtoReflect.Descriptor instead.
-func (*AuthHandoffLoginEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffLoginFrame.ProtoReflect.Descriptor instead.
+func (*AuthHandoffLoginFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *AuthHandoffLoginEvent) GetIdentifierEvent() *AuthHandoffLoginIdentifierEvent {
+func (x *AuthHandoffLoginFrame) GetIdentifierFrame() *AuthHandoffLoginIdentifierFrame {
 	if x != nil {
-		return x.IdentifierEvent
+		return x.IdentifierFrame
 	}
 	return nil
 }
 
-func (x *AuthHandoffLoginEvent) GetPasswordEvent() *AuthHandoffLoginPasswordEvent {
+func (x *AuthHandoffLoginFrame) GetPasswordFrame() *AuthHandoffLoginPasswordFrame {
 	if x != nil {
-		return x.PasswordEvent
+		return x.PasswordFrame
 	}
 	return nil
 }
@@ -783,8 +783,8 @@ type AuthHandoffInteractRequest struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*AuthHandoffInteractRequest_SyncEvent
-	//	*AuthHandoffInteractRequest_LoginEvent
+	//	*AuthHandoffInteractRequest_SyncFrame
+	//	*AuthHandoffInteractRequest_LoginFrame
 	Payload isAuthHandoffInteractRequest_Payload `protobuf_oneof:"payload"`
 }
 
@@ -827,16 +827,16 @@ func (m *AuthHandoffInteractRequest) GetPayload() isAuthHandoffInteractRequest_P
 	return nil
 }
 
-func (x *AuthHandoffInteractRequest) GetSyncEvent() *AuthHandoffSyncEvent {
-	if x, ok := x.GetPayload().(*AuthHandoffInteractRequest_SyncEvent); ok {
-		return x.SyncEvent
+func (x *AuthHandoffInteractRequest) GetSyncFrame() *AuthHandoffSyncFrame {
+	if x, ok := x.GetPayload().(*AuthHandoffInteractRequest_SyncFrame); ok {
+		return x.SyncFrame
 	}
 	return nil
 }
 
-func (x *AuthHandoffInteractRequest) GetLoginEvent() *AuthHandoffLoginEvent {
-	if x, ok := x.GetPayload().(*AuthHandoffInteractRequest_LoginEvent); ok {
-		return x.LoginEvent
+func (x *AuthHandoffInteractRequest) GetLoginFrame() *AuthHandoffLoginFrame {
+	if x, ok := x.GetPayload().(*AuthHandoffInteractRequest_LoginFrame); ok {
+		return x.LoginFrame
 	}
 	return nil
 }
@@ -845,19 +845,19 @@ type isAuthHandoffInteractRequest_Payload interface {
 	isAuthHandoffInteractRequest_Payload()
 }
 
-type AuthHandoffInteractRequest_SyncEvent struct {
-	SyncEvent *AuthHandoffSyncEvent `protobuf:"bytes,1,opt,name=sync_event,json=syncEvent,proto3,oneof"`
+type AuthHandoffInteractRequest_SyncFrame struct {
+	SyncFrame *AuthHandoffSyncFrame `protobuf:"bytes,1,opt,name=sync_frame,json=syncFrame,proto3,oneof"`
 }
 
-type AuthHandoffInteractRequest_LoginEvent struct {
-	LoginEvent *AuthHandoffLoginEvent `protobuf:"bytes,2,opt,name=login_event,json=loginEvent,proto3,oneof"`
+type AuthHandoffInteractRequest_LoginFrame struct {
+	LoginFrame *AuthHandoffLoginFrame `protobuf:"bytes,2,opt,name=login_frame,json=loginFrame,proto3,oneof"`
 }
 
-func (*AuthHandoffInteractRequest_SyncEvent) isAuthHandoffInteractRequest_Payload() {}
+func (*AuthHandoffInteractRequest_SyncFrame) isAuthHandoffInteractRequest_Payload() {}
 
-func (*AuthHandoffInteractRequest_LoginEvent) isAuthHandoffInteractRequest_Payload() {}
+func (*AuthHandoffInteractRequest_LoginFrame) isAuthHandoffInteractRequest_Payload() {}
 
-type AuthHandoffLoginSuccessEvent struct {
+type AuthHandoffLoginSuccessFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -865,8 +865,8 @@ type AuthHandoffLoginSuccessEvent struct {
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 }
 
-func (x *AuthHandoffLoginSuccessEvent) Reset() {
-	*x = AuthHandoffLoginSuccessEvent{}
+func (x *AuthHandoffLoginSuccessFrame) Reset() {
+	*x = AuthHandoffLoginSuccessFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -874,13 +874,13 @@ func (x *AuthHandoffLoginSuccessEvent) Reset() {
 	}
 }
 
-func (x *AuthHandoffLoginSuccessEvent) String() string {
+func (x *AuthHandoffLoginSuccessFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthHandoffLoginSuccessEvent) ProtoMessage() {}
+func (*AuthHandoffLoginSuccessFrame) ProtoMessage() {}
 
-func (x *AuthHandoffLoginSuccessEvent) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffLoginSuccessFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -892,12 +892,12 @@ func (x *AuthHandoffLoginSuccessEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthHandoffLoginSuccessEvent.ProtoReflect.Descriptor instead.
-func (*AuthHandoffLoginSuccessEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffLoginSuccessFrame.ProtoReflect.Descriptor instead.
+func (*AuthHandoffLoginSuccessFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *AuthHandoffLoginSuccessEvent) GetToken() string {
+func (x *AuthHandoffLoginSuccessFrame) GetToken() string {
 	if x != nil {
 		return x.Token
 	}
@@ -911,7 +911,7 @@ type AuthHandoffInteractResponse struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*AuthHandoffInteractResponse_LoginSuccessEvent
+	//	*AuthHandoffInteractResponse_LoginSuccessFrame
 	Payload isAuthHandoffInteractResponse_Payload `protobuf_oneof:"payload"`
 }
 
@@ -954,9 +954,9 @@ func (m *AuthHandoffInteractResponse) GetPayload() isAuthHandoffInteractResponse
 	return nil
 }
 
-func (x *AuthHandoffInteractResponse) GetLoginSuccessEvent() *AuthHandoffLoginSuccessEvent {
-	if x, ok := x.GetPayload().(*AuthHandoffInteractResponse_LoginSuccessEvent); ok {
-		return x.LoginSuccessEvent
+func (x *AuthHandoffInteractResponse) GetLoginSuccessFrame() *AuthHandoffLoginSuccessFrame {
+	if x, ok := x.GetPayload().(*AuthHandoffInteractResponse_LoginSuccessFrame); ok {
+		return x.LoginSuccessFrame
 	}
 	return nil
 }
@@ -965,13 +965,13 @@ type isAuthHandoffInteractResponse_Payload interface {
 	isAuthHandoffInteractResponse_Payload()
 }
 
-type AuthHandoffInteractResponse_LoginSuccessEvent struct {
-	LoginSuccessEvent *AuthHandoffLoginSuccessEvent `protobuf:"bytes,1,opt,name=login_success_event,json=loginSuccessEvent,proto3,oneof"`
+type AuthHandoffInteractResponse_LoginSuccessFrame struct {
+	LoginSuccessFrame *AuthHandoffLoginSuccessFrame `protobuf:"bytes,1,opt,name=login_success_frame,json=loginSuccessFrame,proto3,oneof"`
 }
 
-func (*AuthHandoffInteractResponse_LoginSuccessEvent) isAuthHandoffInteractResponse_Payload() {}
+func (*AuthHandoffInteractResponse_LoginSuccessFrame) isAuthHandoffInteractResponse_Payload() {}
 
-type ChannelEvent struct {
+type ChannelFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -979,12 +979,12 @@ type ChannelEvent struct {
 	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	// Types that are assignable to Payload:
 	//
-	//	*ChannelEvent_UnknownPayload
-	Payload isChannelEvent_Payload `protobuf_oneof:"payload"`
+	//	*ChannelFrame_UnknownPayload
+	Payload isChannelFrame_Payload `protobuf_oneof:"payload"`
 }
 
-func (x *ChannelEvent) Reset() {
-	*x = ChannelEvent{}
+func (x *ChannelFrame) Reset() {
+	*x = ChannelFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -992,13 +992,13 @@ func (x *ChannelEvent) Reset() {
 	}
 }
 
-func (x *ChannelEvent) String() string {
+func (x *ChannelFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ChannelEvent) ProtoMessage() {}
+func (*ChannelFrame) ProtoMessage() {}
 
-func (x *ChannelEvent) ProtoReflect() protoreflect.Message {
+func (x *ChannelFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1010,41 +1010,41 @@ func (x *ChannelEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ChannelEvent.ProtoReflect.Descriptor instead.
-func (*ChannelEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChannelFrame.ProtoReflect.Descriptor instead.
+func (*ChannelFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *ChannelEvent) GetSequence() uint32 {
+func (x *ChannelFrame) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (m *ChannelEvent) GetPayload() isChannelEvent_Payload {
+func (m *ChannelFrame) GetPayload() isChannelFrame_Payload {
 	if m != nil {
 		return m.Payload
 	}
 	return nil
 }
 
-func (x *ChannelEvent) GetUnknownPayload() []byte {
-	if x, ok := x.GetPayload().(*ChannelEvent_UnknownPayload); ok {
+func (x *ChannelFrame) GetUnknownPayload() []byte {
+	if x, ok := x.GetPayload().(*ChannelFrame_UnknownPayload); ok {
 		return x.UnknownPayload
 	}
 	return nil
 }
 
-type isChannelEvent_Payload interface {
-	isChannelEvent_Payload()
+type isChannelFrame_Payload interface {
+	isChannelFrame_Payload()
 }
 
-type ChannelEvent_UnknownPayload struct {
+type ChannelFrame_UnknownPayload struct {
 	UnknownPayload []byte `protobuf:"bytes,2,opt,name=unknown_payload,json=unknownPayload,proto3,oneof"`
 }
 
-func (*ChannelEvent_UnknownPayload) isChannelEvent_Payload() {}
+func (*ChannelFrame_UnknownPayload) isChannelFrame_Payload() {}
 
 type ChannelInteractRequest struct {
 	state         protoimpl.MessageState
@@ -1053,7 +1053,7 @@ type ChannelInteractRequest struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*ChannelInteractRequest_ChannelEvent
+	//	*ChannelInteractRequest_ChannelFrame
 	Payload isChannelInteractRequest_Payload `protobuf_oneof:"payload"`
 }
 
@@ -1096,9 +1096,9 @@ func (m *ChannelInteractRequest) GetPayload() isChannelInteractRequest_Payload {
 	return nil
 }
 
-func (x *ChannelInteractRequest) GetChannelEvent() *ChannelEvent {
-	if x, ok := x.GetPayload().(*ChannelInteractRequest_ChannelEvent); ok {
-		return x.ChannelEvent
+func (x *ChannelInteractRequest) GetChannelFrame() *ChannelFrame {
+	if x, ok := x.GetPayload().(*ChannelInteractRequest_ChannelFrame); ok {
+		return x.ChannelFrame
 	}
 	return nil
 }
@@ -1107,11 +1107,11 @@ type isChannelInteractRequest_Payload interface {
 	isChannelInteractRequest_Payload()
 }
 
-type ChannelInteractRequest_ChannelEvent struct {
-	ChannelEvent *ChannelEvent `protobuf:"bytes,1,opt,name=channel_event,json=channelEvent,proto3,oneof"`
+type ChannelInteractRequest_ChannelFrame struct {
+	ChannelFrame *ChannelFrame `protobuf:"bytes,1,opt,name=channel_frame,json=channelFrame,proto3,oneof"`
 }
 
-func (*ChannelInteractRequest_ChannelEvent) isChannelInteractRequest_Payload() {}
+func (*ChannelInteractRequest_ChannelFrame) isChannelInteractRequest_Payload() {}
 
 type ChannelInteractResponse struct {
 	state         protoimpl.MessageState
@@ -1120,8 +1120,8 @@ type ChannelInteractResponse struct {
 
 	// Types that are assignable to Payload:
 	//
-	//	*ChannelInteractResponse_DialogErrorEvent
-	//	*ChannelInteractResponse_DialogInfoEvent
+	//	*ChannelInteractResponse_DialogErrorFrame
+	//	*ChannelInteractResponse_DialogInfoFrame
 	Payload isChannelInteractResponse_Payload `protobuf_oneof:"payload"`
 }
 
@@ -1164,16 +1164,16 @@ func (m *ChannelInteractResponse) GetPayload() isChannelInteractResponse_Payload
 	return nil
 }
 
-func (x *ChannelInteractResponse) GetDialogErrorEvent() *DialogErrorEvent {
-	if x, ok := x.GetPayload().(*ChannelInteractResponse_DialogErrorEvent); ok {
-		return x.DialogErrorEvent
+func (x *ChannelInteractResponse) GetDialogErrorFrame() *DialogErrorFrame {
+	if x, ok := x.GetPayload().(*ChannelInteractResponse_DialogErrorFrame); ok {
+		return x.DialogErrorFrame
 	}
 	return nil
 }
 
-func (x *ChannelInteractResponse) GetDialogInfoEvent() *DialogInfoEvent {
-	if x, ok := x.GetPayload().(*ChannelInteractResponse_DialogInfoEvent); ok {
-		return x.DialogInfoEvent
+func (x *ChannelInteractResponse) GetDialogInfoFrame() *DialogInfoFrame {
+	if x, ok := x.GetPayload().(*ChannelInteractResponse_DialogInfoFrame); ok {
+		return x.DialogInfoFrame
 	}
 	return nil
 }
@@ -1182,17 +1182,17 @@ type isChannelInteractResponse_Payload interface {
 	isChannelInteractResponse_Payload()
 }
 
-type ChannelInteractResponse_DialogErrorEvent struct {
-	DialogErrorEvent *DialogErrorEvent `protobuf:"bytes,1,opt,name=dialog_error_event,json=dialogErrorEvent,proto3,oneof"`
+type ChannelInteractResponse_DialogErrorFrame struct {
+	DialogErrorFrame *DialogErrorFrame `protobuf:"bytes,1,opt,name=dialog_error_frame,json=dialogErrorFrame,proto3,oneof"`
 }
 
-type ChannelInteractResponse_DialogInfoEvent struct {
-	DialogInfoEvent *DialogInfoEvent `protobuf:"bytes,2,opt,name=dialog_info_event,json=dialogInfoEvent,proto3,oneof"`
+type ChannelInteractResponse_DialogInfoFrame struct {
+	DialogInfoFrame *DialogInfoFrame `protobuf:"bytes,2,opt,name=dialog_info_frame,json=dialogInfoFrame,proto3,oneof"`
 }
 
-func (*ChannelInteractResponse_DialogErrorEvent) isChannelInteractResponse_Payload() {}
+func (*ChannelInteractResponse_DialogErrorFrame) isChannelInteractResponse_Payload() {}
 
-func (*ChannelInteractResponse_DialogInfoEvent) isChannelInteractResponse_Payload() {}
+func (*ChannelInteractResponse_DialogInfoFrame) isChannelInteractResponse_Payload() {}
 
 var File_pkg_api_eventing_v1alpha1_eventing_proto protoreflect.FileDescriptor
 
@@ -1202,15 +1202,15 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x74, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1a, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x22, 0x53, 0x0a, 0x10, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67,
-	0x45, 0x72, 0x72, 0x6f, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x3f, 0x0a, 0x04, 0x63, 0x6f,
+	0x45, 0x72, 0x72, 0x6f, 0x72, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x3f, 0x0a, 0x04, 0x63, 0x6f,
 	0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x2b, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c,
 	0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61,
 	0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72, 0x72, 0x6f,
 	0x72, 0x43, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x2b, 0x0a, 0x0f, 0x44,
-	0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18,
+	0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x18,
 	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0x9c, 0x01, 0x0a, 0x0e, 0x41, 0x75, 0x74,
-	0x68, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x69,
+	0x68, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x69,
 	0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x0a, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x70,
 	0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70,
@@ -1230,8 +1230,8 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x01, 0x28, 0x0d, 0x52, 0x09, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x49, 0x64, 0x12, 0x1d,
 	0x0a, 0x0a, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x6b, 0x0a,
-	0x11, 0x45, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
+	0x11, 0x45, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x72, 0x61,
+	0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
 	0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x42, 0x0a, 0x09, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69,
 	0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
@@ -1239,115 +1239,115 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x09, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x22, 0x78, 0x0a, 0x13, 0x41, 0x75,
 	0x74, 0x68, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x56, 0x0a, 0x10, 0x61, 0x75, 0x74, 0x68, 0x5f, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x5f,
-	0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6f,
+	0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6f,
 	0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e,
 	0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x4c, 0x6f, 0x67,
-	0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x0e, 0x61, 0x75, 0x74, 0x68, 0x4c,
-	0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79,
+	0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x61, 0x75, 0x74, 0x68, 0x4c,
+	0x6f, 0x67, 0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79,
 	0x6c, 0x6f, 0x61, 0x64, 0x22, 0xbb, 0x02, 0x0a, 0x14, 0x41, 0x75, 0x74, 0x68, 0x49, 0x6e, 0x74,
 	0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a,
-	0x12, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x65, 0x76,
-	0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
+	0x12, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x66, 0x72,
+	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72, 0x72,
-	0x6f, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x10, 0x64, 0x69, 0x61, 0x6c, 0x6f,
-	0x67, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x59, 0x0a, 0x11, 0x64,
-	0x69, 0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74,
+	0x6f, 0x72, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x10, 0x64, 0x69, 0x61, 0x6c, 0x6f,
+	0x67, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x59, 0x0a, 0x11, 0x64,
+	0x69, 0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69,
 	0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x0f, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66,
-	0x6f, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x5f, 0x0a, 0x13, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20,
+	0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x46, 0x72,
+	0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0f, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66,
+	0x6f, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x5f, 0x0a, 0x13, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69,
+	0x6e, 0x74, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65,
 	0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
-	0x2e, 0x45, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x48, 0x00, 0x52, 0x11, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
+	0x2e, 0x45, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x72, 0x61,
+	0x6d, 0x65, 0x48, 0x00, 0x52, 0x11, 0x65, 0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x4c, 0x69,
+	0x73, 0x74, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
 	0x61, 0x64, 0x22, 0x46, 0x0a, 0x14, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66,
-	0x66, 0x53, 0x79, 0x6e, 0x63, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
+	0x66, 0x53, 0x79, 0x6e, 0x63, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
 	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65,
 	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x5d, 0x0a, 0x1f, 0x41, 0x75,
 	0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x49, 0x64,
-	0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a,
+	0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a,
 	0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
 	0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x64, 0x65,
 	0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69,
 	0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x22, 0x57, 0x0a, 0x1d, 0x41, 0x75, 0x74,
 	0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x50, 0x61, 0x73,
-	0x73, 0x77, 0x6f, 0x72, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
 	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65,
 	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
 	0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
 	0x72, 0x64, 0x22, 0xe1, 0x01, 0x0a, 0x15, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f,
-	0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x66, 0x0a, 0x10,
-	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74,
+	0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x66, 0x0a, 0x10,
+	0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x3b, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69,
 	0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
 	0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c,
-	0x6f, 0x67, 0x69, 0x6e, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x52, 0x0f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x12, 0x60, 0x0a, 0x0e, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
-	0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x39, 0x2e, 0x69,
+	0x6f, 0x67, 0x69, 0x6e, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x46, 0x72,
+	0x61, 0x6d, 0x65, 0x52, 0x0f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x65, 0x72, 0x46,
+	0x72, 0x61, 0x6d, 0x65, 0x12, 0x60, 0x0a, 0x0e, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
+	0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x39, 0x2e, 0x69,
 	0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67,
 	0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61,
 	0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f,
-	0x72, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x0d, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
-	0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x22, 0xd0, 0x01, 0x0a, 0x1a, 0x41, 0x75, 0x74, 0x68, 0x48,
+	0x72, 0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x52, 0x0d, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
+	0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x22, 0xd0, 0x01, 0x0a, 0x1a, 0x41, 0x75, 0x74, 0x68, 0x48,
 	0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x51, 0x0a, 0x0a, 0x73, 0x79, 0x6e, 0x63, 0x5f, 0x65, 0x76,
-	0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x51, 0x0a, 0x0a, 0x73, 0x79, 0x6e, 0x63, 0x5f, 0x66, 0x72,
+	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f,
-	0x66, 0x66, 0x53, 0x79, 0x6e, 0x63, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x09, 0x73,
-	0x79, 0x6e, 0x63, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x54, 0x0a, 0x0b, 0x6c, 0x6f, 0x67, 0x69,
-	0x6e, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x31, 0x2e,
+	0x66, 0x66, 0x53, 0x79, 0x6e, 0x63, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x09, 0x73,
+	0x79, 0x6e, 0x63, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x54, 0x0a, 0x0b, 0x6c, 0x6f, 0x67, 0x69,
+	0x6e, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x31, 0x2e,
 	0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e,
 	0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48,
-	0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x48, 0x00, 0x52, 0x0a, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x09,
+	0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65,
+	0x48, 0x00, 0x52, 0x0a, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09,
 	0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x34, 0x0a, 0x1c, 0x41, 0x75, 0x74,
 	0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x53, 0x75, 0x63,
-	0x63, 0x65, 0x73, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f, 0x6b,
+	0x63, 0x65, 0x73, 0x73, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f, 0x6b,
 	0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x22,
 	0x94, 0x01, 0x0a, 0x1b, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61, 0x6e, 0x64, 0x6f, 0x66, 0x66, 0x49,
 	0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x6a, 0x0a, 0x13, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x5f, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73,
-	0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x38, 0x2e, 0x69,
+	0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x38, 0x2e, 0x69,
 	0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67,
 	0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x48, 0x61,
 	0x6e, 0x64, 0x6f, 0x66, 0x66, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73,
-	0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x11, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x53,
-	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70,
+	0x73, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x11, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x53,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70,
 	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x60, 0x0a, 0x0c, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65,
-	0x6c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
+	0x6c, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
 	0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e,
 	0x63, 0x65, 0x12, 0x29, 0x0a, 0x0f, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x5f, 0x70, 0x61,
 	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x0e, 0x75,
 	0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x42, 0x09, 0x0a,
 	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x74, 0x0a, 0x16, 0x43, 0x68, 0x61, 0x6e,
 	0x6e, 0x65, 0x6c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x4f, 0x0a, 0x0d, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x5f, 0x65, 0x76,
-	0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
+	0x73, 0x74, 0x12, 0x4f, 0x0a, 0x0d, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x5f, 0x66, 0x72,
+	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
-	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x0c, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0xdd,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x46, 0x72,
+	0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0c, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x46, 0x72,
+	0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0xdd,
 	0x01, 0x0a, 0x17, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61,
 	0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x12, 0x64, 0x69,
-	0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74,
+	0x61, 0x6c, 0x6f, 0x67, 0x5f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69,
 	0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x48, 0x00, 0x52, 0x10, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72,
-	0x72, 0x6f, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x59, 0x0a, 0x11, 0x64, 0x69, 0x61, 0x6c,
-	0x6f, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20,
+	0x68, 0x61, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x46,
+	0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x10, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72,
+	0x72, 0x6f, 0x72, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x59, 0x0a, 0x11, 0x64, 0x69, 0x61, 0x6c,
+	0x6f, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65,
 	0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31,
-	0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x48, 0x00, 0x52, 0x0f, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x2a, 0xd4,
+	0x2e, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x46, 0x72, 0x61, 0x6d, 0x65,
+	0x48, 0x00, 0x52, 0x0f, 0x64, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x46, 0x72,
+	0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x2a, 0xd4,
 	0x01, 0x0a, 0x0f, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x43, 0x6f,
 	0x64, 0x65, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x55, 0x54, 0x44, 0x41, 0x54, 0x45, 0x44, 0x5f, 0x43,
 	0x4c, 0x49, 0x45, 0x4e, 0x54, 0x10, 0x00, 0x12, 0x14, 0x0a, 0x10, 0x55, 0x4e, 0x45, 0x58, 0x50,
@@ -1373,7 +1373,7 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x50, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x65, 0x12, 0x2a, 0x2e, 0x69, 0x6f, 0x2e, 0x65,
 	0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
 	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x4c, 0x6f, 0x67, 0x69, 0x6e,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x1a, 0x30, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61,
+	0x46, 0x72, 0x61, 0x6d, 0x65, 0x1a, 0x30, 0x2e, 0x69, 0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61,
 	0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68,
 	0x61, 0x31, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x32, 0x96, 0x02, 0x0a, 0x07, 0x47, 0x61,
@@ -1415,41 +1415,41 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_enumTypes = make([]protoimpl.E
 var file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_pkg_api_eventing_v1alpha1_eventing_proto_goTypes = []interface{}{
 	(DialogErrorCode)(0),                    // 0: io.elkia.eventing.v1alpha1.DialogErrorCode
-	(*DialogErrorEvent)(nil),                // 1: io.elkia.eventing.v1alpha1.DialogErrorEvent
-	(*DialogInfoEvent)(nil),                 // 2: io.elkia.eventing.v1alpha1.DialogInfoEvent
-	(*AuthLoginEvent)(nil),                  // 3: io.elkia.eventing.v1alpha1.AuthLoginEvent
+	(*DialogErrorFrame)(nil),                // 1: io.elkia.eventing.v1alpha1.DialogErrorFrame
+	(*DialogInfoFrame)(nil),                 // 2: io.elkia.eventing.v1alpha1.DialogInfoFrame
+	(*AuthLoginFrame)(nil),                  // 3: io.elkia.eventing.v1alpha1.AuthLoginFrame
 	(*Endpoint)(nil),                        // 4: io.elkia.eventing.v1alpha1.Endpoint
-	(*EndpointListEvent)(nil),               // 5: io.elkia.eventing.v1alpha1.EndpointListEvent
+	(*EndpointListFrame)(nil),               // 5: io.elkia.eventing.v1alpha1.EndpointListFrame
 	(*AuthInteractRequest)(nil),             // 6: io.elkia.eventing.v1alpha1.AuthInteractRequest
 	(*AuthInteractResponse)(nil),            // 7: io.elkia.eventing.v1alpha1.AuthInteractResponse
-	(*AuthHandoffSyncEvent)(nil),            // 8: io.elkia.eventing.v1alpha1.AuthHandoffSyncEvent
-	(*AuthHandoffLoginIdentifierEvent)(nil), // 9: io.elkia.eventing.v1alpha1.AuthHandoffLoginIdentifierEvent
-	(*AuthHandoffLoginPasswordEvent)(nil),   // 10: io.elkia.eventing.v1alpha1.AuthHandoffLoginPasswordEvent
-	(*AuthHandoffLoginEvent)(nil),           // 11: io.elkia.eventing.v1alpha1.AuthHandoffLoginEvent
+	(*AuthHandoffSyncFrame)(nil),            // 8: io.elkia.eventing.v1alpha1.AuthHandoffSyncFrame
+	(*AuthHandoffLoginIdentifierFrame)(nil), // 9: io.elkia.eventing.v1alpha1.AuthHandoffLoginIdentifierFrame
+	(*AuthHandoffLoginPasswordFrame)(nil),   // 10: io.elkia.eventing.v1alpha1.AuthHandoffLoginPasswordFrame
+	(*AuthHandoffLoginFrame)(nil),           // 11: io.elkia.eventing.v1alpha1.AuthHandoffLoginFrame
 	(*AuthHandoffInteractRequest)(nil),      // 12: io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest
-	(*AuthHandoffLoginSuccessEvent)(nil),    // 13: io.elkia.eventing.v1alpha1.AuthHandoffLoginSuccessEvent
+	(*AuthHandoffLoginSuccessFrame)(nil),    // 13: io.elkia.eventing.v1alpha1.AuthHandoffLoginSuccessFrame
 	(*AuthHandoffInteractResponse)(nil),     // 14: io.elkia.eventing.v1alpha1.AuthHandoffInteractResponse
-	(*ChannelEvent)(nil),                    // 15: io.elkia.eventing.v1alpha1.ChannelEvent
+	(*ChannelFrame)(nil),                    // 15: io.elkia.eventing.v1alpha1.ChannelFrame
 	(*ChannelInteractRequest)(nil),          // 16: io.elkia.eventing.v1alpha1.ChannelInteractRequest
 	(*ChannelInteractResponse)(nil),         // 17: io.elkia.eventing.v1alpha1.ChannelInteractResponse
 }
 var file_pkg_api_eventing_v1alpha1_eventing_proto_depIdxs = []int32{
-	0,  // 0: io.elkia.eventing.v1alpha1.DialogErrorEvent.code:type_name -> io.elkia.eventing.v1alpha1.DialogErrorCode
-	4,  // 1: io.elkia.eventing.v1alpha1.EndpointListEvent.endpoints:type_name -> io.elkia.eventing.v1alpha1.Endpoint
-	3,  // 2: io.elkia.eventing.v1alpha1.AuthInteractRequest.auth_login_event:type_name -> io.elkia.eventing.v1alpha1.AuthLoginEvent
-	1,  // 3: io.elkia.eventing.v1alpha1.AuthInteractResponse.dialog_error_event:type_name -> io.elkia.eventing.v1alpha1.DialogErrorEvent
-	2,  // 4: io.elkia.eventing.v1alpha1.AuthInteractResponse.dialog_info_event:type_name -> io.elkia.eventing.v1alpha1.DialogInfoEvent
-	5,  // 5: io.elkia.eventing.v1alpha1.AuthInteractResponse.endpoint_list_event:type_name -> io.elkia.eventing.v1alpha1.EndpointListEvent
-	9,  // 6: io.elkia.eventing.v1alpha1.AuthHandoffLoginEvent.identifier_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginIdentifierEvent
-	10, // 7: io.elkia.eventing.v1alpha1.AuthHandoffLoginEvent.password_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginPasswordEvent
-	8,  // 8: io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest.sync_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffSyncEvent
-	11, // 9: io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest.login_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginEvent
-	13, // 10: io.elkia.eventing.v1alpha1.AuthHandoffInteractResponse.login_success_event:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginSuccessEvent
-	15, // 11: io.elkia.eventing.v1alpha1.ChannelInteractRequest.channel_event:type_name -> io.elkia.eventing.v1alpha1.ChannelEvent
-	1,  // 12: io.elkia.eventing.v1alpha1.ChannelInteractResponse.dialog_error_event:type_name -> io.elkia.eventing.v1alpha1.DialogErrorEvent
-	2,  // 13: io.elkia.eventing.v1alpha1.ChannelInteractResponse.dialog_info_event:type_name -> io.elkia.eventing.v1alpha1.DialogInfoEvent
+	0,  // 0: io.elkia.eventing.v1alpha1.DialogErrorFrame.code:type_name -> io.elkia.eventing.v1alpha1.DialogErrorCode
+	4,  // 1: io.elkia.eventing.v1alpha1.EndpointListFrame.endpoints:type_name -> io.elkia.eventing.v1alpha1.Endpoint
+	3,  // 2: io.elkia.eventing.v1alpha1.AuthInteractRequest.auth_login_frame:type_name -> io.elkia.eventing.v1alpha1.AuthLoginFrame
+	1,  // 3: io.elkia.eventing.v1alpha1.AuthInteractResponse.dialog_error_frame:type_name -> io.elkia.eventing.v1alpha1.DialogErrorFrame
+	2,  // 4: io.elkia.eventing.v1alpha1.AuthInteractResponse.dialog_info_frame:type_name -> io.elkia.eventing.v1alpha1.DialogInfoFrame
+	5,  // 5: io.elkia.eventing.v1alpha1.AuthInteractResponse.endpoint_list_frame:type_name -> io.elkia.eventing.v1alpha1.EndpointListFrame
+	9,  // 6: io.elkia.eventing.v1alpha1.AuthHandoffLoginFrame.identifier_frame:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginIdentifierFrame
+	10, // 7: io.elkia.eventing.v1alpha1.AuthHandoffLoginFrame.password_frame:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginPasswordFrame
+	8,  // 8: io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest.sync_frame:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffSyncFrame
+	11, // 9: io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest.login_frame:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginFrame
+	13, // 10: io.elkia.eventing.v1alpha1.AuthHandoffInteractResponse.login_success_frame:type_name -> io.elkia.eventing.v1alpha1.AuthHandoffLoginSuccessFrame
+	15, // 11: io.elkia.eventing.v1alpha1.ChannelInteractRequest.channel_frame:type_name -> io.elkia.eventing.v1alpha1.ChannelFrame
+	1,  // 12: io.elkia.eventing.v1alpha1.ChannelInteractResponse.dialog_error_frame:type_name -> io.elkia.eventing.v1alpha1.DialogErrorFrame
+	2,  // 13: io.elkia.eventing.v1alpha1.ChannelInteractResponse.dialog_info_frame:type_name -> io.elkia.eventing.v1alpha1.DialogInfoFrame
 	6,  // 14: io.elkia.eventing.v1alpha1.Auth.AuthInteract:input_type -> io.elkia.eventing.v1alpha1.AuthInteractRequest
-	3,  // 15: io.elkia.eventing.v1alpha1.Auth.AuthLoginProduce:input_type -> io.elkia.eventing.v1alpha1.AuthLoginEvent
+	3,  // 15: io.elkia.eventing.v1alpha1.Auth.AuthLoginProduce:input_type -> io.elkia.eventing.v1alpha1.AuthLoginFrame
 	12, // 16: io.elkia.eventing.v1alpha1.Gateway.AuthHandoffInteract:input_type -> io.elkia.eventing.v1alpha1.AuthHandoffInteractRequest
 	16, // 17: io.elkia.eventing.v1alpha1.Gateway.ChannelInteract:input_type -> io.elkia.eventing.v1alpha1.ChannelInteractRequest
 	7,  // 18: io.elkia.eventing.v1alpha1.Auth.AuthInteract:output_type -> io.elkia.eventing.v1alpha1.AuthInteractResponse
@@ -1470,7 +1470,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DialogErrorEvent); i {
+			switch v := v.(*DialogErrorFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1482,7 +1482,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DialogInfoEvent); i {
+			switch v := v.(*DialogInfoFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1494,7 +1494,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthLoginEvent); i {
+			switch v := v.(*AuthLoginFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1518,7 +1518,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EndpointListEvent); i {
+			switch v := v.(*EndpointListFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1554,7 +1554,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffSyncEvent); i {
+			switch v := v.(*AuthHandoffSyncFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1566,7 +1566,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffLoginIdentifierEvent); i {
+			switch v := v.(*AuthHandoffLoginIdentifierFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1578,7 +1578,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffLoginPasswordEvent); i {
+			switch v := v.(*AuthHandoffLoginPasswordFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1590,7 +1590,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffLoginEvent); i {
+			switch v := v.(*AuthHandoffLoginFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1614,7 +1614,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthHandoffLoginSuccessEvent); i {
+			switch v := v.(*AuthHandoffLoginSuccessFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1638,7 +1638,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ChannelEvent); i {
+			switch v := v.(*ChannelFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1675,29 +1675,29 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 		}
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[5].OneofWrappers = []interface{}{
-		(*AuthInteractRequest_AuthLoginEvent)(nil),
+		(*AuthInteractRequest_AuthLoginFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[6].OneofWrappers = []interface{}{
-		(*AuthInteractResponse_DialogErrorEvent)(nil),
-		(*AuthInteractResponse_DialogInfoEvent)(nil),
-		(*AuthInteractResponse_EndpointListEvent)(nil),
+		(*AuthInteractResponse_DialogErrorFrame)(nil),
+		(*AuthInteractResponse_DialogInfoFrame)(nil),
+		(*AuthInteractResponse_EndpointListFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11].OneofWrappers = []interface{}{
-		(*AuthHandoffInteractRequest_SyncEvent)(nil),
-		(*AuthHandoffInteractRequest_LoginEvent)(nil),
+		(*AuthHandoffInteractRequest_SyncFrame)(nil),
+		(*AuthHandoffInteractRequest_LoginFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[13].OneofWrappers = []interface{}{
-		(*AuthHandoffInteractResponse_LoginSuccessEvent)(nil),
+		(*AuthHandoffInteractResponse_LoginSuccessFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[14].OneofWrappers = []interface{}{
-		(*ChannelEvent_UnknownPayload)(nil),
+		(*ChannelFrame_UnknownPayload)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[15].OneofWrappers = []interface{}{
-		(*ChannelInteractRequest_ChannelEvent)(nil),
+		(*ChannelInteractRequest_ChannelFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[16].OneofWrappers = []interface{}{
-		(*ChannelInteractResponse_DialogErrorEvent)(nil),
-		(*ChannelInteractResponse_DialogInfoEvent)(nil),
+		(*ChannelInteractResponse_DialogErrorFrame)(nil),
+		(*ChannelInteractResponse_DialogInfoFrame)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

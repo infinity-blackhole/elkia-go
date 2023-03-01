@@ -44,31 +44,31 @@ func (s *Server) AuthHandoffInteract(
 	if err != nil {
 		return err
 	}
-	sync := m.GetSyncEvent()
+	sync := m.GetSyncFrame()
 	if sync == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	login := m.GetLoginEvent()
+	login := m.GetLoginFrame()
 	if login == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.IdentifierEvent.Sequence != sync.Sequence+1 {
+	if login.IdentifierFrame.Sequence != sync.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.PasswordEvent.Sequence != login.IdentifierEvent.Sequence+1 {
+	if login.PasswordFrame.Sequence != login.IdentifierFrame.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	handoff, err := s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
 		Code:       sync.Code,
-		Identifier: login.IdentifierEvent.Identifier,
-		Password:   login.PasswordEvent.Password,
+		Identifier: login.IdentifierFrame.Identifier,
+		Password:   login.PasswordFrame.Password,
 	})
 	if err != nil {
 		return err
 	}
 	return stream.Send(&eventing.AuthHandoffInteractResponse{
-		Payload: &eventing.AuthHandoffInteractResponse_LoginSuccessEvent{
-			LoginSuccessEvent: &eventing.AuthHandoffLoginSuccessEvent{
+		Payload: &eventing.AuthHandoffInteractResponse_LoginSuccessFrame{
+			LoginSuccessFrame: &eventing.AuthHandoffLoginSuccessFrame{
 				Token: handoff.Token,
 			},
 		},
@@ -94,8 +94,8 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			return err
 		}
 		switch m.Payload.(type) {
-		case *eventing.ChannelInteractRequest_ChannelEvent:
-			m := m.GetChannelEvent()
+		case *eventing.ChannelInteractRequest_ChannelFrame:
+			m := m.GetChannelFrame()
 			if sequence != m.Sequence {
 				return errors.New("channel: handshake sync protocol error")
 			}

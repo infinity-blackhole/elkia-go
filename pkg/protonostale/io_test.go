@@ -72,7 +72,7 @@ func TestEncodeDecodeAuthFrame(t *testing.T) {
 	}
 }
 
-func TestReaderReadSyncEvent(t *testing.T) {
+func TestReaderReadSyncFrame(t *testing.T) {
 	input := []byte{
 		150, 156, 122, 80, 79, 14, 198, 205, 171, 145, 70, 205, 214, 220, 208,
 		217, 208, 196, 7, 212, 73,
@@ -88,7 +88,7 @@ func TestReaderReadSyncEvent(t *testing.T) {
 	}
 }
 
-func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
+func TestReaderReadAuthHandoffPasswordFrame(t *testing.T) {
 	input := []byte{
 		208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208, 210,
 		63, 199, 205, 171, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214, 248,
@@ -114,7 +114,7 @@ func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
 	}
 }
 
-func TestReaderReadeHeartbeatEvent(t *testing.T) {
+func TestReaderReadeHeartbeatFrame(t *testing.T) {
 	input := []byte{
 		199, 205, 171, 241, 128, 63,
 	}

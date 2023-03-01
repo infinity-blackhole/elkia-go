@@ -10,11 +10,11 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-type DialogErrorEvent struct {
-	eventing.DialogErrorEvent
+type DialogErrorFrame struct {
+	eventing.DialogErrorFrame
 }
 
-func (e *DialogErrorEvent) MarshalNosTale() ([]byte, error) {
+func (e *DialogErrorFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "failc %d", e.Code); err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (e *DialogErrorEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *DialogErrorEvent) UnmarshalNosTale(b []byte) error {
+func (e *DialogErrorFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -38,11 +38,11 @@ func (e *DialogErrorEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type DialogInfoEvent struct {
-	eventing.DialogInfoEvent
+type DialogInfoFrame struct {
+	eventing.DialogInfoFrame
 }
 
-func (e *DialogInfoEvent) MarshalNosTale() ([]byte, error) {
+func (e *DialogInfoFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%s %s", DialogInfoOpCode, e.Content); err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (e *DialogInfoEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *DialogInfoEvent) UnmarshalNosTale(b []byte) error {
+func (e *DialogInfoFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -62,11 +62,11 @@ func (e *DialogInfoEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type EndpointListEvent struct {
-	eventing.EndpointListEvent
+type EndpointListFrame struct {
+	eventing.EndpointListFrame
 }
 
-func (e *EndpointListEvent) MarshalNosTale() ([]byte, error) {
+func (e *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", e.Code); err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (e *EndpointListEvent) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (e *EndpointListEvent) UnmarshalNosTale(b []byte) error {
+func (e *EndpointListFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) < 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -169,16 +169,16 @@ func (e *Endpoint) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthHandoffLoginEvent struct {
-	eventing.AuthHandoffLoginEvent
+type AuthHandoffLoginFrame struct {
+	eventing.AuthHandoffLoginFrame
 }
 
-func (e *AuthHandoffLoginEvent) MarshalNosTale() ([]byte, error) {
+func (e *AuthHandoffLoginFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	bs, err := (&AuthHandoffLoginIdentifierEvent{
-		AuthHandoffLoginIdentifierEvent: eventing.AuthHandoffLoginIdentifierEvent{
-			Sequence:   e.AuthHandoffLoginEvent.IdentifierEvent.Sequence,
-			Identifier: e.AuthHandoffLoginEvent.IdentifierEvent.Identifier,
+	bs, err := (&AuthHandoffLoginIdentifierFrame{
+		AuthHandoffLoginIdentifierFrame: eventing.AuthHandoffLoginIdentifierFrame{
+			Sequence:   e.AuthHandoffLoginFrame.IdentifierFrame.Sequence,
+			Identifier: e.AuthHandoffLoginFrame.IdentifierFrame.Identifier,
 		},
 	}).
 		MarshalNosTale()
@@ -188,10 +188,10 @@ func (e *AuthHandoffLoginEvent) MarshalNosTale() ([]byte, error) {
 	if _, err := b.Write(bs); err != nil {
 		return nil, err
 	}
-	bs, err = (&AuthHandoffLoginPasswordEvent{
-		AuthHandoffLoginPasswordEvent: eventing.AuthHandoffLoginPasswordEvent{
-			Sequence: e.PasswordEvent.Sequence,
-			Password: e.PasswordEvent.Password,
+	bs, err = (&AuthHandoffLoginPasswordFrame{
+		AuthHandoffLoginPasswordFrame: eventing.AuthHandoffLoginPasswordFrame{
+			Sequence: e.PasswordFrame.Sequence,
+			Password: e.PasswordFrame.Password,
 		},
 	}).
 		MarshalNosTale()
@@ -204,24 +204,24 @@ func (e *AuthHandoffLoginEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *AuthHandoffLoginEvent) UnmarshalNosTale(b []byte) error {
+func (e *AuthHandoffLoginFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
-	if err := (&AuthHandoffLoginIdentifierEvent{
-		AuthHandoffLoginIdentifierEvent: eventing.AuthHandoffLoginIdentifierEvent{
-			Sequence:   e.AuthHandoffLoginEvent.IdentifierEvent.Sequence,
-			Identifier: e.AuthHandoffLoginEvent.IdentifierEvent.Identifier,
+	if err := (&AuthHandoffLoginIdentifierFrame{
+		AuthHandoffLoginIdentifierFrame: eventing.AuthHandoffLoginIdentifierFrame{
+			Sequence:   e.AuthHandoffLoginFrame.IdentifierFrame.Sequence,
+			Identifier: e.AuthHandoffLoginFrame.IdentifierFrame.Identifier,
 		},
 	}).
 		UnmarshalNosTale(bs[0]); err != nil {
 		return err
 	}
-	if err := (&AuthHandoffLoginPasswordEvent{
-		AuthHandoffLoginPasswordEvent: eventing.AuthHandoffLoginPasswordEvent{
-			Sequence: e.AuthHandoffLoginEvent.PasswordEvent.Sequence,
-			Password: e.AuthHandoffLoginEvent.PasswordEvent.Password,
+	if err := (&AuthHandoffLoginPasswordFrame{
+		AuthHandoffLoginPasswordFrame: eventing.AuthHandoffLoginPasswordFrame{
+			Sequence: e.AuthHandoffLoginFrame.PasswordFrame.Sequence,
+			Password: e.AuthHandoffLoginFrame.PasswordFrame.Password,
 		},
 	}).
 		UnmarshalNosTale(bs[1]); err != nil {
@@ -230,11 +230,11 @@ func (e *AuthHandoffLoginEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthHandoffLoginIdentifierEvent struct {
-	eventing.AuthHandoffLoginIdentifierEvent
+type AuthHandoffLoginIdentifierFrame struct {
+	eventing.AuthHandoffLoginIdentifierFrame
 }
 
-func (e *AuthHandoffLoginIdentifierEvent) MarshalNosTale() ([]byte, error) {
+func (e *AuthHandoffLoginIdentifierFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
 		return nil, err
@@ -245,7 +245,7 @@ func (e *AuthHandoffLoginIdentifierEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *AuthHandoffLoginIdentifierEvent) UnmarshalNosTale(b []byte) error {
+func (e *AuthHandoffLoginIdentifierFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -259,11 +259,11 @@ func (e *AuthHandoffLoginIdentifierEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthHandoffLoginPasswordEvent struct {
-	eventing.AuthHandoffLoginPasswordEvent
+type AuthHandoffLoginPasswordFrame struct {
+	eventing.AuthHandoffLoginPasswordFrame
 }
 
-func (e *AuthHandoffLoginPasswordEvent) MarshalNosTale() ([]byte, error) {
+func (e *AuthHandoffLoginPasswordFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (e *AuthHandoffLoginPasswordEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *AuthHandoffLoginPasswordEvent) UnmarshalNosTale(b []byte) error {
+func (e *AuthHandoffLoginPasswordFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -295,15 +295,15 @@ type AuthInteractRequest struct {
 func (r *AuthInteractRequest) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	switch v := r.Payload.(type) {
-	case *eventing.AuthInteractRequest_AuthLoginEvent:
+	case *eventing.AuthInteractRequest_AuthLoginFrame:
 		if _, err := fmt.Fprintf(&b, "%s ", AuthLoginOpCode); err != nil {
 			return nil, err
 		}
-		bs, err := (&AuthLoginEvent{
-			AuthLoginEvent: eventing.AuthLoginEvent{
-				Identifier:    v.AuthLoginEvent.Identifier,
-				Password:      v.AuthLoginEvent.Password,
-				ClientVersion: v.AuthLoginEvent.ClientVersion,
+		bs, err := (&AuthLoginFrame{
+			AuthLoginFrame: eventing.AuthLoginFrame{
+				Identifier:    v.AuthLoginFrame.Identifier,
+				Password:      v.AuthLoginFrame.Password,
+				ClientVersion: v.AuthLoginFrame.ClientVersion,
 			},
 		}).MarshalNosTale()
 		if err != nil {
@@ -323,12 +323,12 @@ func (r *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	opcode := string(bs[0])
 	switch opcode {
 	case AuthLoginOpCode:
-		var authLoginEvent AuthLoginEvent
-		if err := authLoginEvent.UnmarshalNosTale(bs[1]); err != nil {
+		var authLoginFrame AuthLoginFrame
+		if err := authLoginFrame.UnmarshalNosTale(bs[1]); err != nil {
 			return err
 		}
-		r.Payload = &eventing.AuthInteractRequest_AuthLoginEvent{
-			AuthLoginEvent: &authLoginEvent.AuthLoginEvent,
+		r.Payload = &eventing.AuthInteractRequest_AuthLoginFrame{
+			AuthLoginFrame: &authLoginFrame.AuthLoginFrame,
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -343,13 +343,13 @@ type AuthInteractResponse struct {
 func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	switch v := r.Payload.(type) {
-	case *eventing.AuthInteractResponse_DialogErrorEvent:
+	case *eventing.AuthInteractResponse_DialogErrorFrame:
 		if _, err := fmt.Fprintf(&b, "%s ", DialogErrorOpCode); err != nil {
 			return nil, err
 		}
-		vv := &DialogErrorEvent{
-			DialogErrorEvent: eventing.DialogErrorEvent{
-				Code: v.DialogErrorEvent.Code,
+		vv := &DialogErrorFrame{
+			DialogErrorFrame: eventing.DialogErrorFrame{
+				Code: v.DialogErrorFrame.Code,
 			},
 		}
 		bs, err := vv.MarshalNosTale()
@@ -365,11 +365,11 @@ func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-type AuthLoginEvent struct {
-	eventing.AuthLoginEvent
+type AuthLoginFrame struct {
+	eventing.AuthLoginFrame
 }
 
-func (e *AuthLoginEvent) MarshalNosTale() ([]byte, error) {
+func (e *AuthLoginFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 
 	if _, err := b.WriteString(e.Identifier); err != nil {
@@ -392,7 +392,7 @@ func (e *AuthLoginEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *AuthLoginEvent) UnmarshalNosTale(b []byte) error {
+func (e *AuthLoginFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 4 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -411,11 +411,11 @@ func (e *AuthLoginEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthHandoffSyncEvent struct {
-	eventing.AuthHandoffSyncEvent
+type AuthHandoffSyncFrame struct {
+	eventing.AuthHandoffSyncFrame
 }
 
-func (e *AuthHandoffSyncEvent) MarshalNosTale() ([]byte, error) {
+func (e *AuthHandoffSyncFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "43%d %d ;;737:584-.37:83898 868 71;481.6; ", e.Sequence, e.Code); err != nil {
 		return nil, err
@@ -423,7 +423,7 @@ func (e *AuthHandoffSyncEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *AuthHandoffSyncEvent) UnmarshalNosTale(b []byte) error {
+func (e *AuthHandoffSyncFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 3 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -441,11 +441,11 @@ func (e *AuthHandoffSyncEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type ChannelEvent struct {
-	eventing.ChannelEvent
+type ChannelFrame struct {
+	eventing.ChannelFrame
 }
 
-func (e *ChannelEvent) MarshalNosTale() ([]byte, error) {
+func (e *ChannelFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
 		return nil, err
@@ -453,7 +453,7 @@ func (e *ChannelEvent) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *ChannelEvent) UnmarshalNosTale(b []byte) error {
+func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.SplitN(b, []byte(" "), 2)
 	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)
 	if err != nil {

@@ -72,16 +72,16 @@ func (c *handoffConn) serve(ctx context.Context) {
 }
 
 func (c *handoffConn) handleMessages(ctx context.Context) error {
-	var sync protonostale.AuthHandoffSyncEvent
+	var sync protonostale.AuthHandoffSyncFrame
 	if err := c.dec.Decode(sync); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	conn := c.newChannelConn(&sync.AuthHandoffSyncEvent)
+	conn := c.newChannelConn(&sync.AuthHandoffSyncFrame)
 	go conn.serve(ctx)
 	return nil
 }
 
-func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *channelConn {
+func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncFrame) *channelConn {
 	return &channelConn{
 		rwc:      h.rwc,
 		gateway:  h.gateway,
@@ -127,8 +127,8 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}
 	logrus.Debugf("gateway: created auth handoff interact stream")
 	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
-		Payload: &eventing.AuthHandoffInteractRequest_SyncEvent{
-			SyncEvent: &eventing.AuthHandoffSyncEvent{
+		Payload: &eventing.AuthHandoffInteractRequest_SyncFrame{
+			SyncFrame: &eventing.AuthHandoffSyncFrame{
 				Sequence: c.sequence,
 				Code:     c.Code,
 			},
@@ -136,14 +136,14 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	var handoffLogin protonostale.AuthHandoffLoginEvent
+	var handoffLogin protonostale.AuthHandoffLoginFrame
 	if err := c.dec.Decode(&handoffLogin); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)
 	}
 	logrus.Debugf("gateway: read event: %v", handoffLogin)
 	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
-		Payload: &eventing.AuthHandoffInteractRequest_LoginEvent{
-			LoginEvent: &handoffLogin.AuthHandoffLoginEvent,
+		Payload: &eventing.AuthHandoffInteractRequest_LoginFrame{
+			LoginFrame: &handoffLogin.AuthHandoffLoginFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
@@ -154,7 +154,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: received login success event")
-	loginSuccess := m.GetLoginSuccessEvent()
+	loginSuccess := m.GetLoginSuccessFrame()
 	if loginSuccess == nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
@@ -170,13 +170,13 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	for {
-		var m protonostale.ChannelEvent
+		var m protonostale.ChannelFrame
 		if err := c.dec.Decode(&m); err != nil {
 			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 		}
 		if err := channelStream.Send(&eventing.ChannelInteractRequest{
-			Payload: &eventing.ChannelInteractRequest_ChannelEvent{
-				ChannelEvent: &m.ChannelEvent,
+			Payload: &eventing.ChannelInteractRequest_ChannelFrame{
+				ChannelFrame: &m.ChannelFrame,
 			},
 		}); err != nil {
 			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)

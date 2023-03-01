@@ -11,13 +11,13 @@ import (
 func WriteError(w *bufio.Writer, code eventing.DialogErrorCode, msg string) (n int, err error) {
 	if msg != "" {
 		logrus.Errorf("error: %s", msg)
-		if n, err = protonostale.WriteDialogInfoEvent(w, &eventing.DialogInfoEvent{
+		if n, err = protonostale.WriteDialogInfoFrame(w, &eventing.DialogInfoFrame{
 			Content: msg,
 		}); err != nil {
 			return n, err
 		}
 	}
-	if n, err = protonostale.WriteDialogErrorEvent(w, &eventing.DialogErrorEvent{
+	if n, err = protonostale.WriteDialogErrorFrame(w, &eventing.DialogErrorFrame{
 		Code: code,
 	}); err != nil {
 		return n, err

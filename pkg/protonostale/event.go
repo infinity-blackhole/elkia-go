@@ -17,7 +17,7 @@ func DecodeUint(b []byte) (uint32, error) {
 	return uint32(code), nil
 }
 
-func WriteEvent(w *bufio.Writer, b []byte) (n int, err error) {
+func WriteFrame(w *bufio.Writer, b []byte) (n int, err error) {
 	nn, err := w.Write(b)
 	if err != nil {
 		return n, err
@@ -29,24 +29,24 @@ func WriteEvent(w *bufio.Writer, b []byte) (n int, err error) {
 	return n + 1, nil
 }
 
-func WriteDialogErrorEvent(
+func WriteDialogErrorFrame(
 	w *bufio.Writer,
-	msg *eventing.DialogErrorEvent,
+	msg *eventing.DialogErrorFrame,
 ) (n int, err error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "failc %d", msg.Code); err != nil {
 		return n, err
 	}
-	return WriteEvent(w, b.Bytes())
+	return WriteFrame(w, b.Bytes())
 }
 
-func WriteDialogInfoEvent(
+func WriteDialogInfoFrame(
 	w *bufio.Writer,
-	msg *eventing.DialogInfoEvent,
+	msg *eventing.DialogInfoFrame,
 ) (n int, err error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "info %s", msg.Content); err != nil {
 		return n, err
 	}
-	return WriteEvent(w, b.Bytes())
+	return WriteFrame(w, b.Bytes())
 }

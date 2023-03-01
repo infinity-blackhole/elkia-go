@@ -6,9 +6,9 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func DecodeAuthHandoffSyncEvent(
+func DecodeAuthHandoffSyncFrame(
 	b []byte,
-) (*eventing.AuthHandoffSyncEvent, error) {
+) (*eventing.AuthHandoffSyncFrame, error) {
 	fields := bytes.Fields(b[2:])
 	sn, err := DecodeUint(fields[0])
 	if err != nil {
@@ -18,66 +18,66 @@ func DecodeAuthHandoffSyncEvent(
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffSyncEvent{
+	return &eventing.AuthHandoffSyncFrame{
 		Sequence: sn,
 		Code:     code,
 	}, nil
 }
 
-func DecodeAuthHandoffLoginEvent(
+func DecodeAuthHandoffLoginFrame(
 	b []byte,
-) (*eventing.AuthHandoffLoginEvent, error) {
+) (*eventing.AuthHandoffLoginFrame, error) {
 	fields := bytes.Fields(b)
-	idMsg, err := DecodeAuthHandoffLoginIdentifierEvent(fields[0])
+	idMsg, err := DecodeAuthHandoffLoginIdentifierFrame(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	pwdMsg, err := DecodeAuthHandoffLoginPasswordEvent(fields[1])
+	pwdMsg, err := DecodeAuthHandoffLoginPasswordFrame(fields[1])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffLoginEvent{
-		IdentifierEvent: idMsg,
-		PasswordEvent:   pwdMsg,
+	return &eventing.AuthHandoffLoginFrame{
+		IdentifierFrame: idMsg,
+		PasswordFrame:   pwdMsg,
 	}, nil
 }
 
-func DecodeAuthHandoffLoginIdentifierEvent(
+func DecodeAuthHandoffLoginIdentifierFrame(
 	b []byte,
-) (*eventing.AuthHandoffLoginIdentifierEvent, error) {
+) (*eventing.AuthHandoffLoginIdentifierFrame, error) {
 	fields := bytes.Fields(b)
 	sn, err := DecodeUint(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffLoginIdentifierEvent{
+	return &eventing.AuthHandoffLoginIdentifierFrame{
 		Sequence:   sn,
 		Identifier: string(fields[1]),
 	}, nil
 }
 
-func DecodeAuthHandoffLoginPasswordEvent(
+func DecodeAuthHandoffLoginPasswordFrame(
 	b []byte,
-) (*eventing.AuthHandoffLoginPasswordEvent, error) {
+) (*eventing.AuthHandoffLoginPasswordFrame, error) {
 	fields := bytes.Fields(b)
 	sn, err := DecodeUint(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffLoginPasswordEvent{
+	return &eventing.AuthHandoffLoginPasswordFrame{
 		Sequence: sn,
 		Password: string(fields[1]),
 	}, nil
 }
 
-func DecodeChannelEvent(b []byte) (*eventing.ChannelEvent, error) {
+func DecodeChannelFrame(b []byte) (*eventing.ChannelFrame, error) {
 	fields := bytes.Fields(b)
 	sn, err := DecodeUint(fields[0])
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.ChannelEvent{
+	return &eventing.ChannelFrame{
 		Sequence: sn,
-		Payload:  &eventing.ChannelEvent_UnknownPayload{UnknownPayload: fields[1]},
+		Payload:  &eventing.ChannelFrame_UnknownPayload{UnknownPayload: fields[1]},
 	}, nil
 }

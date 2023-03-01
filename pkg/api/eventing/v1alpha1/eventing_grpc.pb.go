@@ -27,7 +27,7 @@ type AuthClient interface {
 	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
 	// AuthLoginProduce send a login event to the auth server and returns a
 	// stream of events
-	AuthLoginProduce(ctx context.Context, in *AuthLoginEvent, opts ...grpc.CallOption) (Auth_AuthLoginProduceClient, error)
+	AuthLoginProduce(ctx context.Context, in *AuthLoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginProduceClient, error)
 }
 
 type authClient struct {
@@ -69,7 +69,7 @@ func (x *authAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	return m, nil
 }
 
-func (c *authClient) AuthLoginProduce(ctx context.Context, in *AuthLoginEvent, opts ...grpc.CallOption) (Auth_AuthLoginProduceClient, error) {
+func (c *authClient) AuthLoginProduce(ctx context.Context, in *AuthLoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginProduceClient, error) {
 	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Auth/AuthLoginProduce", opts...)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ type AuthServer interface {
 	AuthInteract(Auth_AuthInteractServer) error
 	// AuthLoginProduce send a login event to the auth server and returns a
 	// stream of events
-	AuthLoginProduce(*AuthLoginEvent, Auth_AuthLoginProduceServer) error
+	AuthLoginProduce(*AuthLoginFrame, Auth_AuthLoginProduceServer) error
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -121,7 +121,7 @@ type UnimplementedAuthServer struct {
 func (UnimplementedAuthServer) AuthInteract(Auth_AuthInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthInteract not implemented")
 }
-func (UnimplementedAuthServer) AuthLoginProduce(*AuthLoginEvent, Auth_AuthLoginProduceServer) error {
+func (UnimplementedAuthServer) AuthLoginProduce(*AuthLoginFrame, Auth_AuthLoginProduceServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthLoginProduce not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
@@ -164,7 +164,7 @@ func (x *authAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 }
 
 func _Auth_AuthLoginProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(AuthLoginEvent)
+	m := new(AuthLoginFrame)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}

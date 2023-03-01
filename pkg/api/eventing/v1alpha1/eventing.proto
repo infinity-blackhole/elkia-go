@@ -15,11 +15,11 @@ enum DialogErrorCode {
   BAD_CASE = 8;
 }
 
-message DialogErrorEvent { DialogErrorCode code = 1; }
+message DialogErrorFrame { DialogErrorCode code = 1; }
 
-message DialogInfoEvent { string content = 1; }
+message DialogInfoFrame { string content = 1; }
 
-message AuthLoginEvent {
+message AuthLoginFrame {
   string identifier = 2;
   string password = 3;
   string client_version = 5;
@@ -35,20 +35,20 @@ message Endpoint {
   string world_name = 6;
 }
 
-message EndpointListEvent {
+message EndpointListFrame {
   uint32 code = 1;
   repeated Endpoint endpoints = 2;
 }
 
 message AuthInteractRequest {
-  oneof payload { AuthLoginEvent auth_login_event = 1; }
+  oneof payload { AuthLoginFrame auth_login_frame = 1; }
 }
 
 message AuthInteractResponse {
   oneof payload {
-    DialogErrorEvent dialog_error_event = 1;
-    DialogInfoEvent dialog_info_event = 2;
-    EndpointListEvent endpoint_list_event = 3;
+    DialogErrorFrame dialog_error_frame = 1;
+    DialogInfoFrame dialog_info_frame = 2;
+    EndpointListFrame endpoint_list_frame = 3;
   }
 }
 
@@ -60,55 +60,55 @@ service Auth {
 
   // AuthLoginProduce send a login event to the auth server and returns a
   // stream of events
-  rpc AuthLoginProduce(AuthLoginEvent) returns (stream AuthInteractResponse);
+  rpc AuthLoginProduce(AuthLoginFrame) returns (stream AuthInteractResponse);
 }
 
-message AuthHandoffSyncEvent {
+message AuthHandoffSyncFrame {
   uint32 sequence = 1;
   uint32 code = 2;
 }
 
-message AuthHandoffLoginIdentifierEvent {
+message AuthHandoffLoginIdentifierFrame {
   uint32 sequence = 1;
   string identifier = 2;
 }
 
-message AuthHandoffLoginPasswordEvent {
+message AuthHandoffLoginPasswordFrame {
   uint32 sequence = 1;
   string password = 2;
 }
 
-message AuthHandoffLoginEvent {
-  AuthHandoffLoginIdentifierEvent identifier_event = 1;
-  AuthHandoffLoginPasswordEvent password_event = 2;
+message AuthHandoffLoginFrame {
+  AuthHandoffLoginIdentifierFrame identifier_frame = 1;
+  AuthHandoffLoginPasswordFrame password_frame = 2;
 }
 
 message AuthHandoffInteractRequest {
   oneof payload {
-    AuthHandoffSyncEvent sync_event = 1;
-    AuthHandoffLoginEvent login_event = 2;
+    AuthHandoffSyncFrame sync_frame = 1;
+    AuthHandoffLoginFrame login_frame = 2;
   }
 }
 
-message AuthHandoffLoginSuccessEvent { string token = 1; }
+message AuthHandoffLoginSuccessFrame { string token = 1; }
 
 message AuthHandoffInteractResponse {
-  oneof payload { AuthHandoffLoginSuccessEvent login_success_event = 1; }
+  oneof payload { AuthHandoffLoginSuccessFrame login_success_frame = 1; }
 }
 
-message ChannelEvent {
+message ChannelFrame {
   uint32 sequence = 1;
   oneof payload { bytes unknown_payload = 2; }
 }
 
 message ChannelInteractRequest {
-  oneof payload { ChannelEvent channel_event = 1; }
+  oneof payload { ChannelFrame channel_frame = 1; }
 }
 
 message ChannelInteractResponse {
   oneof payload {
-    DialogErrorEvent dialog_error_event = 1;
-    DialogInfoEvent dialog_info_event = 2;
+    DialogErrorFrame dialog_error_frame = 1;
+    DialogInfoFrame dialog_info_frame = 2;
   }
 }
 
