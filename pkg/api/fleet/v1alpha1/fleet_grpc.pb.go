@@ -230,15 +230,15 @@ type PresenceClient interface {
 	// token.
 	AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error)
 	// AuthHandoff hands off a session to a gateway with a given token and
-	// key.
+	// code.
 	AuthHandoff(ctx context.Context, in *AuthHandoffRequest, opts ...grpc.CallOption) (*AuthHandoffResponse, error)
-	// AuthLogout logs out a session with a given key.
+	// AuthLogout logs out a session with a given code.
 	AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error)
-	// SessionGet gets a session with a given key.
+	// SessionGet gets a session with a given code.
 	SessionGet(ctx context.Context, in *SessionGetRequest, opts ...grpc.CallOption) (*SessionGetResponse, error)
 	// SessionPut creates a session with a given identifier and token.
 	SessionPut(ctx context.Context, in *SessionPutRequest, opts ...grpc.CallOption) (*SessionPutResponse, error)
-	// SessionDelete Deletes a session with a given key.
+	// SessionDelete Deletes a session with a given code.
 	SessionDelete(ctx context.Context, in *SessionDeleteRequest, opts ...grpc.CallOption) (*SessionDeleteResponse, error)
 }
 
@@ -323,15 +323,15 @@ type PresenceServer interface {
 	// token.
 	AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error)
 	// AuthHandoff hands off a session to a gateway with a given token and
-	// key.
+	// code.
 	AuthHandoff(context.Context, *AuthHandoffRequest) (*AuthHandoffResponse, error)
-	// AuthLogout logs out a session with a given key.
+	// AuthLogout logs out a session with a given code.
 	AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error)
-	// SessionGet gets a session with a given key.
+	// SessionGet gets a session with a given code.
 	SessionGet(context.Context, *SessionGetRequest) (*SessionGetResponse, error)
 	// SessionPut creates a session with a given identifier and token.
 	SessionPut(context.Context, *SessionPutRequest) (*SessionPutResponse, error)
-	// SessionDelete Deletes a session with a given key.
+	// SessionDelete Deletes a session with a given code.
 	SessionDelete(context.Context, *SessionDeleteRequest) (*SessionDeleteResponse, error)
 	mustEmbedUnimplementedPresenceServer()
 }

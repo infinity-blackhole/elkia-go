@@ -71,7 +71,7 @@ func (i *PresenceServer) AuthLogin(
 		return nil, err
 	}
 	return &fleet.AuthLoginResponse{
-		Key: sessionPut.Key,
+		Code: sessionPut.Code,
 	}, nil
 }
 
@@ -117,7 +117,7 @@ func (s *PresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	return &fleet.AuthRefreshLoginResponse{
-		Key: sessionPut.Key,
+		Code: sessionPut.Code,
 	}, nil
 }
 
@@ -126,7 +126,7 @@ func (s *PresenceServer) AuthHandoff(
 	in *fleet.AuthHandoffRequest,
 ) (*fleet.AuthHandoffResponse, error) {
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Key: in.Key,
+		Code: in.Code,
 	})
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (s *PresenceServer) AuthLogout(
 	in *fleet.AuthLogoutRequest,
 ) (*fleet.AuthLogoutResponse, error) {
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Key: in.Key,
+		Code: in.Code,
 	})
 	if err != nil {
 		return nil, err
@@ -175,13 +175,13 @@ func (s *PresenceServer) SessionGet(
 	ctx context.Context,
 	in *fleet.SessionGetRequest,
 ) (*fleet.SessionGetResponse, error) {
-	res, err := s.etcd.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Key))
+	res, err := s.etcd.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got %d handoff sessions", len(res.Kvs))
 	if len(res.Kvs) == 1 {
-		return nil, errors.New("invalid key")
+		return nil, errors.New("invalid code")
 	}
 	var session fleet.Session
 	if err := proto.Unmarshal(res.Kvs[0].Value, &session); err != nil {
@@ -201,21 +201,21 @@ func (s *PresenceServer) SessionPut(
 	if err != nil {
 		return nil, err
 	}
-	key, err := s.generateKey(in.Session.Id)
+	code, err := s.generateCode(in.Session.Id)
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.etcd.Put(ctx, fmt.Sprintf("sessions:%d", key), string(d))
+	res, err := s.etcd.Put(ctx, fmt.Sprintf("sessions:%d", code), string(d))
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: set handoff session: %v", res)
 	return &fleet.SessionPutResponse{
-		Key: key,
+		Code: code,
 	}, nil
 }
 
-func (*PresenceServer) generateKey(id string) (uint32, error) {
+func (*PresenceServer) generateCode(id string) (uint32, error) {
 	h := fnv.New32a()
 	if err := gob.
 		NewEncoder(h).
@@ -229,7 +229,7 @@ func (s *PresenceServer) SessionDelete(
 	ctx context.Context,
 	in *fleet.SessionDeleteRequest,
 ) (*fleet.SessionDeleteResponse, error) {
-	res, err := s.etcd.Delete(ctx, fmt.Sprintf("sessions:%d", in.Key))
+	res, err := s.etcd.Delete(ctx, fmt.Sprintf("sessions:%d", in.Code))
 	if err != nil {
 		return nil, err
 	}

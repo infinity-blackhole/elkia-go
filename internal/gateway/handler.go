@@ -125,7 +125,7 @@ func (c *handshaker) handoff(
 		}
 		return nil, nil
 	}
-	if syncMsg.Sequence != handoffMsg.KeyEvent.Sequence+1 {
+	if syncMsg.Sequence != handoffMsg.CodeEvent.Sequence+1 {
 		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
 			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
@@ -133,7 +133,7 @@ func (c *handshaker) handoff(
 		}
 		return nil, nil
 	}
-	if handoffMsg.KeyEvent.Sequence != handoffMsg.PasswordEvent.Sequence+1 {
+	if handoffMsg.CodeEvent.Sequence != handoffMsg.PasswordEvent.Sequence+1 {
 		if err := c.wc.WriteDialogErrorEvent(&eventing.DialogErrorEvent{
 			Code: eventing.DialogErrorCode_BAD_CASE,
 		}); err != nil {
@@ -142,14 +142,14 @@ func (c *handshaker) handoff(
 		return nil, nil
 	}
 	_, err = c.presence.AuthHandoff(ctx, &fleet.AuthHandoffRequest{
-		Key:      handoffMsg.KeyEvent.Key,
+		Code:     handoffMsg.CodeEvent.Code,
 		Password: handoffMsg.PasswordEvent.Password,
 	})
 	if err != nil {
 		return nil, nil
 	}
 	return &eventing.AuthHandoffSuccessEvent{
-		Key:      handoffMsg.KeyEvent.Key,
+		Code:     handoffMsg.CodeEvent.Code,
 		Sequence: syncMsg.Sequence,
 	}, nil
 }
@@ -157,7 +157,7 @@ func (c *handshaker) handoff(
 func (h *handshaker) newConn(ack *eventing.AuthHandoffSuccessEvent) *conn {
 	return &conn{
 		rwc:           h.rwc,
-		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), ack.Key),
+		rc:            protonostale.NewGatewayChannelReader(bufio.NewReader(h.rwc), ack.Code),
 		wc:            protonostale.NewGatewayWriter(bufio.NewWriter(h.rwc)),
 		presence:      h.presence,
 		kafkaProducer: h.kafkaProducer,

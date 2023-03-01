@@ -66,7 +66,7 @@ func TestReadVersion(t *testing.T) {
 
 func TestWriteGatewayListEvent(t *testing.T) {
 	input := &eventing.GatewayListEvent{
-		Key: 1,
+		Code: 1,
 		Gateways: []*eventing.Gateway{
 			{
 				Host:      "127.0.0.1",
