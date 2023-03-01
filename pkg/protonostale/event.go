@@ -40,11 +40,11 @@ func (r *EventReader) ReadUint32() (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	key, err := strconv.ParseUint(string(rf), 10, 32)
+	code, err := strconv.ParseUint(string(rf), 10, 32)
 	if err != nil {
 		return 0, err
 	}
-	return uint32(key), nil
+	return uint32(code), nil
 }
 
 func (r *EventReader) ReadField() ([]byte, error) {

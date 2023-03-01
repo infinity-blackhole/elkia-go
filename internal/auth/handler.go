@@ -158,7 +158,7 @@ func (c *conn) handleHandoff(ctx context.Context, r *protonostale.AuthEventReade
 	}
 	if err := c.wc.WriteGatewayListEvent(
 		&eventing.GatewayListEvent{
-			Key:      handoff.Key,
+			Code:     handoff.Code,
 			Gateways: gateways,
 		},
 	); err != nil {

@@ -31,7 +31,7 @@ func (r *GatewayHandshakeEventReader) ReadSyncEvent() (*eventing.SyncEvent, erro
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHandoffEvent, error) {
-	keyMsg, err := r.ReadAuthHandoffKeyEvent()
+	keyMsg, err := r.ReadAuthHandoffCodeEvent()
 	if err != nil {
 		return nil, err
 	}
@@ -40,23 +40,23 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHand
 		return nil, err
 	}
 	return &eventing.AuthHandoffEvent{
-		KeyEvent:      keyMsg,
+		CodeEvent:     keyMsg,
 		PasswordEvent: pwdMsg,
 	}, nil
 }
 
-func (r *GatewayHandshakeEventReader) ReadAuthHandoffKeyEvent() (*eventing.AuthHandoffKeyEvent, error) {
+func (r *GatewayHandshakeEventReader) ReadAuthHandoffCodeEvent() (*eventing.AuthHandoffCodeEvent, error) {
 	sn, err := r.ReadSequence()
 	if err != nil {
 		return nil, err
 	}
-	key, err := r.ReadUint32()
+	code, err := r.ReadUint32()
 	if err != nil {
 		return nil, err
 	}
-	return &eventing.AuthHandoffKeyEvent{
+	return &eventing.AuthHandoffCodeEvent{
 		Sequence: sn,
-		Key:      key,
+		Code:     code,
 	}, nil
 }
 
@@ -142,16 +142,16 @@ func (r *GatewayHandshakeReader) ReadMessageSlice() ([]*GatewayHandshakeEventRea
 	return readers, nil
 }
 
-func NewGatewayChannelReader(r *bufio.Reader, key uint32) *GatewayChannelReader {
+func NewGatewayChannelReader(r *bufio.Reader, code uint32) *GatewayChannelReader {
 	return &GatewayChannelReader{
-		r:   monoalphabetic.NewReaderWithKey(r, key),
-		key: key,
+		r:    monoalphabetic.NewReaderWithCode(r, code),
+		code: code,
 	}
 }
 
 type GatewayChannelReader struct {
-	r   *monoalphabetic.Reader
-	key uint32
+	r    *monoalphabetic.Reader
+	code uint32
 }
 
 func (r *GatewayChannelReader) ReadMessageSlice() ([]*GatewayChannelEventReader, error) {

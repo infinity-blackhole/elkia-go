@@ -19,16 +19,16 @@ func NewReader(r *bufio.Reader) *Reader {
 	}
 }
 
-func NewReaderWithKey(r *bufio.Reader, key uint32) *Reader {
+func NewReaderWithCode(r *bufio.Reader, code uint32) *Reader {
 	return &Reader{
-		R:   r,
-		key: &key,
+		R:    r,
+		code: &code,
 	}
 }
 
 type Reader struct {
-	R   *bufio.Reader
-	key *uint32
+	R    *bufio.Reader
+	code *uint32
 }
 
 // ReadMessageSlice reads a single message from r,
@@ -74,9 +74,9 @@ func (r *Reader) decryptMessage(msg []byte) []byte {
 }
 
 func (r *Reader) decryptByte(c byte) byte {
-	if r.key == nil {
-		mode := *r.key & 0xFF
-		offset := (*r.key >> 6) & 3
+	if r.code == nil {
+		mode := *r.code & 0xFF
+		offset := (*r.code >> 6) & 3
 		switch mode {
 		case 0:
 			return (c - byte(offset) - 0x40) & 0xFF
