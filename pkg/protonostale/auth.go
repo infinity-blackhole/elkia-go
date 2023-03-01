@@ -18,7 +18,7 @@ var (
 func ParseAuthFrame(b []byte) (*eventing.AuthInteractRequest, error) {
 	fields := bytes.SplitN(b, []byte(" "), 2)
 	if len(fields) != 2 {
-		return nil, fmt.Errorf("invalid auth event: %s", b)
+		return nil, fmt.Errorf("invalid auth frame: %s", b)
 	}
 	opcode := string(fields[0])
 	switch opcode {
@@ -33,14 +33,14 @@ func ParseAuthFrame(b []byte) (*eventing.AuthInteractRequest, error) {
 			},
 		}, nil
 	default:
-		return nil, fmt.Errorf("unknown auth event: %s", b)
+		return nil, fmt.Errorf("unknown auth frame: %s", b)
 	}
 }
 
 func DecodeAuthLoginFrame(s []byte) (*eventing.AuthLoginFrame, error) {
 	fields := bytes.Fields(s)
 	if len(fields) != 5 {
-		return nil, fmt.Errorf("invalid auth login event: %s", s)
+		return nil, fmt.Errorf("invalid auth login frame: %s", s)
 	}
 	identifier := string(fields[1])
 	pwd, err := ParsePassword(fields[2])

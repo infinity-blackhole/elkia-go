@@ -45,7 +45,7 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 				return err
 			}
 		default:
-			return status.Newf(codes.Unimplemented, "unimplemented event type: %T", m.Payload).Err()
+			return status.Newf(codes.Unimplemented, "unimplemented frame type: %T", m.Payload).Err()
 		}
 	}
 }

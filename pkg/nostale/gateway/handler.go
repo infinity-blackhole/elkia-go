@@ -140,7 +140,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	if err := c.dec.Decode(&handoffLogin); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)
 	}
-	logrus.Debugf("gateway: read event: %v", handoffLogin)
+	logrus.Debugf("gateway: read frame: %v", handoffLogin)
 	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_LoginFrame{
 			LoginFrame: &handoffLogin.AuthHandoffLoginFrame,
@@ -148,17 +148,17 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: sent login event")
+	logrus.Debugf("gateway: sent login frame")
 	m, err := authStream.Recv()
 	if err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: received login success event")
+	logrus.Debugf("gateway: received login success frame")
 	loginSuccess := m.GetLoginSuccessFrame()
 	if loginSuccess == nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: received login success event: %v", loginSuccess)
+	logrus.Debugf("gateway: received login success frame: %v", loginSuccess)
 	ctx = metadata.AppendToOutgoingContext(
 		ctx,
 		"sequence", strconv.FormatUint(uint64(c.sequence), 10),

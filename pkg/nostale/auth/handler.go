@@ -74,7 +74,7 @@ func (c *conn) handleMessages(ctx context.Context) error {
 		if err := c.dec.Decode(&msg); err != nil {
 			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 		}
-		logrus.Debugf("auth: read event: %v", msg.Payload)
+		logrus.Debugf("auth: read frame: %v", msg.Payload)
 		stream, err := c.auth.AuthInteract(ctx)
 		if err != nil {
 			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
@@ -97,7 +97,7 @@ func (c *conn) handleMessages(ctx context.Context) error {
 			if err := c.enc.Encode(&ed); err != nil {
 				return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 			}
-			logrus.Debug("auth: wrote endpoint list event")
+			logrus.Debug("auth: wrote endpoint list frame")
 		default:
 			logrus.Errorf("auth: unexpected login response: %v", m)
 			return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)

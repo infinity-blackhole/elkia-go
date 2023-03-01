@@ -58,7 +58,7 @@ service Auth {
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthLoginProduce send a login event to the auth server and returns a
+  // AuthLoginProduce send a login frame to the auth server and returns a
   // stream of events
   rpc AuthLoginProduce(AuthLoginFrame) returns (stream AuthInteractResponse);
 }
