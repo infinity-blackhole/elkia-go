@@ -114,7 +114,8 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if err := clientWriter.Flush(); err != nil {
 		t.Fatalf("Failed to flush message: %v", err)
 	}
-	encResult, err := clientReader.ReadBytes(Delim)
+	encoding := NewLoginEncoding()
+	encResult, err := clientReader.ReadBytes(encoding.Delim())
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
@@ -134,7 +135,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		237, 242, 201, 10,
 	}
 	result := make([]byte, len(encResult))
-	if _, err := DecodeAuthFrame(result, encResult); err != nil {
+	if _, err := encoding.Decode(result, encResult); err != nil {
 		t.Fatalf("Failed to decode frame: %v", err)
 	}
 	if !bytes.Equal(expected, result) {

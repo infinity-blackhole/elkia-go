@@ -1,14 +1,12 @@
 package gateway
 
 import (
-	"bufio"
 	"context"
-	"fmt"
 	"net"
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/auth"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -41,55 +39,54 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		rc:      bufio.NewReader(c),
-		wc:      bufio.NewWriter(c),
+		dec:     auth.NewDecoder(NewSessionDecoding(), c),
+		enc:     auth.NewEncoder(NewSessionDecoding(), c),
 		gateway: h.gateway,
 	}
 }
 
 type handoffConn struct {
 	rwc     net.Conn
-	rc      *bufio.Reader
-	wc      *bufio.Writer
+	dec     *auth.Decoder
+	enc     *auth.Encoder
 	gateway eventing.GatewayClient
 }
 
 func (c *handoffConn) serve(ctx context.Context) {
-	go func() {
-		if err := recover(); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"An unexpected error occurred, please try again later",
-			)
+	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
+	defer span.End()
+	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
+	err := c.handleMessages(ctx)
+	switch e := err.(type) {
+	case *protonostale.Status:
+		if err := c.enc.Encode(e); err != nil {
+			logrus.Errorf("auth: failed to send error: %v", err)
 		}
-	}()
-	logrus.Debugf("gateway: new auth handoff from %v", c.rwc.RemoteAddr())
-	c.handoff(ctx)
+	default:
+		if err := c.enc.Encode(
+			protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR),
+		); err != nil {
+			logrus.Errorf("auth: failed to send error: %v", err)
+		}
+	}
 }
 
-func (c *handoffConn) handoff(ctx context.Context) {
-	_, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
-	defer span.End()
-	sync, err := ReadSyncFrame(c.rc)
-	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"An unexpected error occurred, please try again later",
-		)
-		return
+func (c *handoffConn) handleMessages(ctx context.Context) error {
+	var sync protonostale.AuthHandoffSyncEvent
+	if err := c.dec.Decode(sync); err != nil {
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	conn := c.newChannelConn(sync)
+	conn := c.newChannelConn(&sync.AuthHandoffSyncEvent)
 	go conn.serve(ctx)
+	return nil
 }
 
 func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *channelConn {
 	return &channelConn{
 		rwc:      h.rwc,
-		rc:       bufio.NewReader(h.rwc),
-		wc:       bufio.NewWriter(h.rwc),
 		gateway:  h.gateway,
+		dec:      auth.NewDecoder(NewWorldFrameListEncoding(sync.Code), h.rwc),
+		enc:      auth.NewEncoder(NewWorldFrameListEncoding(sync.Code), h.rwc),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}
@@ -97,44 +94,39 @@ func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *chann
 
 type channelConn struct {
 	rwc      net.Conn
-	rc       *bufio.Reader
-	wc       *bufio.Writer
+	dec      *auth.Decoder
+	enc      *auth.Encoder
 	gateway  eventing.GatewayClient
 	Code     uint32
 	sequence uint32
 }
 
 func (c *channelConn) serve(ctx context.Context) {
-	go func() {
-		if err := recover(); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				"An unexpected error occurred, please try again later",
-			)
+	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
+	defer span.End()
+	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
+	err := c.handleMessages(ctx)
+	switch e := err.(type) {
+	case *protonostale.Status:
+		if err := c.enc.Encode(e); err != nil {
+			logrus.Errorf("auth: failed to send error: %v", err)
 		}
-	}()
-	logrus.Debugf("gateway: new channel from %v", c.rwc.RemoteAddr())
-	c.upgrade(ctx)
+	default:
+		if err := c.enc.Encode(
+			protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR),
+		); err != nil {
+			logrus.Errorf("auth: failed to send error: %v", err)
+		}
+	}
 }
 
-func (c *channelConn) upgrade(ctx context.Context) {
-	scanner := bufio.NewScanner(c.rc)
-	scanner.Split(bufio.ScanLines)
-	stream, err := c.gateway.AuthHandoffInteract(ctx)
+func (c *channelConn) handleMessages(ctx context.Context) error {
+	authStream, err := c.gateway.AuthHandoffInteract(ctx)
 	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to create auth handoff interact stream: %v",
-				err,
-			),
-		)
-		return
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: created auth handoff interact stream")
-	if err := stream.Send(&eventing.AuthHandoffInteractRequest{
+	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_SyncEvent{
 			SyncEvent: &eventing.AuthHandoffSyncEvent{
 				Sequence: c.sequence,
@@ -142,152 +134,52 @@ func (c *channelConn) upgrade(ctx context.Context) {
 			},
 		},
 	}); err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to send auth handoff sync event: %v",
-				err,
-			),
-		)
-		return
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
-	if !scanner.Scan() {
-		if err := scanner.Err(); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_BAD_CASE,
-				fmt.Sprintf(
-					"failed to read auth handoff login event: %v",
-					err,
-				),
-			)
-			return
-		}
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_BAD_CASE,
-			"failed to read auth handoff login event: EOF",
-		)
-		return
+	var handoffLogin protonostale.AuthHandoffLoginEvent
+	if err := c.dec.Decode(&handoffLogin); err != nil {
+		return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)
 	}
-	logrus.Debugf("gateway: read message: %s", scanner.Text())
-	login, err := protonostale.ParseAuthHandoffLoginEvent(scanner.Text())
-	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_BAD_CASE,
-			fmt.Sprintf(
-				"failed to parse auth handoff login event: %v",
-				err,
-			),
-		)
-		return
-	}
-	logrus.Debugf("gateway: read event: %v", login)
-	if err := stream.Send(&eventing.AuthHandoffInteractRequest{
+	logrus.Debugf("gateway: read event: %v", handoffLogin)
+	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
 		Payload: &eventing.AuthHandoffInteractRequest_LoginEvent{
-			LoginEvent: login,
+			LoginEvent: &handoffLogin.AuthHandoffLoginEvent,
 		},
 	}); err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to send auth handoff login event: %v",
-				err,
-			),
-		)
-		return
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent login event")
-	m, err := stream.Recv()
+	m, err := authStream.Recv()
 	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to receive auth handoff login success event: %v",
-				err,
-			),
-		)
-		return
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: received login success event")
 	loginSuccess := m.GetLoginSuccessEvent()
 	if loginSuccess == nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_BAD_CASE,
-			fmt.Sprintf(
-				"failed to receive auth handoff login success event: %v",
-				err,
-			),
-		)
-		return
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: received login success event: %v", loginSuccess)
-	c.handleMessages(ctx, loginSuccess.Token)
-}
-
-func (c *channelConn) handleMessages(ctx context.Context, token string) {
-	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
-	defer span.End()
 	ctx = metadata.AppendToOutgoingContext(
 		ctx,
 		"sequence", strconv.FormatUint(uint64(c.sequence), 10),
 		"code", strconv.FormatUint(uint64(c.Code), 10),
-		"session", token,
+		"session", loginSuccess.Token,
 	)
-	stream, err := c.gateway.ChannelInteract(ctx)
+	channelStream, err := c.gateway.ChannelInteract(ctx)
 	if err != nil {
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			fmt.Sprintf(
-				"failed to create channel interact stream: %v",
-				err,
-			),
-		)
+		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	for {
-		m, err := protonostale.DecodeChannelEvent(c.rc)
-		if err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				fmt.Sprintf(
-					"failed to read channel event: %v",
-					err,
-				),
-			)
+		var m protonostale.ChannelEvent
+		if err := c.dec.Decode(&m); err != nil {
+			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 		}
-		if err := stream.Send(&eventing.ChannelInteractRequest{
+		if err := channelStream.Send(&eventing.ChannelInteractRequest{
 			Payload: &eventing.ChannelInteractRequest_ChannelEvent{
-				ChannelEvent: m,
+				ChannelEvent: &m.ChannelEvent,
 			},
 		}); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				fmt.Sprintf(
-					"failed to send channel event: %v",
-					err,
-				),
-			)
+			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 		}
 	}
-}
-
-func ReadSyncFrame(r *bufio.Reader) (*eventing.AuthHandoffSyncEvent, error) {
-	encFrame, err := r.ReadBytes('\n')
-	if err != nil {
-		return nil, err
-	}
-	var decodedSync []byte
-	n, err := DecodeSessionFrame(decodedSync, encFrame)
-	if err != nil {
-		return nil, err
-	}
-	return protonostale.ReadAuthHandoffSyncEvent(decodedSync[:n])
 }

@@ -1,11 +1,10 @@
 package gateway
 
 import (
-	"bufio"
 	"bytes"
-	"fmt"
 	"testing"
-	"testing/iotest"
+
+	"github.com/infinity-blackhole/elkia/pkg/nostale/auth"
 )
 
 // key:3324008792
@@ -16,20 +15,13 @@ func TestReaderReadSyncEvent(t *testing.T) {
 		217, 208, 196, 7, 212, 73,
 	}
 	expected := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6")
-	r := iotest.NewReadLogger(
-		t.Name(),
-		NewHandoffReader(bufio.NewReader(bytes.NewReader(input))),
-	)
+	enc := auth.NewDecoder(NewSessionDecoding(), bytes.NewReader(input))
 	result := make([]byte, len(expected))
-	n, err := r.Read(result)
-	if err != nil {
+	if err := enc.Decode(result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %v, got %v", expected, result)
-	}
-	if len(expected) != n*2 {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n*2)
 	}
 }
 
@@ -40,33 +32,25 @@ func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
 		193, 160, 65, 218, 193, 224, 66, 241, 205, 63,
 	}
 	expected := []byte("49272 9hibwiwiG2e6Nr")
-	r := iotest.NewReadLogger(
-		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input)), 0),
-	)
+	dec := auth.NewDecoder(NewWorldFrameListEncoding(0), bytes.NewReader(input))
 	result := make([]byte, len(expected))
-	n, err := r.Read(result)
-	if err != nil {
+	if err := dec.Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
-	if n != len(expected) {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n)
-	}
 }
 
 func TestReaderReadCodeDerivation(t *testing.T) {
-	var buff bytes.Buffer
-	r := NewReader(bufio.NewReader(&buff), 100)
+	r := NewWorldFrameListEncoding(100)
 	if r.mode != 1 {
 		t.Errorf("Expected mode 74, got %d", r.mode)
 	}
 	if r.offset != 164 {
 		t.Errorf("Expected offset 0, got %d", r.offset)
 	}
-	r = NewReader(bufio.NewReader(&buff), 1)
+	r = NewWorldFrameListEncoding(1)
 	if r.mode != 0 {
 		t.Errorf("Expected mode 0, got %d", r.mode)
 	}
@@ -80,20 +64,13 @@ func TestReaderReadeHeartbeatEvent(t *testing.T) {
 		199, 205, 171, 241, 128, 63,
 	}
 	expected := []byte("49277 0")
-	r := iotest.NewReadLogger(
-		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input)), 0),
-	)
+	enc := auth.NewDecoder(NewWorldFrameListEncoding(0), bytes.NewReader(input))
 	result := make([]byte, len(expected))
-	n, err := r.Read(result)
-	if err != nil {
+	if err := enc.Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
-	}
-	if n != len(expected) {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n)
 	}
 }
 
@@ -103,18 +80,11 @@ func TestWriterWrite(t *testing.T) {
 		3, 153, 144, 144,
 	}
 	var result bytes.Buffer
-	w := iotest.NewWriteLogger(
-		t.Name(),
-		NewWriter(bufio.NewWriter(&result)),
-	)
-	n, err := fmt.Fprint(w, input)
-	if err != nil {
+	enc := auth.NewEncoder(NewSessionDecoding(), &result)
+	if err := enc.Encode(&input); err != nil {
 		t.Errorf("Error writing line: %s", err)
 	}
 	if !bytes.Equal(expected, result.Bytes()) {
 		t.Errorf("Expected %v, got %v", expected, result.Bytes())
-	}
-	if len(input) != n {
-		t.Errorf("Expected %d bytes, got %d", len(input), n)
 	}
 }

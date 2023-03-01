@@ -6,15 +6,22 @@ import (
 	"io"
 )
 
-const Delim = byte(0xD8)
+type Encoding interface {
+	Encode(dst, src []byte)
+	Decode(dst, src []byte) (int, error)
+	DecodedLen(x int) int
+	Delim() byte
+}
 
 type Decoder struct {
 	r *bufio.Reader
+	e Encoding
 }
 
-func NewDecoder(r io.Reader) *Decoder {
+func NewDecoder(e Encoding, r io.Reader) *Decoder {
 	return &Decoder{
 		r: bufio.NewReader(r),
+		e: e,
 	}
 }
 
@@ -23,12 +30,12 @@ func (d *Decoder) More() bool {
 }
 
 func (d *Decoder) Decode(v any) error {
-	bs, err := d.r.ReadBytes(Delim)
+	bs, err := d.r.ReadBytes(d.e.Delim())
 	if err != nil {
 		return err
 	}
 	buff := make([]byte, len(bs))
-	if _, err := DecodeAuthFrame(buff, bs); err != nil {
+	if _, err := d.e.Decode(buff, bs); err != nil {
 		return err
 	}
 	switch v := v.(type) {
@@ -47,11 +54,13 @@ func (d *Decoder) Decode(v any) error {
 
 type Encoder struct {
 	w *bufio.Writer
+	e Encoding
 }
 
-func NewEncoder(w io.Writer) *Encoder {
+func NewEncoder(e Encoding, w io.Writer) *Encoder {
 	return &Encoder{
 		w: bufio.NewWriter(w),
+		e: e,
 	}
 }
 
@@ -69,13 +78,11 @@ func (e *Encoder) Encode(v any) (err error) {
 		}
 	}
 	buff := make([]byte, len(bs))
-	if _, err := EncodeAuthFrame(buff, bs); err != nil {
-		return err
-	}
+	e.e.Encode(buff, bs)
 	if _, err := e.w.Write(buff); err != nil {
 		return err
 	}
-	if err := e.w.WriteByte(Delim); err != nil {
+	if err := e.w.WriteByte(e.e.Delim()); err != nil {
 		return err
 	}
 	return e.w.Flush()
@@ -89,7 +96,14 @@ type Marshaler interface {
 	MarshalNosTale() ([]byte, error)
 }
 
-func DecodeAuthFrame(dst, src []byte) (n int, err error) {
+func NewLoginEncoding() *LoginEncoding {
+	return &LoginEncoding{}
+}
+
+type LoginEncoding struct {
+}
+
+func (e *LoginEncoding) Decode(dst, src []byte) (n int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -106,15 +120,19 @@ func DecodeAuthFrame(dst, src []byte) (n int, err error) {
 	return n, nil
 }
 
-func EncodeAuthFrame(dst, src []byte) (n int, err error) {
+func (e *LoginEncoding) DecodedLen(x int) int {
+	return x * 2
+}
+
+func (e *LoginEncoding) Encode(dst, src []byte) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
-	if len(src) == 0 {
-		return 0, nil
-	}
-	for n = 0; n < len(src); n++ {
+	for n := 0; n < len(src); n++ {
 		dst[n] = (src[n] + 15) & 0xFF
 	}
-	return n, nil
+}
+
+func (e *LoginEncoding) Delim() byte {
+	return 0xD8
 }

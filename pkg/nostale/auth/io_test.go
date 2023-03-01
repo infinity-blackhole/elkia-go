@@ -28,7 +28,7 @@ func TestDecoderDecode(t *testing.T) {
 			"BAE0870F40C2DA3666\n",
 	)
 	result := make([]byte, len(expected))
-	if err := NewDecoder(&input).Decode(&result); err != nil {
+	if err := NewDecoder(NewLoginEncoding(), &input).Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
@@ -44,7 +44,7 @@ func TestEncoderEncode(t *testing.T) {
 		130, 131, 10,
 	}
 	var buf bytes.Buffer
-	if err := NewEncoder(&buf).Encode(input); err != nil {
+	if err := NewEncoder(NewLoginEncoding(), &buf).Encode(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := buf.Bytes()
@@ -56,11 +56,11 @@ func TestEncoderEncode(t *testing.T) {
 func TestAsymmetricEncodeDecode(t *testing.T) {
 	expected := "fail Hello. This is a basic test"
 	var buff bytes.Buffer
-	if err := NewEncoder(&buff).Encode(expected); err != nil {
+	if err := NewEncoder(NewLoginEncoding(), &buff).Encode(expected); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := make([]byte, len(expected))
-	if err := NewDecoder(&buff).Decode(&result); err == nil {
+	if err := NewDecoder(NewLoginEncoding(), &buff).Decode(&result); err == nil {
 		t.Errorf("Expected error, got %s", result)
 	}
 }

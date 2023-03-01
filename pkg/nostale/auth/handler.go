@@ -36,8 +36,8 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newConn(c net.Conn) *conn {
 	return &conn{
 		rwc:  c,
-		dec:  NewDecoder(c),
-		enc:  NewEncoder(c),
+		dec:  NewDecoder(NewLoginEncoding(), c),
+		enc:  NewEncoder(NewLoginEncoding(), c),
 		auth: h.auth,
 	}
 }

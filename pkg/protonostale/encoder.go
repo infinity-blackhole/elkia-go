@@ -411,6 +411,58 @@ func (e *AuthLoginEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
+type AuthHandoffSyncEvent struct {
+	eventing.AuthHandoffSyncEvent
+}
+
+func (e *AuthHandoffSyncEvent) MarshalNosTale() ([]byte, error) {
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "43%d %d ;;737:584-.37:83898 868 71;481.6; ", e.Sequence, e.Code); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
+func (e *AuthHandoffSyncEvent) UnmarshalNosTale(b []byte) error {
+	bs := bytes.Split(b, []byte(" "))
+	if len(bs) != 3 {
+		return fmt.Errorf("invalid length: %d", len(bs))
+	}
+	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)
+	if err != nil {
+		return err
+	}
+	e.Sequence = uint32(sn)
+	code, err := strconv.ParseUint(string(bs[1]), 10, 32)
+	if err != nil {
+		return err
+	}
+	e.Code = uint32(code)
+	return nil
+}
+
+type ChannelEvent struct {
+	eventing.ChannelEvent
+}
+
+func (e *ChannelEvent) MarshalNosTale() ([]byte, error) {
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
+func (e *ChannelEvent) UnmarshalNosTale(b []byte) error {
+	bs := bytes.SplitN(b, []byte(" "), 2)
+	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)
+	if err != nil {
+		return err
+	}
+	e.Sequence = uint32(sn)
+	return nil
+}
+
 func DecodePassword(b []byte) (string, error) {
 	if len(b)%2 == 0 {
 		b = b[3:]
