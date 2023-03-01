@@ -56,11 +56,11 @@ func (*HandoffReader) decodeByte(b byte) byte {
 	}
 }
 
-func NewReader(r *bufio.Reader, key uint32) *Reader {
+func NewReader(r *bufio.Reader, code uint32) *Reader {
 	return &Reader{
 		r:      r,
-		mode:   byte(key >> 6 & 0x03),
-		offset: byte(key&0xFF + 0x40&0xFF),
+		mode:   byte(code >> 6 & 0x03),
+		offset: byte(code&0xFF + 0x40&0xFF),
 	}
 }
 

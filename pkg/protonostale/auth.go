@@ -87,7 +87,7 @@ func WriteEndpointListEvent(
 	msg *eventing.EndpointListEvent,
 ) (n int, err error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "NsTeST %d ", msg.Key); err != nil {
+	if _, err := fmt.Fprintf(&b, "NsTeST %d ", msg.Code); err != nil {
 		return n, err
 	}
 	for _, m := range msg.Endpoints {

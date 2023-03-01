@@ -66,7 +66,7 @@ func TestDecodeVersion(t *testing.T) {
 
 func TestWriteEndpointListEvent(t *testing.T) {
 	input := &eventing.EndpointListEvent{
-		Key: 1,
+		Code: 1,
 		Endpoints: []*eventing.Endpoint{
 			{
 				Host:      "127.0.0.1",

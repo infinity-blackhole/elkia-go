@@ -65,7 +65,7 @@ func (s *MemoryPresenceServer) AuthLogin(
 		return nil, err
 	}
 	return &fleet.AuthLoginResponse{
-		Key: sessionPut.Key,
+		Code: sessionPut.Code,
 	}, nil
 }
 
@@ -107,7 +107,7 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	return &fleet.AuthRefreshLoginResponse{
-		Key: sessionPut.Key,
+		Code: sessionPut.Code,
 	}, nil
 }
 
@@ -124,7 +124,7 @@ func (s *MemoryPresenceServer) AuthLogout(
 	in *fleet.AuthLogoutRequest,
 ) (*fleet.AuthLogoutResponse, error) {
 	if _, err := s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
-		Key: in.Key,
+		Code: in.Code,
 	}); err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (s *MemoryPresenceServer) SessionGet(
 	ctx context.Context,
 	in *fleet.SessionGetRequest,
 ) (*fleet.SessionGetResponse, error) {
-	session, ok := s.sessions[in.Key]
+	session, ok := s.sessions[in.Code]
 	if !ok {
 		return nil, errors.New("session not found")
 	}
@@ -154,10 +154,10 @@ func (s *MemoryPresenceServer) SessionPut(
 		Encode(in.Session.Id); err != nil {
 		return nil, err
 	}
-	key := h.Sum32()
-	s.sessions[key] = in.Session
+	code := h.Sum32()
+	s.sessions[code] = in.Session
 	return &fleet.SessionPutResponse{
-		Key: key,
+		Code: code,
 	}, nil
 }
 
@@ -165,6 +165,6 @@ func (s *MemoryPresenceServer) SessionDelete(
 	ctx context.Context,
 	in *fleet.SessionDeleteRequest,
 ) (*fleet.SessionDeleteResponse, error) {
-	delete(s.sessions, in.Key)
+	delete(s.sessions, in.Code)
 	return &fleet.SessionDeleteResponse{}, nil
 }

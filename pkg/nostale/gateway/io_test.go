@@ -57,7 +57,7 @@ func TestReaderReadAuthHandoffPasswordEvent(t *testing.T) {
 	}
 }
 
-func TestReaderReadKeyDerivation(t *testing.T) {
+func TestReaderReadCodeDerivation(t *testing.T) {
 	var buff bytes.Buffer
 	r := NewReader(bufio.NewReader(&buff), 100)
 	if r.mode != 1 {

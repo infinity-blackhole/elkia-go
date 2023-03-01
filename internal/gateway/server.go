@@ -27,7 +27,7 @@ func NewServer(cfg ServerConfig) *Server {
 type ChannelServer struct {
 	eventing.Gateway_ChannelInteractServer
 	Sequence uint32
-	Key      uint32
+	Code     uint32
 }
 
 type Server struct {
@@ -59,7 +59,7 @@ func (s *Server) AuthHandoffInteract(
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	handoff, err := s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
-		Key:        sync.Key,
+		Code:       sync.Code,
 		Identifier: login.IdentifierEvent.Identifier,
 		Password:   login.PasswordEvent.Password,
 	})
@@ -84,7 +84,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	_, err = GetKeyFromMetadata(md)
+	_, err = GetCodeFromMetadata(md)
 	if err != nil {
 		return err
 	}
@@ -118,14 +118,14 @@ func GetSequenceFromMetadata(md metadata.MD) (uint32, error) {
 	return uint32(sequence), nil
 }
 
-func GetKeyFromMetadata(md metadata.MD) (uint32, error) {
-	keys := md.Get("key")
-	if len(keys) != 1 {
+func GetCodeFromMetadata(md metadata.MD) (uint32, error) {
+	codes := md.Get("code")
+	if len(codes) != 1 {
 		return 0, errors.New("channel: handshake metadata error")
 	}
-	key, err := strconv.ParseUint(keys[0], 10, 32)
+	code, err := strconv.ParseUint(codes[0], 10, 32)
 	if err != nil {
 		return 0, err
 	}
-	return uint32(key), nil
+	return uint32(code), nil
 }

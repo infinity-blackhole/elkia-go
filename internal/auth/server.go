@@ -92,7 +92,7 @@ func (s *Server) AuthLoginProduce(
 	return stream.Send(&eventing.AuthInteractResponse{
 		Payload: &eventing.AuthInteractResponse_EndpointListEvent{
 			EndpointListEvent: &eventing.EndpointListEvent{
-				Key:       handoff.Key,
+				Code:      handoff.Code,
 				Endpoints: ms,
 			},
 		},

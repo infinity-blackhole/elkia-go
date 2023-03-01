@@ -90,7 +90,7 @@ func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *chann
 		rc:       bufio.NewReader(h.rwc),
 		wc:       bufio.NewWriter(h.rwc),
 		gateway:  h.gateway,
-		key:      sync.Key,
+		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}
 }
@@ -100,7 +100,7 @@ type channelConn struct {
 	rc       *bufio.Reader
 	wc       *bufio.Writer
 	gateway  eventing.GatewayClient
-	key      uint32
+	Code     uint32
 	sequence uint32
 }
 
@@ -138,7 +138,7 @@ func (c *channelConn) upgrade(ctx context.Context) {
 		Payload: &eventing.AuthHandoffInteractRequest_SyncEvent{
 			SyncEvent: &eventing.AuthHandoffSyncEvent{
 				Sequence: c.sequence,
-				Key:      c.key,
+				Code:     c.Code,
 			},
 		},
 	}); err != nil {
@@ -236,7 +236,7 @@ func (c *channelConn) handleMessages(ctx context.Context, token string) {
 	ctx = metadata.AppendToOutgoingContext(
 		ctx,
 		"sequence", strconv.FormatUint(uint64(c.sequence), 10),
-		"key", strconv.FormatUint(uint64(c.key), 10),
+		"code", strconv.FormatUint(uint64(c.Code), 10),
 		"session", token,
 	)
 	stream, err := c.gateway.ChannelInteract(ctx)

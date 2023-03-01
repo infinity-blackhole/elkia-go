@@ -36,7 +36,7 @@ message Endpoint {
 }
 
 message EndpointListEvent {
-  uint32 key = 1;
+  uint32 code = 1;
   repeated Endpoint endpoints = 2;
 }
 
@@ -65,7 +65,7 @@ service Auth {
 
 message AuthHandoffSyncEvent {
   uint32 sequence = 1;
-  uint32 key = 2;
+  uint32 code = 2;
 }
 
 message AuthHandoffLoginIdentifierEvent {

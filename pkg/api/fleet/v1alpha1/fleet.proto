@@ -64,7 +64,7 @@ message AuthLoginRequest {
   string password = 2;
 }
 
-message AuthLoginResponse { uint32 key = 1; }
+message AuthLoginResponse { uint32 code = 1; }
 
 message AuthRefreshLoginRequest {
   string identifier = 1;
@@ -72,17 +72,17 @@ message AuthRefreshLoginRequest {
   string token = 3;
 }
 
-message AuthRefreshLoginResponse { uint32 key = 1; }
+message AuthRefreshLoginResponse { uint32 code = 1; }
 
 message AuthHandoffRequest {
-  uint32 key = 1;
+  uint32 code = 1;
   string identifier = 2;
   string password = 3;
 }
 
 message AuthHandoffResponse { string token = 1; }
 
-message AuthLogoutRequest { uint32 key = 1; }
+message AuthLogoutRequest { uint32 code = 1; }
 
 message AuthLogoutResponse {}
 
@@ -91,15 +91,15 @@ message Session {
   string token = 2;
 }
 
-message SessionGetRequest { uint32 key = 1; }
+message SessionGetRequest { uint32 code = 1; }
 
 message SessionGetResponse { Session session = 1; }
 
 message SessionPutRequest { Session session = 1; }
 
-message SessionPutResponse { uint32 key = 1; }
+message SessionPutResponse { uint32 code = 1; }
 
-message SessionDeleteRequest { uint32 key = 1; }
+message SessionDeleteRequest { uint32 code = 1; }
 
 message SessionDeleteResponse {}
 
@@ -113,18 +113,18 @@ service Presence {
       returns (AuthRefreshLoginResponse);
 
   // AuthHandoff hands off a session to a gateway with a given token and
-  // key.
+  // code.
   rpc AuthHandoff(AuthHandoffRequest) returns (AuthHandoffResponse);
 
-  // AuthLogout logs out a session with a given key.
+  // AuthLogout logs out a session with a given code.
   rpc AuthLogout(AuthLogoutRequest) returns (AuthLogoutResponse);
 
-  // SessionGet gets a session with a given key.
+  // SessionGet gets a session with a given code.
   rpc SessionGet(SessionGetRequest) returns (SessionGetResponse);
 
   // SessionPut creates a session with a given identifier and token.
   rpc SessionPut(SessionPutRequest) returns (SessionPutResponse);
 
-  // SessionDelete Deletes a session with a given key.
+  // SessionDelete Deletes a session with a given code.
   rpc SessionDelete(SessionDeleteRequest) returns (SessionDeleteResponse);
 }

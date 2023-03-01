@@ -10,11 +10,11 @@ import (
 )
 
 func DecodeUint(b []byte) (uint32, error) {
-	key, err := strconv.ParseUint(string(b), 10, 32)
+	code, err := strconv.ParseUint(string(b), 10, 32)
 	if err != nil {
 		return 0, err
 	}
-	return uint32(key), nil
+	return uint32(code), nil
 }
 
 func WriteEvent(w *bufio.Writer, b []byte) (n int, err error) {

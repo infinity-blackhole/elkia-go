@@ -68,7 +68,7 @@ type EndpointListEvent struct {
 
 func (e *EndpointListEvent) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", e.Key); err != nil {
+	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", e.Code); err != nil {
 		return nil, err
 	}
 	for _, m := range e.Endpoints {
@@ -103,11 +103,11 @@ func (e *EndpointListEvent) UnmarshalNosTale(b []byte) error {
 	if string(bs[0]) != "NsTeST" {
 		return fmt.Errorf("invalid prefix: %s", string(bs[0]))
 	}
-	key, err := strconv.ParseUint(string(bs[1]), 10, 32)
+	code, err := strconv.ParseUint(string(bs[1]), 10, 32)
 	if err != nil {
 		return err
 	}
-	e.Key = uint32(key)
+	e.Code = uint32(code)
 	for _, m := range bs[2:] {
 		var ep Endpoint
 		if err := ep.UnmarshalNosTale(m); err != nil {

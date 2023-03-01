@@ -14,13 +14,13 @@ func DecodeAuthHandoffSyncEvent(
 	if err != nil {
 		return nil, err
 	}
-	key, err := DecodeUint(fields[1])
+	code, err := DecodeUint(fields[1])
 	if err != nil {
 		return nil, err
 	}
 	return &eventing.AuthHandoffSyncEvent{
 		Sequence: sn,
-		Key:      key,
+		Code:     code,
 	}, nil
 }
 
