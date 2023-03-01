@@ -1,53 +1,13 @@
 package auth
 
 import (
-	"bufio"
 	"bytes"
-	"fmt"
 	"testing"
-	"testing/iotest"
 )
 
-func TestWriterWrite(t *testing.T) {
-	input := "fail Hello. This is a basic test"
-	expected := []byte{
-		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
-		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
-		130, 131,
-	}
-	var buf bytes.Buffer
-	w := iotest.NewWriteLogger(
-		t.Name(),
-		NewWriter(bufio.NewWriter(&buf)),
-	)
-	n, err := fmt.Fprint(w, input)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	if len(input) != n {
-		t.Errorf("Expected %d bytes written, got %d", len(input), n)
-	}
-	result := buf.Bytes()
-	if !bytes.Equal(expected, result) {
-		t.Errorf("Expected %v, got %v", expected, result)
-	}
-}
-
-func TestReaderReadEof(t *testing.T) {
-	input := []byte{}
-	r := NewReader(bufio.NewReader(bytes.NewReader(input)))
-	result := make([]byte, 1)
-	n, err := r.Read(result)
-	if err == nil {
-		t.Errorf("Expected error, got nil")
-	}
-	if n != 0 {
-		t.Errorf("Expected 0 bytes read, got %d", n)
-	}
-}
-
-func TestReaderRead(t *testing.T) {
-	input := []byte{
+func TestDecoderDecode(t *testing.T) {
+	var input bytes.Buffer
+	input.Write([]byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
 		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
 		2, 4, 5, 149, 150, 2, 3, 145, 6, 1, 9, 10, 9, 149, 6, 2, 0, 5, 144, 3,
@@ -60,52 +20,47 @@ func TestReaderRead(t *testing.T) {
 		252, 255, 2, 3, 1, 242, 2, 242, 143, 3, 150, 0, 5, 2, 255, 144, 150,
 		0, 5, 3, 148, 5, 144, 145, 149, 2, 10, 3, 2, 148, 6, 2, 143, 0, 150,
 		145, 255, 4, 4, 4, 216,
-	}
+	})
 	expected := []byte(
 		"NoS0575 3614038 a 5AE625665F3E0BD0A065ED07A41989E4025B79D139" +
 			"30A2A8C57D6B4325226707D956A082D1E91B4D96A793562DF98FD03C9DCF743" +
 			"C9C7B4E3055D4F9F09BA015 0039E3DC\v0.9.3.3071 0 C7D2503BD257F5" +
 			"BAE0870F40C2DA3666\n",
 	)
-	r := iotest.NewReadLogger(
-		t.Name(),
-		NewReader(bufio.NewReader(bytes.NewReader(input))),
-	)
 	result := make([]byte, len(expected))
-	n, err := r.Read(result)
-	if err != nil {
+	if err := NewDecoder(&input).Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
-	if !bytes.Equal(expected, result) {
+	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %s, got %s", expected, result)
-	}
-	if len(expected) != n {
-		t.Errorf("Expected %d bytes, got %d", len(expected), n)
 	}
 }
 
-func TestServerAsymmetricEncoding(t *testing.T) {
+func TestEncoderEncode(t *testing.T) {
 	input := "fail Hello. This is a basic test"
-	var b bytes.Buffer
-	w := NewWriter(bufio.NewWriter(&b))
-	n, err := fmt.Fprint(w, input)
-	if err != nil {
+	expected := []byte{
+		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
+		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
+		130, 131, 10,
+	}
+	var buf bytes.Buffer
+	if err := NewEncoder(&buf).Encode(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if n != len(input) {
-		t.Errorf("Expected %d bytes, got %d", len(input), n)
+	result := buf.Bytes()
+	if !bytes.Equal(expected, result) {
+		t.Errorf("Expected %v, got %v", expected, result)
 	}
-	r := NewReader(bufio.NewReader(&b))
-	buff := make([]byte, len(input))
-	n, err = r.Read(buff)
-	if err != nil {
+}
+
+func TestAsymmetricEncodeDecode(t *testing.T) {
+	expected := "fail Hello. This is a basic test"
+	var buff bytes.Buffer
+	if err := NewEncoder(&buff).Encode(expected); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	result := string(buff)
-	if input == result {
-		t.Errorf("Expected different from %s, got %s", input, result)
-	}
-	if len(input) != n {
-		t.Errorf("Expected %d bytes, got %d", len(input), n)
+	result := make([]byte, len(expected))
+	if err := NewDecoder(&buff).Decode(&result); err == nil {
+		t.Errorf("Expected error, got %s", result)
 	}
 }

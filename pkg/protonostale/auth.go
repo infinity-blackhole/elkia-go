@@ -1,27 +1,29 @@
 package protonostale
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"strconv"
-	"strings"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (
-	AuthLoginOpCode = "NoS0575"
+	AuthLoginOpCode   = "NoS0575"
+	DialogErrorOpCode = "failc"
+	DialogInfoOpCode  = "info"
 )
 
-func ParseAuthEvent(s string) (*eventing.AuthInteractRequest, error) {
-	fields := strings.SplitN(s, " ", 2)
+func ParseAuthEvent(b []byte) (*eventing.AuthInteractRequest, error) {
+	fields := bytes.SplitN(b, []byte(" "), 2)
 	if len(fields) != 2 {
-		return nil, fmt.Errorf("invalid auth event: %s", s)
+		return nil, fmt.Errorf("invalid auth event: %s", b)
 	}
-	switch fields[0] {
+	opcode := string(fields[0])
+	switch opcode {
 	case AuthLoginOpCode:
-		authLoginEvent, err := ParseAuthLoginEvent(fields[1])
+		authLoginEvent, err := DecodeAuthLoginEvent(fields[1])
 		if err != nil {
 			return nil, err
 		}
@@ -31,21 +33,21 @@ func ParseAuthEvent(s string) (*eventing.AuthInteractRequest, error) {
 			},
 		}, nil
 	default:
-		return nil, fmt.Errorf("unknown auth event: %s", s)
+		return nil, fmt.Errorf("unknown auth event: %s", b)
 	}
 }
 
-func ParseAuthLoginEvent(s string) (*eventing.AuthLoginEvent, error) {
-	fields := strings.Fields(s)
+func DecodeAuthLoginEvent(s []byte) (*eventing.AuthLoginEvent, error) {
+	fields := bytes.Fields(s)
 	if len(fields) != 5 {
 		return nil, fmt.Errorf("invalid auth login event: %s", s)
 	}
-	identifier := fields[1]
+	identifier := string(fields[1])
 	pwd, err := ParsePassword(fields[2])
 	if err != nil {
 		return nil, err
 	}
-	clientVersion, err := ParseVersion(fields[4])
+	clientVersion, err := DecodeVersion(fields[4])
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +58,7 @@ func ParseAuthLoginEvent(s string) (*eventing.AuthLoginEvent, error) {
 	}, nil
 }
 
-func ParsePassword(s string) (string, error) {
+func ParsePassword(s []byte) (string, error) {
 	b := []byte(s)
 	if len(b)%2 == 0 {
 		b = b[3:]
@@ -81,7 +83,7 @@ func ParsePassword(s string) (string, error) {
 }
 
 func WriteEndpointListEvent(
-	w *bufio.Writer,
+	w io.Writer,
 	msg *eventing.EndpointListEvent,
 ) (n int, err error) {
 	var b bytes.Buffer
@@ -89,7 +91,7 @@ func WriteEndpointListEvent(
 		return n, err
 	}
 	for _, m := range msg.Endpoints {
-		if _, err := WriteEndpoint(bufio.NewWriter(&b), m); err != nil {
+		if _, err := WriteEndpoint(&b, m); err != nil {
 			return n, err
 		}
 		if err := b.WriteByte(' '); err != nil {
@@ -100,15 +102,11 @@ func WriteEndpointListEvent(
 	if err != nil {
 		return n, err
 	}
-	n, err = fmt.Fprintln(w, b.String())
-	if err != nil {
-		return n, err
-	}
-	return n, w.Flush()
+	return fmt.Fprintln(w, b.String())
 }
 
-func WriteEndpoint(w *bufio.Writer, m *eventing.Endpoint) (int, error) {
-	n, err := fmt.Fprintf(
+func WriteEndpoint(w io.Writer, m *eventing.Endpoint) (int, error) {
+	return fmt.Fprintf(
 		w,
 		"%s:%s:%d:%d.%d.%s",
 		m.Host,
@@ -118,8 +116,4 @@ func WriteEndpoint(w *bufio.Writer, m *eventing.Endpoint) (int, error) {
 		m.ChannelId,
 		m.WorldName,
 	)
-	if err != nil {
-		return n, err
-	}
-	return n, w.Flush()
 }

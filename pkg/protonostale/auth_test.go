@@ -1,7 +1,6 @@
 package protonostale
 
 import (
-	"bufio"
 	"bytes"
 	"testing"
 	"testing/iotest"
@@ -9,14 +8,14 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func TestParseAuthLoginEvent(t *testing.T) {
-	input := "2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086"
+func TestDecodeAuthLoginEvent(t *testing.T) {
+	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := &eventing.AuthLoginEvent{
 		Identifier:    "admin",
 		Password:      "s3cr3t",
 		ClientVersion: "0.9.3+3086",
 	}
-	result, err := ParseAuthLoginEvent(input)
+	result, err := DecodeAuthLoginEvent(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -31,8 +30,8 @@ func TestParseAuthLoginEvent(t *testing.T) {
 	}
 }
 
-func TestReadPassword(t *testing.T) {
-	input := "2EB6A196E4B60D96A9267E"
+func TestDecodePassword(t *testing.T) {
+	input := []byte("2EB6A196E4B60D96A9267E")
 	expected := "admin"
 	result, err := ParsePassword(input)
 	if err != nil {
@@ -42,7 +41,7 @@ func TestReadPassword(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
 
-	input = "1BE97B527A306B597A2"
+	input = []byte("1BE97B527A306B597A2")
 	expected = "user"
 	result, err = ParsePassword(input)
 	if err != nil {
@@ -53,10 +52,10 @@ func TestReadPassword(t *testing.T) {
 	}
 }
 
-func TestReadVersion(t *testing.T) {
-	input := "0.9.3.3086"
+func TestDecodeVersion(t *testing.T) {
+	input := []byte("0.9.3.3086")
 	expected := "0.9.3+3086"
-	result, err := ParseVersion(input)
+	result, err := DecodeVersion(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -89,7 +88,7 @@ func TestWriteEndpointListEvent(t *testing.T) {
 	}
 	expected := "NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1\n"
 	var result bytes.Buffer
-	w := bufio.NewWriter(iotest.NewWriteLogger(t.Name(), &result))
+	w := iotest.NewWriteLogger(t.Name(), &result)
 	n, err := WriteEndpointListEvent(w, input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)

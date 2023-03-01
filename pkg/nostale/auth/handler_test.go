@@ -97,7 +97,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		iotest.NewWriteLogger(t.Name(), clientConn),
 	)
 	clientReader := bufio.NewReader(
-		iotest.NewReadLogger(t.Name(), NewReader(bufio.NewReader(clientConn))),
+		iotest.NewReadLogger(t.Name(), clientConn),
 	)
 	defer clientConn.Close()
 	defer serverConn.Close()
@@ -114,7 +114,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if err := clientWriter.Flush(); err != nil {
 		t.Fatalf("Failed to flush message: %v", err)
 	}
-	result, err := clientReader.ReadBytes('\n')
+	encResult, err := clientReader.ReadBytes(Delim)
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
@@ -133,7 +133,11 @@ func TestHandlerServeNosTale(t *testing.T) {
 		238, 242, 249, 242, 243, 243, 243, 243, 237, 242, 243, 243, 243, 243,
 		237, 242, 201, 10,
 	}
-	if !bytes.Equal(result, expected) {
+	result := make([]byte, len(encResult))
+	if _, err := DecodeAuthFrame(result, encResult); err != nil {
+		t.Fatalf("Failed to decode frame: %v", err)
+	}
+	if !bytes.Equal(expected, result) {
 		t.Fatalf("Expected %v, got %v", expected, result)
 	}
 }

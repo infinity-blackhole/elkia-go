@@ -41,8 +41,8 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		rc:      bufio.NewReader(NewHandoffReader(bufio.NewReader(c))),
-		wc:      bufio.NewWriter(NewWriter(bufio.NewWriter(c))),
+		rc:      bufio.NewReader(c),
+		wc:      bufio.NewWriter(c),
 		gateway: h.gateway,
 	}
 }
@@ -71,37 +71,12 @@ func (c *handoffConn) serve(ctx context.Context) {
 func (c *handoffConn) handoff(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Handoff")
 	defer span.End()
-	scanner := bufio.NewScanner(c.rc)
-	scanner.Split(bufio.ScanLines)
-	if !scanner.Scan() {
-		if err := scanner.Err(); err != nil {
-			utils.WriteError(
-				c.wc,
-				eventing.DialogErrorCode_UNEXPECTED_ERROR,
-				fmt.Sprintf(
-					"failed to read handshake event: %v",
-					err,
-				),
-			)
-			return
-		}
-		utils.WriteError(
-			c.wc,
-			eventing.DialogErrorCode_UNEXPECTED_ERROR,
-			"failed to read handshake event: EOF",
-		)
-		return
-	}
-	logrus.Debugf("gateway: read message: %s", scanner.Text())
-	sync, err := protonostale.ParseAuthHandoffSyncEvent(scanner.Text())
+	sync, err := ReadSyncFrame(c.rc)
 	if err != nil {
 		utils.WriteError(
 			c.wc,
-			eventing.DialogErrorCode_BAD_CASE,
-			fmt.Sprintf(
-				"failed to parse auth handoff sync event: %v",
-				err,
-			),
+			eventing.DialogErrorCode_UNEXPECTED_ERROR,
+			"An unexpected error occurred, please try again later",
 		)
 		return
 	}
@@ -111,13 +86,9 @@ func (c *handoffConn) handoff(ctx context.Context) {
 
 func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncEvent) *channelConn {
 	return &channelConn{
-		rwc: h.rwc,
-		rc: bufio.NewReader(
-			NewReader(bufio.NewReader(h.rwc), sync.Key),
-		),
-		wc: bufio.NewWriter(
-			NewWriter(bufio.NewWriter(h.rwc)),
-		),
+		rwc:      h.rwc,
+		rc:       bufio.NewReader(h.rwc),
+		wc:       bufio.NewWriter(h.rwc),
 		gateway:  h.gateway,
 		key:      sync.Key,
 		sequence: sync.Sequence,
@@ -280,7 +251,7 @@ func (c *channelConn) handleMessages(ctx context.Context, token string) {
 		)
 	}
 	for {
-		m, err := protonostale.ReadChannelEvent(c.rc)
+		m, err := protonostale.DecodeChannelEvent(c.rc)
 		if err != nil {
 			utils.WriteError(
 				c.wc,
@@ -306,4 +277,17 @@ func (c *channelConn) handleMessages(ctx context.Context, token string) {
 			)
 		}
 	}
+}
+
+func ReadSyncFrame(r *bufio.Reader) (*eventing.AuthHandoffSyncEvent, error) {
+	encFrame, err := r.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+	var decodedSync []byte
+	n, err := DecodeSessionFrame(decodedSync, encFrame)
+	if err != nil {
+		return nil, err
+	}
+	return protonostale.ReadAuthHandoffSyncEvent(decodedSync[:n])
 }

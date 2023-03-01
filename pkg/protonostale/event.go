@@ -9,8 +9,8 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func ParseUint(s string) (uint32, error) {
-	key, err := strconv.ParseUint(s, 10, 32)
+func DecodeUint(b []byte) (uint32, error) {
+	key, err := strconv.ParseUint(string(b), 10, 32)
 	if err != nil {
 		return 0, err
 	}

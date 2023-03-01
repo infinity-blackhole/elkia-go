@@ -2,66 +2,119 @@ package auth
 
 import (
 	"bufio"
+	"fmt"
+	"io"
 )
 
-// NewReader returns a new Reader reading from r.
-//
-// To avoid denial of service attacks, the provided bufio.Reader
-// should be reading from an io.LimitReader or similar Reader to bound
-// the size of responses.
-func NewReader(r *bufio.Reader) *Reader {
-	return &Reader{
-		r: r,
-	}
-}
+const Delim = byte(0xD8)
 
-// A Reader implements convenience methods for reading messages
-// from a NosTale protocol network connection.
-type Reader struct {
+type Decoder struct {
 	r *bufio.Reader
 }
 
-func (r *Reader) ReadByte() (byte, error) {
-	c, err := r.r.ReadByte()
-	if err != nil {
-		return c, err
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{
+		r: bufio.NewReader(r),
 	}
-	if c > 14 {
-		return (c - 15) ^ 195, nil
-	}
-	return (255 - (14 - c)) ^ 195, nil
 }
 
-func (r *Reader) Read(p []byte) (n int, err error) {
-	for n = 0; n < len(p); n++ {
-		c, err := r.ReadByte()
+func (d *Decoder) More() bool {
+	return d.r.Buffered() > 0
+}
+
+func (d *Decoder) Decode(v any) error {
+	bs, err := d.r.ReadBytes(Delim)
+	if err != nil {
+		return err
+	}
+	buff := make([]byte, len(bs))
+	if _, err := DecodeAuthFrame(buff, bs); err != nil {
+		return err
+	}
+	switch v := v.(type) {
+	case *string:
+		*v = string(buff)
+		return nil
+	case *[]byte:
+		*v = buff
+		return nil
+	case Unmarshaler:
+		return v.UnmarshalNosTale(buff)
+	default:
+		return fmt.Errorf("invalid payload: %v", v)
+	}
+}
+
+type Encoder struct {
+	w *bufio.Writer
+}
+
+func NewEncoder(w io.Writer) *Encoder {
+	return &Encoder{
+		w: bufio.NewWriter(w),
+	}
+}
+
+func (e *Encoder) Encode(v any) (err error) {
+	var bs []byte
+	switch v := v.(type) {
+	case *string:
+		bs = []byte(*v)
+	case *[]byte:
+		bs = *v
+	case Marshaler:
+		bs, err = v.MarshalNosTale()
 		if err != nil {
-			return n, err
+			return err
 		}
-		p[n] = c
+	}
+	buff := make([]byte, len(bs))
+	if _, err := EncodeAuthFrame(buff, bs); err != nil {
+		return err
+	}
+	if _, err := e.w.Write(buff); err != nil {
+		return err
+	}
+	if err := e.w.WriteByte(Delim); err != nil {
+		return err
+	}
+	return e.w.Flush()
+}
+
+type Unmarshaler interface {
+	UnmarshalNosTale([]byte) error
+}
+
+type Marshaler interface {
+	MarshalNosTale() ([]byte, error)
+}
+
+func DecodeAuthFrame(dst, src []byte) (n int, err error) {
+	if len(dst) < len(src) {
+		panic("dst buffer is too small")
+	}
+	if len(src) == 0 {
+		return 0, nil
+	}
+	for n = 0; n < len(src); n++ {
+		if src[n] > 14 {
+			dst[n] = (src[n] - 15) ^ 195
+		} else {
+			dst[n] = (255 - (14 - src[n])) ^ 195
+		}
 	}
 	return n, nil
 }
 
-// A Writer implements convenience methods for writing
-// messages to a NosTale protocol network connection.
-type Writer struct {
-	w *bufio.Writer
-}
-
-// NewWriter returns a new Writer writing to w.
-func NewWriter(w *bufio.Writer) *Writer {
-	return &Writer{
-		w: w,
+func EncodeAuthFrame(dst, src []byte) (n int, err error) {
+	if len(dst) < len(src) {
+		panic("dst buffer is too small")
 	}
-}
-
-// Write writes the formatted message.
-func (w *Writer) Write(p []byte) (n int, err error) {
-	for n = 0; n < len(p); n++ {
-		if err := w.w.WriteByte((p[n] + 15) & 0xFF); err != nil {
-			return n, err
-		}
+	if len(src) == 0 {
+		return 0, nil
 	}
-	return n, w.w.Flush()
+	for n = 0; n < len(src); n++ {
+		dst[n] = (src[n] + 15) & 0xFF
+	}
+	return n, nil
 }
