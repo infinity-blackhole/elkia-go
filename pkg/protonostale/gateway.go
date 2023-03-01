@@ -31,7 +31,7 @@ func (r *GatewayHandshakeEventReader) ReadSyncEvent() (*eventing.SyncEvent, erro
 }
 
 func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHandoffEvent, error) {
-	keyMsg, err := r.ReadAuthHandoffCodeEvent()
+	codeMsg, err := r.ReadAuthHandoffCodeEvent()
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (r *GatewayHandshakeEventReader) ReadAuthHandoffEvent() (*eventing.AuthHand
 		return nil, err
 	}
 	return &eventing.AuthHandoffEvent{
-		CodeEvent:     keyMsg,
+		CodeEvent:     codeMsg,
 		PasswordEvent: pwdMsg,
 	}, nil
 }

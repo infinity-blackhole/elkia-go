@@ -149,8 +149,8 @@ func (c *handshaker) handoff(
 		return nil, nil
 	}
 	return &eventing.AuthHandoffSuccessEvent{
-		Code:     handoffMsg.CodeEvent.Code,
 		Sequence: syncMsg.Sequence,
+		Code:     handoffMsg.CodeEvent.Code,
 	}, nil
 }
 
