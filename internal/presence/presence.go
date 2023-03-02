@@ -182,7 +182,7 @@ func (s *PresenceServer) SessionGet(
 		return nil, errors.New("invalid code")
 	}
 	var session fleet.Session
-	if err := proto.Unmarshal(res.Kvs[0].Value, &session); err != nil {
+	if err := proto.UnmarshalNosTale(res.Kvs[0].Value, &session); err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got handoff session: %v", session)

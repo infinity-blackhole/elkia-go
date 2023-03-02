@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/auth"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nss"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nsw"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -39,16 +41,14 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		dec:     auth.NewDecoder(NewSessionDecoding(), c),
-		enc:     auth.NewEncoder(NewSessionDecoding(), c),
+		dec:     encoding.NewDecoder(nss.NewEncoding(), c),
 		gateway: h.gateway,
 	}
 }
 
 type handoffConn struct {
 	rwc     net.Conn
-	dec     *auth.Decoder
-	enc     *auth.Encoder
+	dec     *encoding.Decoder
 	gateway eventing.GatewayClient
 }
 
@@ -56,24 +56,14 @@ func (c *handoffConn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
-	err := c.handleMessages(ctx)
-	switch e := err.(type) {
-	case *protonostale.Status:
-		if err := c.enc.Encode(e); err != nil {
-			logrus.Errorf("auth: failed to send error: %v", err)
-		}
-	default:
-		if err := c.enc.Encode(
-			protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR),
-		); err != nil {
-			logrus.Errorf("auth: failed to send error: %v", err)
-		}
+	if err := c.handleMessages(ctx); err != nil {
+		c.rwc.Close()
 	}
 }
 
 func (c *handoffConn) handleMessages(ctx context.Context) error {
 	var sync protonostale.AuthHandoffSyncFrame
-	if err := c.dec.Decode(sync); err != nil {
+	if err := c.dec.Decode(&sync); err != nil {
 		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
 	}
 	conn := c.newChannelConn(&sync.AuthHandoffSyncFrame)
@@ -85,8 +75,8 @@ func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncFrame) *chann
 	return &channelConn{
 		rwc:      h.rwc,
 		gateway:  h.gateway,
-		dec:      auth.NewDecoder(NewWorldFrameListEncoding(sync.Code), h.rwc),
-		enc:      auth.NewEncoder(NewWorldFrameListEncoding(sync.Code), h.rwc),
+		dec:      encoding.NewDecoder(nsw.NewEncoding(sync.Code), h.rwc),
+		enc:      encoding.NewEncoder(nsw.NewEncoding(sync.Code), h.rwc),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}
@@ -94,8 +84,8 @@ func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncFrame) *chann
 
 type channelConn struct {
 	rwc      net.Conn
-	dec      *auth.Decoder
-	enc      *auth.Encoder
+	dec      *encoding.Decoder
+	enc      *encoding.Encoder
 	gateway  eventing.GatewayClient
 	Code     uint32
 	sequence uint32

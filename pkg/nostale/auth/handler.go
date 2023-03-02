@@ -5,6 +5,8 @@ import (
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nsl"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -36,16 +38,16 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newConn(c net.Conn) *conn {
 	return &conn{
 		rwc:  c,
-		dec:  NewDecoder(NewLoginEncoding(), c),
-		enc:  NewEncoder(NewLoginEncoding(), c),
+		dec:  encoding.NewDecoder(nsl.NewEncoding(), c),
+		enc:  encoding.NewEncoder(nsl.NewEncoding(), c),
 		auth: h.auth,
 	}
 }
 
 type conn struct {
 	rwc  net.Conn
-	dec  *Decoder
-	enc  *Encoder
+	dec  *encoding.Decoder
+	enc  *encoding.Encoder
 	auth eventing.AuthClient
 }
 

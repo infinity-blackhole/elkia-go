@@ -3,20 +3,19 @@ package protonostale
 import (
 	"bytes"
 	"testing"
-	"testing/iotest"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func TestDecodeAuthLoginFrame(t *testing.T) {
-	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
+func TestAuthLoginFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086\n")
 	expected := &eventing.AuthLoginFrame{
 		Identifier:    "admin",
 		Password:      "s3cr3t",
 		ClientVersion: "0.9.3+3086",
 	}
-	result, err := DecodeAuthLoginFrame(input)
-	if err != nil {
+	var result AuthLoginFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 	if result.Identifier != expected.Identifier {
@@ -33,7 +32,7 @@ func TestDecodeAuthLoginFrame(t *testing.T) {
 func TestDecodePassword(t *testing.T) {
 	input := []byte("2EB6A196E4B60D96A9267E")
 	expected := "admin"
-	result, err := ParsePassword(input)
+	result, err := DecodePassword(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -43,7 +42,7 @@ func TestDecodePassword(t *testing.T) {
 
 	input = []byte("1BE97B527A306B597A2")
 	expected = "user"
-	result, err = ParsePassword(input)
+	result, err = DecodePassword(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -52,10 +51,10 @@ func TestDecodePassword(t *testing.T) {
 	}
 }
 
-func TestDecodeVersion(t *testing.T) {
-	input := []byte("0.9.3.3086")
+func TestDecodeClientVersion(t *testing.T) {
+	input := []byte("006666A8\v0.9.3.3086\n")
 	expected := "0.9.3+3086"
-	result, err := DecodeVersion(input)
+	result, err := DecodeClientVersion(input)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -64,39 +63,36 @@ func TestDecodeVersion(t *testing.T) {
 	}
 }
 
-func TestWriteEndpointListFrame(t *testing.T) {
-	input := &eventing.EndpointListFrame{
-		Code: 1,
-		Endpoints: []*eventing.Endpoint{
-			{
-				Host:      "127.0.0.1",
-				Port:      "4124",
-				Weight:    0,
-				WorldId:   1,
-				ChannelId: 1,
-				WorldName: "Test",
-			},
-			{
-				Host:      "127.0.0.1",
-				Port:      "4125",
-				Weight:    0,
-				WorldId:   1,
-				ChannelId: 2,
-				WorldName: "Test",
+func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
+	input := &EndpointListFrame{
+		EndpointListFrame: eventing.EndpointListFrame{
+			Code: 1,
+			Endpoints: []*eventing.Endpoint{
+				{
+					Host:      "127.0.0.1",
+					Port:      "4124",
+					Weight:    0,
+					WorldId:   1,
+					ChannelId: 1,
+					WorldName: "Test",
+				},
+				{
+					Host:      "127.0.0.1",
+					Port:      "4125",
+					Weight:    0,
+					WorldId:   1,
+					ChannelId: 2,
+					WorldName: "Test",
+				},
 			},
 		},
 	}
-	expected := "NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1\n"
-	var result bytes.Buffer
-	w := iotest.NewWriteLogger(t.Name(), &result)
-	n, err := WriteEndpointListFrame(w, input)
+	expected := []byte("NsTeST 1 127.0.0.1:4124:0:1.1.Test 127.0.0.1:4125:0:1.2.Test -1:-1:-1:10000.10000.1\n")
+	result, err := input.MarshalNosTale()
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if n != len(expected) {
-		t.Errorf("Expected %v, got %v", len(expected), n)
-	}
-	if result.String() != expected {
-		t.Errorf("Expected %v, got %v", expected, result.String())
+	if !bytes.Equal(result, expected) {
+		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }

@@ -1,99 +1,24 @@
-package gateway
+package nsw
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"math"
 )
 
-type Unmarshaler interface {
-	UnmarshalNosTale([]byte) error
-}
-
-type Marshaler interface {
-	MarshalNosTale() ([]byte, error)
-}
-
-type Encoding interface {
-	Encode(dst, src []byte)
-	Decode(dst, src []byte) (int, error)
-	DecodedLen(x int) int
-	Delim() byte
-}
-
-type SessionEncoding struct {
-	r *bufio.Reader
-}
-
-func NewSessionDecoding() *SessionEncoding {
-	return &SessionEncoding{}
-}
-
-func (e *SessionEncoding) Decode(dst, src []byte) (n int, err error) {
-	if len(dst) < len(src) {
-		panic("dst buffer is too small")
-	}
-	for n = 0; len(src) > n*2; n++ {
-		first_byte := src[n] - 0xF
-		second_byte := first_byte & 0xF0
-		second_key := second_byte >> 0x4
-		first_key := first_byte - second_byte
-		for i, key := range []byte{second_key, first_key} {
-			switch key {
-			case 0, 1:
-				dst[n*2+i] = ' '
-			case 2:
-				dst[n*2+i] = '-'
-			case 3:
-				dst[n*2+i] = '.'
-			default:
-				dst[n*2+i] = 0x2C + key
-			}
-		}
-	}
-	return n, nil
-}
-
-func (e *SessionEncoding) DecodedLen(x int) int {
-	return x * 2
-}
-
-func (e *SessionEncoding) Encode(dst, src []byte) {
-	if len(dst) < len(src) {
-		panic("dst buffer is too small")
-	}
-	for n := 0; n < len(src); n++ {
-		if (n % 0x7E) != 0 {
-			dst[n] = ^src[n]
-		} else {
-			remaining := byte(len(src) - n)
-			if remaining > 0x7E {
-				remaining = 0x7E
-			}
-			dst[n] = remaining
-			dst[n] = ^src[n]
-		}
-	}
-}
-
-func (e *SessionEncoding) Delim() byte {
-	return '\n'
-}
-
-func NewWorldFrameListEncoding(key uint32) *FrameEncoding {
-	return &FrameEncoding{
+func NewEncoding(key uint32) *Encoding {
+	return &Encoding{
 		mode:   byte(key >> 6 & 0x03),
 		offset: byte(key&0xFF + 0x40&0xFF),
 	}
 }
 
-type FrameEncoding struct {
+type Encoding struct {
 	mode   byte
 	offset byte
 }
 
-func (e *FrameEncoding) Decode(dst, src []byte) (n int, err error) {
+func (e *Encoding) Decode(dst, src []byte) (n int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -108,7 +33,7 @@ func (e *FrameEncoding) Decode(dst, src []byte) (n int, err error) {
 	return n, nil
 }
 
-func (e *FrameEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
+func (e *Encoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	for n = 0; n < len(src); n++ {
 		switch e.mode {
 		case 0:
@@ -126,7 +51,7 @@ func (e *FrameEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	return n, nil
 }
 
-func (d *FrameEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
+func (d *Encoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	var lookup = []byte{
 		'\x00', ' ', '-', '.', '0', '1', '2', '3', '4',
 		'5', '6', '7', '8', '9', '\n', '\x00',
@@ -179,28 +104,35 @@ func (d *FrameEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	return len(dst), nil
 }
 
-func (e *FrameEncoding) DecodedLen(x int) int {
+func (e *Encoding) DecodedLen(x int) int {
 	return x
 }
 
-func (e *FrameEncoding) Encode(dst, src []byte) {
+func (e *Encoding) Encode(dst, src []byte) (n int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
-	for n := 0; n < len(src); n++ {
-		if (n % 0x7E) != 0 {
-			dst[n] = ^src[n]
+	var nsrc int
+	for n, nsrc = 0, 0; nsrc < len(src); n, nsrc = n+1, nsrc+1 {
+		if (nsrc % 0x7E) != 0 {
+			dst[n] = ^src[nsrc]
 		} else {
-			remaining := byte(len(src) - n)
+			remaining := byte(len(src) - nsrc)
 			if remaining > 0x7E {
 				remaining = 0x7E
 			}
 			dst[n] = remaining
-			dst[n] = ^src[n]
+			n++
+			dst[n] = ^src[nsrc]
 		}
 	}
+	return n, nil
 }
 
-func (e *FrameEncoding) Delim() byte {
+func (e *Encoding) EncodedLen(x int) int {
+	return x * 2
+}
+
+func (e *Encoding) Delim() byte {
 	return '\n'
 }

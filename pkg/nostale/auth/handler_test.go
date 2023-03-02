@@ -15,6 +15,7 @@ import (
 	"github.com/infinity-blackhole/elkia/internal/presence"
 	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nsl"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -114,7 +115,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if err := clientWriter.Flush(); err != nil {
 		t.Fatalf("Failed to flush message: %v", err)
 	}
-	encoding := NewLoginEncoding()
+	encoding := nsl.NewEncoding()
 	encResult, err := clientReader.ReadBytes(encoding.Delim())
 	if err != nil {
 		t.Fatalf("Failed to read line bytes: %v", err)
