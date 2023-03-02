@@ -7,13 +7,13 @@ import (
 )
 
 type EncodingEncoder interface {
-	Encode(dst, src []byte) (int, error)
+	Encode(dst, src []byte) (ndst, nsrc int, err error)
 	EncodedLen(x int) int
 	Delim() byte
 }
 
 type EncodingDecoder interface {
-	Decode(dst, src []byte) (int, error)
+	Decode(dst, src []byte) (ndst, nsrc int, err error)
 	DecodedLen(x int) int
 	Delim() byte
 }
@@ -48,18 +48,19 @@ func (d *Decoder) Decode(v any) error {
 		return err
 	}
 	buff := make([]byte, d.e.DecodedLen(len(bs)))
-	if _, err := d.e.Decode(buff, bs); err != nil {
+	ndst, _, err := d.e.Decode(buff, bs)
+	if err != nil {
 		return err
 	}
 	switch v := v.(type) {
 	case *string:
-		*v = string(buff)
+		*v = string(buff[:ndst])
 		return nil
 	case *[]byte:
-		*v = buff
+		*v = buff[:ndst]
 		return nil
 	case Unmarshaler:
-		return v.UnmarshalNosTale(buff)
+		return v.UnmarshalNosTale(buff[:ndst])
 	default:
 		return fmt.Errorf("invalid payload: %v", v)
 	}
@@ -91,11 +92,11 @@ func (e *Encoder) Encode(v any) (err error) {
 		}
 	}
 	buff := make([]byte, e.e.EncodedLen(len(bs)))
-	n, err := e.e.Encode(buff, bs)
+	ndst, _, err := e.e.Encode(buff, bs)
 	if err != nil {
 		return err
 	}
-	if _, err := e.w.Write(buff[:n]); err != nil {
+	if _, err := e.w.Write(buff[:ndst]); err != nil {
 		return err
 	}
 	if err := e.w.WriteByte(e.e.Delim()); err != nil {

@@ -18,19 +18,19 @@ type Encoding struct {
 	offset byte
 }
 
-func (e *Encoding) Decode(dst, src []byte) (n int, err error) {
+func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
-	n, err = e.decodeFrameList(dst, src)
+	ndst, err = e.decodeFrameList(dst, src)
 	if err != nil {
-		return n, err
+		return ndst, nsrc, err
 	}
-	n, err = e.unpackFrameList(dst, dst[:n])
+	nsrc, err = e.unpackFrameList(dst, dst[:ndst])
 	if err != nil {
-		return n, err
+		return ndst, nsrc, err
 	}
-	return n, nil
+	return ndst, nsrc, nil
 }
 
 func (e *Encoding) decodeFrameList(dst, src []byte) (n int, err error) {
@@ -108,25 +108,24 @@ func (e *Encoding) DecodedLen(x int) int {
 	return x
 }
 
-func (e *Encoding) Encode(dst, src []byte) (n int, err error) {
+func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
-	var nsrc int
-	for n, nsrc = 0, 0; nsrc < len(src); n, nsrc = n+1, nsrc+1 {
+	for ndst, nsrc = 0, 0; nsrc < len(src); ndst, nsrc = ndst+1, nsrc+1 {
 		if (nsrc % 0x7E) != 0 {
-			dst[n] = ^src[nsrc]
+			dst[ndst] = ^src[nsrc]
 		} else {
 			remaining := byte(len(src) - nsrc)
 			if remaining > 0x7E {
 				remaining = 0x7E
 			}
-			dst[n] = remaining
-			n++
-			dst[n] = ^src[nsrc]
+			dst[ndst] = remaining
+			ndst++
+			dst[ndst] = ^src[nsrc]
 		}
 	}
-	return n, nil
+	return ndst, nsrc, nil
 }
 
 func (e *Encoding) EncodedLen(x int) int {

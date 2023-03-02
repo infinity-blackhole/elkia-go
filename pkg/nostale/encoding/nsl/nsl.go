@@ -7,35 +7,35 @@ func NewEncoding() *Encoding {
 type Encoding struct {
 }
 
-func (e *Encoding) Decode(dst, src []byte) (n int, err error) {
+func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
 	if len(src) == 0 {
-		return 0, nil
+		return ndst, nsrc, nil
 	}
-	for n = 0; n < len(src); n++ {
-		if src[n] > 14 {
-			dst[n] = (src[n] - 15) ^ 195
+	for ndst, nsrc = 0, 0; nsrc < len(src); ndst, nsrc = ndst+1, nsrc+1 {
+		if src[nsrc] > 14 {
+			dst[ndst] = (src[nsrc] - 15) ^ 195
 		} else {
-			dst[n] = (255 - (14 - src[n])) ^ 195
+			dst[ndst] = (255 - (14 - src[nsrc])) ^ 195
 		}
 	}
-	return n, nil
+	return ndst, nsrc, nil
 }
 
 func (e *Encoding) DecodedLen(x int) int {
-	return x * 2
+	return x
 }
 
-func (e *Encoding) Encode(dst, src []byte) (n int, err error) {
+func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
-	for n = 0; n < len(src); n++ {
-		dst[n] = (src[n] + 15) & 0xFF
+	for ndst, nsrc = 0, 0; nsrc < len(src); ndst, nsrc = ndst+1, nsrc+1 {
+		dst[ndst] = (src[nsrc] + 15) & 0xFF
 	}
-	return n, nil
+	return ndst, nsrc, nil
 }
 
 func (e *Encoding) EncodedLen(x int) int {

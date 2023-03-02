@@ -136,10 +136,11 @@ func TestHandlerServeNosTale(t *testing.T) {
 		237, 242, 201, 10,
 	}
 	result := make([]byte, len(encResult))
-	if _, err := encoding.Decode(result, encResult); err != nil {
+	ndst, _, err := encoding.Decode(result, encResult)
+	if err != nil {
 		t.Fatalf("Failed to decode frame: %v", err)
 	}
-	if !bytes.Equal(expected, result) {
-		t.Fatalf("Expected %v, got %v", expected, result)
+	if !bytes.Equal(expected, result[:ndst]) {
+		t.Fatalf("Expected %v, got %v", expected, result[:ndst])
 	}
 }
