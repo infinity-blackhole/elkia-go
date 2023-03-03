@@ -38,10 +38,6 @@ func NewDecoder(r io.Reader, e EncodingDecoder) *Decoder {
 	}
 }
 
-func (d *Decoder) More() bool {
-	return d.r.Buffered() > 0
-}
-
 func (d *Decoder) Decode(v any) error {
 	bs, err := d.r.ReadBytes(d.e.Delim())
 	if err != nil {

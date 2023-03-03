@@ -41,7 +41,7 @@ message EndpointListFrame {
 }
 
 message AuthInteractRequest {
-  oneof payload { AuthLoginFrame auth_login_frame = 1; }
+  oneof payload { AuthLoginFrame login_frame = 1; }
 }
 
 message AuthInteractResponse {
@@ -58,29 +58,30 @@ service Auth {
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthLoginProduce send a login frame to the auth server and returns a
+  // AuthLoginFrameProduce send a login frame to the auth server and returns a
   // stream of events
-  rpc AuthLoginProduce(AuthLoginFrame) returns (stream AuthInteractResponse);
+  rpc AuthLoginFrameProduce(AuthLoginFrame)
+      returns (stream AuthInteractResponse);
 }
 
-message AuthHandoffSyncFrame {
+message SyncFrame {
   uint32 sequence = 1;
   uint32 code = 2;
 }
 
-message AuthHandoffLoginIdentifierFrame {
+message HandoffIdentifierFrame {
   uint32 sequence = 1;
   string identifier = 2;
 }
 
-message AuthHandoffLoginPasswordFrame {
+message HandoffPasswordFrame {
   uint32 sequence = 1;
   string password = 2;
 }
 
-message AuthHandoffLoginFrame {
-  AuthHandoffLoginIdentifierFrame identifier_frame = 1;
-  AuthHandoffLoginPasswordFrame password_frame = 2;
+message HandoffFrame {
+  HandoffIdentifierFrame identifier_frame = 1;
+  HandoffPasswordFrame password_frame = 2;
 }
 
 message WorldFrame {
@@ -90,8 +91,8 @@ message WorldFrame {
 
 message ChannelInteractRequest {
   oneof payload {
-    AuthHandoffSyncFrame sync_frame = 1;
-    AuthHandoffLoginFrame login_frame = 2;
+    SyncFrame sync_frame = 1;
+    HandoffFrame handoff_frame = 2;
     WorldFrame world_frame = 3;
   }
 }

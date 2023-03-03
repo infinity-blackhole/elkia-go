@@ -52,27 +52,27 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	login := m.GetLoginFrame()
-	if login == nil {
+	handoff := m.GetHandoffFrame()
+	if handoff == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.IdentifierFrame.Sequence != s.sequence+1 {
+	if handoff.IdentifierFrame.Sequence != s.sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.PasswordFrame.Sequence != login.IdentifierFrame.Sequence+1 {
+	if handoff.PasswordFrame.Sequence != handoff.IdentifierFrame.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	s.sequence = login.PasswordFrame.Sequence
-	if login.IdentifierFrame.Sequence != sync.Sequence+1 {
+	s.sequence = handoff.PasswordFrame.Sequence
+	if handoff.IdentifierFrame.Sequence != sync.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	if login.PasswordFrame.Sequence != login.IdentifierFrame.Sequence+1 {
+	if handoff.PasswordFrame.Sequence != handoff.IdentifierFrame.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	_, err = s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
 		Code:       sync.Code,
-		Identifier: login.IdentifierFrame.Identifier,
-		Password:   login.PasswordFrame.Password,
+		Identifier: handoff.IdentifierFrame.Identifier,
+		Password:   handoff.PasswordFrame.Password,
 	})
 	if err != nil {
 		return err

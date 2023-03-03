@@ -6,12 +6,12 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-func TestAuthHandoffSyncFrameUnmarshalNosTale(t *testing.T) {
+func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6; ")
-	expected := &eventing.AuthHandoffSyncFrame{
+	expected := &eventing.SyncFrame{
 		Code: 0,
 	}
-	var result AuthHandoffSyncFrame
+	var result SyncFrame
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

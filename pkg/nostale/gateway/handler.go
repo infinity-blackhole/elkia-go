@@ -58,16 +58,16 @@ func (c *handoffConn) serve(ctx context.Context) {
 }
 
 func (c *handoffConn) handleMessages(ctx context.Context) error {
-	var sync protonostale.AuthHandoffSyncFrame
+	var sync protonostale.SyncFrame
 	if err := c.dec.Decode(&sync); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
-	conn := c.newChannelConn(&sync.AuthHandoffSyncFrame)
+	conn := c.newChannelConn(&sync.SyncFrame)
 	go conn.serve(ctx)
 	return nil
 }
 
-func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncFrame) *channelConn {
+func (h *handoffConn) newChannelConn(sync *eventing.SyncFrame) *channelConn {
 	e := encoding.WorldEncoding.WithKey(sync.Code)
 	return &channelConn{
 		rwc:      h.rwc,
@@ -115,7 +115,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	logrus.Debugf("gateway: created auth handoff interact stream")
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_SyncFrame{
-			SyncFrame: &eventing.AuthHandoffSyncFrame{
+			SyncFrame: &eventing.SyncFrame{
 				Sequence: c.sequence,
 				Code:     c.Code,
 			},
@@ -123,14 +123,14 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
-	var handoffLogin protonostale.AuthHandoffLoginFrame
+	var handoffLogin protonostale.HandoffFrame
 	if err := c.dec.Decode(&handoffLogin); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
 	logrus.Debugf("gateway: read frame: %v", handoffLogin.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_LoginFrame{
-			LoginFrame: &handoffLogin.AuthHandoffLoginFrame,
+		Payload: &eventing.ChannelInteractRequest_HandoffFrame{
+			HandoffFrame: &handoffLogin.HandoffFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)

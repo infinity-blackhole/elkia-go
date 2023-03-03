@@ -3,7 +3,6 @@ package encoding
 import (
 	"bytes"
 	"errors"
-	"math"
 )
 
 var WorldEncoding worldEncoding
@@ -54,56 +53,78 @@ func (e worldEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
 }
 
 func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
-	var lookup = []byte{
-		'\x00', ' ', '-', '.', '0', '1', '2', '3', '4',
-		'5', '6', '7', '8', '9', '\n', '\x00',
+	var chunks [][]byte
+	for _, chunk := range bytes.Split(src, []byte{0xFF}) {
+		chunks = append(chunks, doDecryptHelper(chunk, [][]byte{}))
 	}
-	var sub [][]byte
-	for _, s := range bytes.Split(src, []byte{0xFF}) {
-		var result [][]byte
-		for len(s) > 0 {
-			head := s[0]
-			s = s[1:]
-			isPacked := head&0x80 > 0
-			tmpLen := head & 0x7F
-			var partLen int
-			if isPacked {
-				partLen = int(math.Ceil(float64(tmpLen) / 2))
-			} else {
-				partLen = int(tmpLen)
-			}
-			if partLen == 0 {
-				continue
-			}
-			var chunk []byte
-			if partLen <= len(lookup) {
-				chunk = append(chunk, lookup[partLen-1])
-			} else {
-				chunk = make([]byte, partLen)
-				for i := 0; i < partLen; i++ {
-					chunk[i] = byte(0xFF)
-				}
-			}
-			if isPacked {
-				var decodedChunk []byte
-				for i := 0; i < partLen/2; i++ {
-					b := s[0]
-					s = s[1:]
-					hi := (b >> 4) & 0xF
-					lo := b & 0xF
-					decodedChunk = append(decodedChunk, chunk[hi], chunk[lo])
-				}
-				if partLen%2 == 1 {
-					decodedChunk = append(decodedChunk, chunk[s[0]>>4])
-				}
-				chunk = decodedChunk
-			}
-			result = append(result, chunk)
+	result := bytes.Join(chunks, []byte{})
+	copy(dst, result)
+	return len(result), nil
+}
+
+func doDecryptHelper(binary []byte, result [][]byte) []byte {
+	if len(binary) == 0 {
+		return []byte(reverseAndJoin(result))
+	}
+
+	b := binary[0]
+	rest := binary[1:]
+
+	if b <= 0x7A {
+		var l int
+		if int(b) < len(rest) {
+			l = int(b)
+		} else {
+			l = len(rest)
 		}
-		sub = append(sub, bytes.Join(result, []byte{}))
+
+		first := rest[:l]
+		second := rest[l:]
+
+		res := make([]byte, len(first))
+		for _, c := range first {
+			res = append(res, c^0xFF)
+		}
+
+		return doDecryptHelper(second, append([][]byte{res}, result...))
+	} else {
+		first, second := doDecrypt2(rest, b&0x7F)
+		return doDecryptHelper(second, append([][]byte{first}, result...))
 	}
-	copy(dst, bytes.Join(sub, []byte{0xFF}))
-	return len(dst), nil
+}
+
+func doDecrypt2(binary []byte, n byte) ([]byte, []byte) {
+	i := 0
+	result := []byte{}
+
+	for i < int(n) && len(binary) > 0 {
+		h := int(binary[0] >> 4)
+		l := int(binary[0] & 0x0F)
+		binary = binary[1:]
+
+		if h != 0 && h != 0xF && (l == 0 || l == 0xF) {
+			result = append(result, table[h-1])
+		} else if l != 0 && l != 0xF && (h == 0 || h == 0xF) {
+			result = append(result, table[l-1])
+		} else if h != 0 && h != 0xF && l != 0 && l != 0xF {
+			result = append(result, table[h-1], table[l-1])
+		}
+		i += 1
+	}
+
+	return result, binary
+}
+
+func reverseAndJoin(strings [][]byte) []byte {
+	reversed := [][]byte{}
+	for i := len(strings) - 1; i >= 0; i-- {
+		reversed = append(reversed, strings[i])
+	}
+	return bytes.Join(reversed, []byte{})
+}
+
+var table = []byte{
+	' ', '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'n',
 }
 
 func (e worldEncoding) DecodedLen(x int) int {

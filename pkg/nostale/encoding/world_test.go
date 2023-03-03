@@ -7,7 +7,7 @@ import (
 
 // key:3324008792
 
-func TestWorldEncodingDecodeAuthHandoffPasswordFrame(t *testing.T) {
+func TestWorldEncodingDecodeHandoffPasswordFrame(t *testing.T) {
 	input := []byte{
 		208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208, 210,
 		63, 199, 205, 171, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214, 248,
