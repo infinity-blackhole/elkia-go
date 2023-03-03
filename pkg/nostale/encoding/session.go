@@ -1,13 +1,11 @@
-package nss
+package encoding
 
-type Encoding struct {
+var SessionEncoding sessionEncoding
+
+type sessionEncoding struct {
 }
 
-func NewEncoding() *Encoding {
-	return &Encoding{}
-}
-
-func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
+func (e sessionEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -32,10 +30,10 @@ func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	return ndst, nsrc, nil
 }
 
-func (e *Encoding) DecodedLen(x int) int {
+func (e sessionEncoding) DecodedLen(x int) int {
 	return x * 2
 }
 
-func (e *Encoding) Delim() byte {
+func (e sessionEncoding) Delim() byte {
 	return 0xFF
 }

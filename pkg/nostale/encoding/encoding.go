@@ -31,7 +31,7 @@ type Decoder struct {
 	e EncodingDecoder
 }
 
-func NewDecoder(e EncodingDecoder, r io.Reader) *Decoder {
+func NewDecoder(r io.Reader, e EncodingDecoder) *Decoder {
 	return &Decoder{
 		r: bufio.NewReader(r),
 		e: e,
@@ -71,7 +71,7 @@ type Encoder struct {
 	e EncodingEncoder
 }
 
-func NewEncoder(e EncodingEncoder, w io.Writer) *Encoder {
+func NewEncoder(w io.Writer, e EncodingEncoder) *Encoder {
 	return &Encoder{
 		w: bufio.NewWriter(w),
 		e: e,

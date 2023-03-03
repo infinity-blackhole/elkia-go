@@ -1,13 +1,11 @@
-package nsl
+package encoding
 
 import (
 	"bytes"
 	"testing"
-
-	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
 )
 
-func TestDecoderDecode(t *testing.T) {
+func TestAuthEncodingDecodeFrame(t *testing.T) {
 	var input bytes.Buffer
 	input.Write([]byte{
 		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
@@ -29,9 +27,8 @@ func TestDecoderDecode(t *testing.T) {
 			"C9C7B4E3055D4F9F09BA015 0039E3DC\v0.9.3.3071 0 C7D2503BD257F5" +
 			"BAE0870F40C2DA3666\n",
 	)
-	e := NewEncoding()
-	result := make([]byte, e.DecodedLen(len(input.Bytes())))
-	if err := encoding.NewDecoder(e, &input).Decode(&result); err != nil {
+	result := make([]byte, AuthEncoding.DecodedLen(len(input.Bytes())))
+	if err := NewDecoder(&input, AuthEncoding).Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
@@ -39,7 +36,7 @@ func TestDecoderDecode(t *testing.T) {
 	}
 }
 
-func TestEncoderEncode(t *testing.T) {
+func TestAuthEncodingEncodeFrame(t *testing.T) {
 	input := "fail Hello. This is a basic test"
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
@@ -47,27 +44,11 @@ func TestEncoderEncode(t *testing.T) {
 		130, 131, 10,
 	}
 	var buf bytes.Buffer
-	if err := encoding.NewEncoder(NewEncoding(), &buf).Encode(input); err != nil {
+	if err := NewEncoder(&buf, AuthEncoding).Encode(input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := buf.Bytes()
 	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %v, got %v", expected, result)
-	}
-}
-
-func TestAsymmetricEncodeDecode(t *testing.T) {
-	input := []byte("fail Hello. This is a basic test")
-	e := NewEncoding()
-	var buff bytes.Buffer
-	if err := encoding.NewEncoder(e, &buff).Encode(&input); err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	result := make([]byte, e.DecodedLen(len(input)))
-	if err := encoding.NewDecoder(NewEncoding(), &buff).Decode(&result); err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	if bytes.Equal(input, result) {
-		t.Errorf("Expected %s, got %s", input, result)
 	}
 }

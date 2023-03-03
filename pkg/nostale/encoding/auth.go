@@ -1,13 +1,11 @@
-package nsl
+package encoding
 
-func NewEncoding() *Encoding {
-	return &Encoding{}
+var AuthEncoding authEncoding
+
+type authEncoding struct {
 }
 
-type Encoding struct {
-}
-
-func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
+func (e authEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -22,11 +20,11 @@ func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	return n, n, nil
 }
 
-func (e *Encoding) DecodedLen(x int) int {
+func (e authEncoding) DecodedLen(x int) int {
 	return x
 }
 
-func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
+func (e authEncoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -37,10 +35,10 @@ func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	return n, n, nil
 }
 
-func (e *Encoding) EncodedLen(x int) int {
+func (e authEncoding) EncodedLen(x int) int {
 	return x
 }
 
-func (e *Encoding) Delim() byte {
+func (e authEncoding) Delim() byte {
 	return 0xD8
 }

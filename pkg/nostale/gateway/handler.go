@@ -7,8 +7,6 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nss"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding/nsw"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -41,7 +39,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		dec:     encoding.NewDecoder(nss.NewEncoding(), c),
+		dec:     encoding.NewDecoder(c, encoding.SessionEncoding),
 		gateway: h.gateway,
 	}
 }
@@ -72,11 +70,12 @@ func (c *handoffConn) handleMessages(ctx context.Context) error {
 }
 
 func (h *handoffConn) newChannelConn(sync *eventing.AuthHandoffSyncFrame) *channelConn {
+	e := encoding.WorldEncoding.WithKey(sync.Code)
 	return &channelConn{
 		rwc:      h.rwc,
 		gateway:  h.gateway,
-		dec:      encoding.NewDecoder(nsw.NewEncoding(sync.Code), h.rwc),
-		enc:      encoding.NewEncoder(nsw.NewEncoding(sync.Code), h.rwc),
+		dec:      encoding.NewDecoder(h.rwc, e),
+		enc:      encoding.NewEncoder(h.rwc, e),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}

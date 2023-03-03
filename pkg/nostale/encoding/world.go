@@ -1,4 +1,4 @@
-package nsw
+package encoding
 
 import (
 	"bytes"
@@ -6,19 +6,21 @@ import (
 	"math"
 )
 
-func NewEncoding(key uint32) *Encoding {
-	return &Encoding{
+var WorldEncoding worldEncoding
+
+type worldEncoding struct {
+	mode   byte
+	offset byte
+}
+
+func (e worldEncoding) WithKey(key uint32) *worldEncoding {
+	return &worldEncoding{
 		mode:   byte(key >> 6 & 0x03),
 		offset: byte(key&0xFF + 0x40&0xFF),
 	}
 }
 
-type Encoding struct {
-	mode   byte
-	offset byte
-}
-
-func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
+func (e worldEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -33,7 +35,7 @@ func (e *Encoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	return ndst, nsrc, nil
 }
 
-func (e *Encoding) decodeFrameList(dst, src []byte) (n int, err error) {
+func (e worldEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	for n = 0; n < len(src); n++ {
 		switch e.mode {
 		case 0:
@@ -51,7 +53,7 @@ func (e *Encoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	return n, nil
 }
 
-func (d *Encoding) unpackFrameList(dst, src []byte) (n int, err error) {
+func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	var lookup = []byte{
 		'\x00', ' ', '-', '.', '0', '1', '2', '3', '4',
 		'5', '6', '7', '8', '9', '\n', '\x00',
@@ -104,11 +106,11 @@ func (d *Encoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	return len(dst), nil
 }
 
-func (e *Encoding) DecodedLen(x int) int {
+func (e worldEncoding) DecodedLen(x int) int {
 	return x
 }
 
-func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
+func (e worldEncoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	if len(dst) < len(src) {
 		panic("dst buffer is too small")
 	}
@@ -128,10 +130,10 @@ func (e *Encoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
 	return ndst, nsrc, nil
 }
 
-func (e *Encoding) EncodedLen(x int) int {
+func (e worldEncoding) EncodedLen(x int) int {
 	return x * 2
 }
 
-func (e *Encoding) Delim() byte {
+func (e worldEncoding) Delim() byte {
 	return '\n'
 }
