@@ -86,7 +86,7 @@ func (e worldEncoding) doDecryptHelper(binary []byte) []byte {
 			result = append(result, res)
 		} else {
 			first := make([]byte, len(rest)*2)
-			ndst, nsrc := e.decryptChunk(first, rest, b&0x7F)
+			ndst, nsrc := e.decryptCompactChunk(first, rest, b&0x7F)
 			first = first[:ndst]
 			second := rest[nsrc:]
 			binary = second
@@ -103,11 +103,12 @@ func (e worldEncoding) split(rest []byte, b byte) int {
 	return len(rest)
 }
 
-func (e worldEncoding) decryptChunk(dst, src []byte, n byte) (ndst, nsrc int) {
-	for ndst, nsrc = 0, 0; ndst < int(n) && len(src) > 0; ndst, nsrc = ndst+1, nsrc+1 {
-		h := int(src[0] >> 4)
-		l := int(src[0] & 0x0F)
-		src = src[1:]
+func (e worldEncoding) decryptCompactChunk(dst, src []byte, n byte) (ndst, nsrc int) {
+	buff := src
+	for ndst, nsrc = 0, 0; ndst < int(n) && len(buff) > 0; ndst, nsrc = ndst+1, nsrc+1 {
+		h := int(buff[0] >> 4)
+		l := int(buff[0] & 0x0F)
+		buff = buff[1:]
 
 		if h != 0 && h != 0xF && (l == 0 || l == 0xF) {
 			dst[ndst] = table[h-1]
