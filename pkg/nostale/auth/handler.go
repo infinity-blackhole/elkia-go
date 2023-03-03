@@ -62,7 +62,7 @@ func (c *conn) serve(ctx context.Context) {
 		}
 	default:
 		if err := c.enc.Encode(
-			protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		); err != nil {
 			logrus.Errorf("auth: failed to send error: %v", err)
 		}
@@ -73,21 +73,21 @@ func (c *conn) handleMessages(ctx context.Context) error {
 	for {
 		var msg protonostale.AuthInteractRequest
 		if err := c.dec.Decode(&msg); err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: read frame: %v", msg.Payload)
 		stream, err := c.auth.AuthInteract(ctx)
 		if err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: created auth interact stream")
 		if err := stream.Send(&msg.AuthInteractRequest); err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debug("auth: sent login request")
 		m, err := stream.Recv()
 		if err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: received login response: %v", m)
 		switch m.Payload.(type) {
@@ -96,12 +96,12 @@ func (c *conn) handleMessages(ctx context.Context) error {
 				EndpointListFrame: *m.GetEndpointListFrame(),
 			}
 			if err := c.enc.Encode(&ed); err != nil {
-				return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+				return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 			}
 			logrus.Debug("auth: wrote endpoint list frame")
 		default:
 			logrus.Errorf("auth: unexpected login response: %v", m)
-			return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)
+			return protonostale.NewStatus(eventing.Code_BAD_CASE)
 		}
 	}
 }

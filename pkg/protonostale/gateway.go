@@ -8,11 +8,11 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-type ChannelFrame struct {
-	eventing.ChannelFrame
+type WorldFrame struct {
+	eventing.WorldFrame
 }
 
-func (e *ChannelFrame) MarshalNosTale() ([]byte, error) {
+func (e *WorldFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (e *ChannelFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
+func (e *WorldFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.SplitN(b, []byte(" "), 2)
 	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)
 	if err != nil {

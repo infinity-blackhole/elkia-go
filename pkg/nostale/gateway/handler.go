@@ -3,14 +3,12 @@ package gateway
 import (
 	"context"
 	"net"
-	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
-	"google.golang.org/grpc/metadata"
 )
 
 var name = "github.com/infinity-blackhole/elkia/internal/gateway"
@@ -62,7 +60,7 @@ func (c *handoffConn) serve(ctx context.Context) {
 func (c *handoffConn) handleMessages(ctx context.Context) error {
 	var sync protonostale.AuthHandoffSyncFrame
 	if err := c.dec.Decode(&sync); err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	conn := c.newChannelConn(&sync.AuthHandoffSyncFrame)
 	go conn.serve(ctx)
@@ -102,7 +100,7 @@ func (c *channelConn) serve(ctx context.Context) {
 		}
 	default:
 		if err := c.enc.Encode(
-			protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		); err != nil {
 			logrus.Errorf("auth: failed to send error: %v", err)
 		}
@@ -110,65 +108,48 @@ func (c *channelConn) serve(ctx context.Context) {
 }
 
 func (c *channelConn) handleMessages(ctx context.Context) error {
-	authStream, err := c.gateway.AuthHandoffInteract(ctx)
+	stream, err := c.gateway.ChannelInteract(ctx)
 	if err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: created auth handoff interact stream")
-	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
-		Payload: &eventing.AuthHandoffInteractRequest_SyncFrame{
+	if err := stream.Send(&eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_SyncFrame{
 			SyncFrame: &eventing.AuthHandoffSyncFrame{
 				Sequence: c.sequence,
 				Code:     c.Code,
 			},
 		},
 	}); err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	var handoffLogin protonostale.AuthHandoffLoginFrame
 	if err := c.dec.Decode(&handoffLogin); err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_BAD_CASE)
+		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
-	logrus.Debugf("gateway: read frame: %v", handoffLogin)
-	if err := authStream.Send(&eventing.AuthHandoffInteractRequest{
-		Payload: &eventing.AuthHandoffInteractRequest_LoginFrame{
+	logrus.Debugf("gateway: read frame: %v", handoffLogin.String())
+	if err := stream.Send(&eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_LoginFrame{
 			LoginFrame: &handoffLogin.AuthHandoffLoginFrame,
 		},
 	}); err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent login frame")
-	m, err := authStream.Recv()
 	if err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
-	}
-	logrus.Debugf("gateway: received login success frame")
-	loginSuccess := m.GetLoginSuccessFrame()
-	if loginSuccess == nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
-	}
-	logrus.Debugf("gateway: received login success frame: %v", loginSuccess)
-	ctx = metadata.AppendToOutgoingContext(
-		ctx,
-		"sequence", strconv.FormatUint(uint64(c.sequence), 10),
-		"code", strconv.FormatUint(uint64(c.Code), 10),
-		"session", loginSuccess.Token,
-	)
-	channelStream, err := c.gateway.ChannelInteract(ctx)
-	if err != nil {
-		return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	for {
-		var m protonostale.ChannelFrame
+		var m protonostale.WorldFrame
 		if err := c.dec.Decode(&m); err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
-		if err := channelStream.Send(&eventing.ChannelInteractRequest{
-			Payload: &eventing.ChannelInteractRequest_ChannelFrame{
-				ChannelFrame: &m.ChannelFrame,
+		if err := stream.Send(&eventing.ChannelInteractRequest{
+			Payload: &eventing.ChannelInteractRequest_WorldFrame{
+				WorldFrame: &m.WorldFrame,
 			},
 		}); err != nil {
-			return protonostale.NewStatus(eventing.DialogErrorCode_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}
 }

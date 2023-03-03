@@ -80,7 +80,7 @@ message AuthHandoffRequest {
   string password = 3;
 }
 
-message AuthHandoffResponse { string token = 1; }
+message AuthHandoffResponse {}
 
 message AuthLogoutRequest { uint32 code = 1; }
 

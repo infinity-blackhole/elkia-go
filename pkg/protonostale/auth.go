@@ -42,13 +42,13 @@ type AuthInteractResponse struct {
 func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	switch v := r.Payload.(type) {
-	case *eventing.AuthInteractResponse_DialogErrorFrame:
-		if _, err := fmt.Fprintf(&b, "%s ", DialogErrorOpCode); err != nil {
+	case *eventing.AuthInteractResponse_ErrorFrame:
+		if _, err := fmt.Fprintf(&b, "%s ", ErrorOpCode); err != nil {
 			return nil, err
 		}
-		vv := &DialogErrorFrame{
-			DialogErrorFrame: eventing.DialogErrorFrame{
-				Code: v.DialogErrorFrame.Code,
+		vv := &ErrorFrame{
+			ErrorFrame: eventing.ErrorFrame{
+				Code: v.ErrorFrame.Code,
 			},
 		}
 		bs, err := vv.MarshalNosTale()

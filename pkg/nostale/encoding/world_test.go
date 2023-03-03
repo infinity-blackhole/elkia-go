@@ -11,11 +11,11 @@ func TestWorldEncodingDecodeAuthHandoffPasswordFrame(t *testing.T) {
 	input := []byte{
 		208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208, 210,
 		63, 199, 205, 171, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214, 248,
-		193, 160, 65, 218, 193, 224, 66, 241, 205, 63,
+		193, 160, 65, 218, 193, 224, 66, 241, 205, 63, 10,
 	}
 	expected := []byte("49272 9hibwiwiG2e6Nr")
 	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
-	result := make([]byte, len(expected))
+	result := make([]byte, WorldEncoding.DecodedLen(len(input)))
 	if err := dec.Decode(&result); err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}

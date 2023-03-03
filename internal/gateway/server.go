@@ -35,11 +35,10 @@ type Server struct {
 	presence      fleet.PresenceClient
 	kafkaProducer *kafka.Producer
 	kafkaConsumer *kafka.Consumer
+	sequence      uint32
 }
 
-func (s *Server) AuthHandoffInteract(
-	stream eventing.Gateway_AuthHandoffInteractServer,
-) error {
+func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
 	m, err := stream.Recv()
 	if err != nil {
 		return err
@@ -48,43 +47,33 @@ func (s *Server) AuthHandoffInteract(
 	if sync == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
+	s.sequence = sync.Sequence
+	m, err = stream.Recv()
+	if err != nil {
+		return err
+	}
 	login := m.GetLoginFrame()
 	if login == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
+	if login.IdentifierFrame.Sequence != s.sequence+1 {
+		return errors.New("handoff: handshake sync protocol error")
+	}
+	if login.PasswordFrame.Sequence != login.IdentifierFrame.Sequence+1 {
+		return errors.New("handoff: handshake sync protocol error")
+	}
+	s.sequence = login.PasswordFrame.Sequence
 	if login.IdentifierFrame.Sequence != sync.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	if login.PasswordFrame.Sequence != login.IdentifierFrame.Sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	handoff, err := s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
+	_, err = s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
 		Code:       sync.Code,
 		Identifier: login.IdentifierFrame.Identifier,
 		Password:   login.PasswordFrame.Password,
 	})
-	if err != nil {
-		return err
-	}
-	return stream.Send(&eventing.AuthHandoffInteractResponse{
-		Payload: &eventing.AuthHandoffInteractResponse_LoginSuccessFrame{
-			LoginSuccessFrame: &eventing.AuthHandoffLoginSuccessFrame{
-				Token: handoff.Token,
-			},
-		},
-	})
-}
-
-func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
-	md, ok := metadata.FromIncomingContext(stream.Context())
-	if !ok {
-		return errors.New("channel: handshake metadata error")
-	}
-	sequence, err := GetSequenceFromMetadata(md)
-	if err != nil {
-		return err
-	}
-	_, err = GetCodeFromMetadata(md)
 	if err != nil {
 		return err
 	}
@@ -94,12 +83,12 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			return err
 		}
 		switch m.Payload.(type) {
-		case *eventing.ChannelInteractRequest_ChannelFrame:
-			m := m.GetChannelFrame()
-			if sequence != m.Sequence {
+		case *eventing.ChannelInteractRequest_WorldFrame:
+			m := m.GetWorldFrame()
+			if s.sequence != m.Sequence {
 				return errors.New("channel: handshake sync protocol error")
 			}
-			sequence++
+			s.sequence++
 		default:
 			return errors.New("channel: handshake sync protocol error")
 		}

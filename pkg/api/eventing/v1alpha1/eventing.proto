@@ -3,7 +3,7 @@ package io.elkia.eventing.v1alpha1;
 
 option go_package = "pkg/api/eventing/v1alpha1";
 
-enum DialogErrorCode {
+enum Code {
   OUTDATED_CLIENT = 0;
   UNEXPECTED_ERROR = 1;
   MAINTENANCE = 2;
@@ -15,9 +15,9 @@ enum DialogErrorCode {
   BAD_CASE = 8;
 }
 
-message DialogErrorFrame { DialogErrorCode code = 1; }
+message ErrorFrame { Code code = 1; }
 
-message DialogInfoFrame { string content = 1; }
+message InfoFrame { string content = 1; }
 
 message AuthLoginFrame {
   string identifier = 2;
@@ -46,8 +46,8 @@ message AuthInteractRequest {
 
 message AuthInteractResponse {
   oneof payload {
-    DialogErrorFrame dialog_error_frame = 1;
-    DialogInfoFrame dialog_info_frame = 2;
+    ErrorFrame error_frame = 1;
+    InfoFrame info_frame = 2;
     EndpointListFrame endpoint_list_frame = 3;
   }
 }
@@ -83,41 +83,27 @@ message AuthHandoffLoginFrame {
   AuthHandoffLoginPasswordFrame password_frame = 2;
 }
 
-message AuthHandoffInteractRequest {
-  oneof payload {
-    AuthHandoffSyncFrame sync_frame = 1;
-    AuthHandoffLoginFrame login_frame = 2;
-  }
-}
-
-message AuthHandoffLoginSuccessFrame { string token = 1; }
-
-message AuthHandoffInteractResponse {
-  oneof payload { AuthHandoffLoginSuccessFrame login_success_frame = 1; }
-}
-
-message ChannelFrame {
+message WorldFrame {
   uint32 sequence = 1;
   oneof payload { bytes unknown_payload = 2; }
 }
 
 message ChannelInteractRequest {
-  oneof payload { ChannelFrame channel_frame = 1; }
+  oneof payload {
+    AuthHandoffSyncFrame sync_frame = 1;
+    AuthHandoffLoginFrame login_frame = 2;
+    WorldFrame world_frame = 3;
+  }
 }
 
 message ChannelInteractResponse {
   oneof payload {
-    DialogErrorFrame dialog_error_frame = 1;
-    DialogInfoFrame dialog_info_frame = 2;
+    ErrorFrame error_frame = 1;
+    InfoFrame info_frame = 2;
   }
 }
 
 service Gateway {
-  // AuthHandoffInteract is a bi-directional stream that is used to handoff
-  // the auth server
-  rpc AuthHandoffInteract(stream AuthHandoffInteractRequest)
-      returns (stream AuthHandoffInteractResponse);
-
   // ChannelInteract is a bi-directional stream that is used to interact with
   // the channel server
   rpc ChannelInteract(stream ChannelInteractRequest)

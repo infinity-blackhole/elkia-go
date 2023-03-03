@@ -105,7 +105,7 @@ func (s *PresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+	_, err = s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
 			Id:    successLogin.Session.Id,
 			Token: *successLogin.SessionToken,
@@ -114,9 +114,7 @@ func (s *PresenceServer) AuthRefreshLogin(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthRefreshLoginResponse{
-		Code: sessionPut.Code,
-	}, nil
+	return &fleet.AuthRefreshLoginResponse{}, nil
 }
 
 func (s *PresenceServer) AuthHandoff(
@@ -185,7 +183,7 @@ func (s *PresenceServer) SessionGet(
 	if err := proto.Unmarshal(res.Kvs[0].Value, &session); err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: got handoff session: %v", session)
+	logrus.Debugf("fleet: got handoff session: %v", session.String())
 	return &fleet.SessionGetResponse{
 		Session: &session,
 	}, nil

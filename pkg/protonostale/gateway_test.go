@@ -16,6 +16,6 @@ func TestAuthHandoffSyncFrameUnmarshalNosTale(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 	if result.Code != expected.Code {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
 }

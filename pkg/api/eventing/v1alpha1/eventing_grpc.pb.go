@@ -25,7 +25,7 @@ type AuthClient interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
-	// AuthLoginProduce send a login event to the auth server and returns a
+	// AuthLoginProduce send a login frame to the auth server and returns a
 	// stream of events
 	AuthLoginProduce(ctx context.Context, in *AuthLoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginProduceClient, error)
 }
@@ -108,7 +108,7 @@ type AuthServer interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(Auth_AuthInteractServer) error
-	// AuthLoginProduce send a login event to the auth server and returns a
+	// AuthLoginProduce send a login frame to the auth server and returns a
 	// stream of events
 	AuthLoginProduce(*AuthLoginFrame, Auth_AuthLoginProduceServer) error
 	mustEmbedUnimplementedAuthServer()
@@ -211,9 +211,6 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayClient interface {
-	// AuthHandoffInteract is a bi-directional stream that is used to handoff
-	// the auth server
-	AuthHandoffInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_AuthHandoffInteractClient, error)
 	// ChannelInteract is a bi-directional stream that is used to interact with
 	// the channel server
 	ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error)
@@ -227,39 +224,8 @@ func NewGatewayClient(cc grpc.ClientConnInterface) GatewayClient {
 	return &gatewayClient{cc}
 }
 
-func (c *gatewayClient) AuthHandoffInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_AuthHandoffInteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.Gateway/AuthHandoffInteract", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &gatewayAuthHandoffInteractClient{stream}
-	return x, nil
-}
-
-type Gateway_AuthHandoffInteractClient interface {
-	Send(*AuthHandoffInteractRequest) error
-	Recv() (*AuthHandoffInteractResponse, error)
-	grpc.ClientStream
-}
-
-type gatewayAuthHandoffInteractClient struct {
-	grpc.ClientStream
-}
-
-func (x *gatewayAuthHandoffInteractClient) Send(m *AuthHandoffInteractRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *gatewayAuthHandoffInteractClient) Recv() (*AuthHandoffInteractResponse, error) {
-	m := new(AuthHandoffInteractResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *gatewayClient) ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Gateway/ChannelInteract", opts...)
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.Gateway/ChannelInteract", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -293,9 +259,6 @@ func (x *gatewayChannelInteractClient) Recv() (*ChannelInteractResponse, error) 
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
 type GatewayServer interface {
-	// AuthHandoffInteract is a bi-directional stream that is used to handoff
-	// the auth server
-	AuthHandoffInteract(Gateway_AuthHandoffInteractServer) error
 	// ChannelInteract is a bi-directional stream that is used to interact with
 	// the channel server
 	ChannelInteract(Gateway_ChannelInteractServer) error
@@ -306,9 +269,6 @@ type GatewayServer interface {
 type UnimplementedGatewayServer struct {
 }
 
-func (UnimplementedGatewayServer) AuthHandoffInteract(Gateway_AuthHandoffInteractServer) error {
-	return status.Errorf(codes.Unimplemented, "method AuthHandoffInteract not implemented")
-}
 func (UnimplementedGatewayServer) ChannelInteract(Gateway_ChannelInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method ChannelInteract not implemented")
 }
@@ -323,32 +283,6 @@ type UnsafeGatewayServer interface {
 
 func RegisterGatewayServer(s grpc.ServiceRegistrar, srv GatewayServer) {
 	s.RegisterService(&Gateway_ServiceDesc, srv)
-}
-
-func _Gateway_AuthHandoffInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GatewayServer).AuthHandoffInteract(&gatewayAuthHandoffInteractServer{stream})
-}
-
-type Gateway_AuthHandoffInteractServer interface {
-	Send(*AuthHandoffInteractResponse) error
-	Recv() (*AuthHandoffInteractRequest, error)
-	grpc.ServerStream
-}
-
-type gatewayAuthHandoffInteractServer struct {
-	grpc.ServerStream
-}
-
-func (x *gatewayAuthHandoffInteractServer) Send(m *AuthHandoffInteractResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *gatewayAuthHandoffInteractServer) Recv() (*AuthHandoffInteractRequest, error) {
-	m := new(AuthHandoffInteractRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 func _Gateway_ChannelInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -385,12 +319,6 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GatewayServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "AuthHandoffInteract",
-			Handler:       _Gateway_AuthHandoffInteract_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
 		{
 			StreamName:    "ChannelInteract",
 			Handler:       _Gateway_ChannelInteract_Handler,

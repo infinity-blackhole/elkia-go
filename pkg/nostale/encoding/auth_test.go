@@ -41,10 +41,10 @@ func TestAuthEncodingEncodeFrame(t *testing.T) {
 	expected := []byte{
 		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
 		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
-		130, 131, 10,
+		130, 131, 216,
 	}
 	var buf bytes.Buffer
-	if err := NewEncoder(&buf, AuthEncoding).Encode(input); err != nil {
+	if err := NewEncoder(&buf, AuthEncoding).Encode(&input); err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := buf.Bytes()

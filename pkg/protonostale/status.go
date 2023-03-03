@@ -9,15 +9,15 @@ import (
 )
 
 var (
-	DialogErrorOpCode = "failc"
-	DialogInfoOpCode  = "info"
+	ErrorOpCode = "failc"
+	InfoOpCode  = "info"
 )
 
-type DialogErrorFrame struct {
-	eventing.DialogErrorFrame
+type ErrorFrame struct {
+	eventing.ErrorFrame
 }
 
-func (e *DialogErrorFrame) MarshalNosTale() ([]byte, error) {
+func (e *ErrorFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "failc %d", e.Code); err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (e *DialogErrorFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (e *DialogErrorFrame) UnmarshalNosTale(b []byte) error {
+func (e *ErrorFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -37,38 +37,38 @@ func (e *DialogErrorFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Code = eventing.DialogErrorCode(code)
+	e.Code = eventing.Code(code)
 	return nil
 }
 
-type DialogInfoFrame struct {
-	eventing.DialogInfoFrame
+type InfoFrame struct {
+	eventing.InfoFrame
 }
 
-func (e *DialogInfoFrame) MarshalNosTale() ([]byte, error) {
+func (e *InfoFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%s %s", DialogInfoOpCode, e.Content); err != nil {
+	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, e.Content); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *DialogInfoFrame) UnmarshalNosTale(b []byte) error {
+func (e *InfoFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
-	if string(bs[0]) != DialogInfoOpCode {
+	if string(bs[0]) != InfoOpCode {
 		return fmt.Errorf("invalid prefix: %s", string(bs[0]))
 	}
 	e.Content = string(bs[1])
 	return nil
 }
 
-func NewStatus(code eventing.DialogErrorCode) *Status {
+func NewStatus(code eventing.Code) *Status {
 	return &Status{
-		s: DialogErrorFrame{
-			DialogErrorFrame: eventing.DialogErrorFrame{
+		s: ErrorFrame{
+			ErrorFrame: eventing.ErrorFrame{
 				Code: code,
 			},
 		},
@@ -76,7 +76,7 @@ func NewStatus(code eventing.DialogErrorCode) *Status {
 }
 
 type Status struct {
-	s DialogErrorFrame
+	s ErrorFrame
 }
 
 func (s *Status) Error() string {
