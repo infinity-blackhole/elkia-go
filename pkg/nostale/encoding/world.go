@@ -77,50 +77,47 @@ func (e worldEncoding) doDecryptHelper(binary []byte, result [][]byte) []byte {
 	rest := binary[1:]
 
 	if b <= 0x7A {
-		first, second := e.split(rest, b)
-
+		n := e.split(rest, b)
+		first := rest[:n]
+		second := rest[n:]
 		res := make([]byte, len(first))
 		for _, c := range first {
 			res = append(res, c^0xFF)
 		}
-
 		return e.doDecryptHelper(second, append([][]byte{res}, result...))
 	} else {
-		first, second := e.doDecrypt2(rest, b&0x7F)
+		first := make([]byte, len(rest)*2)
+		ndst, nsrc := e.decryptChunk(first, rest, b&0x7F)
+		first = first[:ndst]
+		second := rest[nsrc:]
 		return e.doDecryptHelper(second, append([][]byte{first}, result...))
 	}
 }
 
-func (e worldEncoding) split(rest []byte, b byte) ([]byte, []byte) {
-	var l int
+func (e worldEncoding) split(rest []byte, b byte) int {
 	if int(b) < len(rest) {
-		l = int(b)
-	} else {
-		l = len(rest)
+		return int(b)
 	}
-	return rest[:l], rest[l:]
+	return len(rest)
 }
 
-func (e worldEncoding) doDecrypt2(binary []byte, n byte) ([]byte, []byte) {
-	i := 0
-	result := []byte{}
-
-	for i < int(n) && len(binary) > 0 {
-		h := int(binary[0] >> 4)
-		l := int(binary[0] & 0x0F)
-		binary = binary[1:]
+func (e worldEncoding) decryptChunk(dst, src []byte, n byte) (ndst, nsrc int) {
+	for ndst, nsrc = 0, 0; ndst < int(n) && len(src) > 0; ndst, nsrc = ndst+1, nsrc+1 {
+		h := int(src[0] >> 4)
+		l := int(src[0] & 0x0F)
+		src = src[1:]
 
 		if h != 0 && h != 0xF && (l == 0 || l == 0xF) {
-			result = append(result, table[h-1])
+			dst[ndst] = table[h-1]
 		} else if l != 0 && l != 0xF && (h == 0 || h == 0xF) {
-			result = append(result, table[l-1])
+			dst[ndst] = table[l-1]
 		} else if h != 0 && h != 0xF && l != 0 && l != 0xF {
-			result = append(result, table[h-1], table[l-1])
+			dst[ndst] = table[h-1]
+			ndst++
+			dst[ndst] = table[l-1]
 		}
-		i += 1
 	}
-
-	return result, binary
+	return ndst, nsrc
 }
 
 func (e worldEncoding) reverseAndJoin(strings [][]byte) []byte {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
@@ -133,34 +132,6 @@ func DecodeClientVersion(b []byte) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
-}
-
-func EncodeClientVersion(version string) (string, error) {
-	fields := strings.Split(version, ".")
-	if len(fields) != 3 {
-		return "", fmt.Errorf("invalid version: %s", version)
-	}
-	major, err := strconv.ParseUint(fields[0], 10, 32)
-	if err != nil {
-		return "", err
-	}
-	minor, err := strconv.ParseUint(fields[1], 10, 32)
-	if err != nil {
-		return "", err
-	}
-	fields = strings.Split(fields[2], "+")
-	if len(fields) != 2 {
-		return "", fmt.Errorf("invalid version: %s", version)
-	}
-	patch, err := strconv.ParseUint(fields[0], 10, 32)
-	if err != nil {
-		return "", err
-	}
-	build, err := strconv.ParseUint(fields[1], 10, 32)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%d.%d.%d.%d", major, minor, patch, build), nil
 }
 
 type EndpointListFrame struct {
