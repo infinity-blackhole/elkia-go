@@ -26,18 +26,18 @@ func TestWorldEncodingDecodeHandoffPasswordFrame(t *testing.T) {
 
 func TestWorldEncodingDecodeModeAndOffset(t *testing.T) {
 	r := WorldEncoding.WithKey(100)
-	if r.mode != 1 {
-		t.Errorf("Expected mode 74, got %d", r.mode)
+	if r.mode() != 1 {
+		t.Errorf("Expected mode 74, got %d", r.mode())
 	}
-	if r.offset != 164 {
-		t.Errorf("Expected offset 0, got %d", r.offset)
+	if r.offset() != 164 {
+		t.Errorf("Expected offset 0, got %d", r.offset())
 	}
 	r = WorldEncoding.WithKey(1)
-	if r.mode != 0 {
-		t.Errorf("Expected mode 0, got %d", r.mode)
+	if r.mode() != 0 {
+		t.Errorf("Expected mode 0, got %d", r.mode())
 	}
-	if r.offset != 65 {
-		t.Errorf("Expected offset 65, got %d", r.offset)
+	if r.offset() != 65 {
+		t.Errorf("Expected offset 65, got %d", r.offset())
 	}
 }
 

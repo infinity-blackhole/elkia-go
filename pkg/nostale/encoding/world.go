@@ -8,14 +8,12 @@ import (
 var WorldEncoding worldEncoding
 
 type worldEncoding struct {
-	mode   byte
-	offset byte
+	key uint32
 }
 
 func (e worldEncoding) WithKey(key uint32) *worldEncoding {
 	return &worldEncoding{
-		mode:   byte(key >> 6 & 0x03),
-		offset: byte(key&0xFF + 0x40&0xFF),
+		key: key,
 	}
 }
 
@@ -36,15 +34,15 @@ func (e worldEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 
 func (e worldEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	for n = 0; n < len(src); n++ {
-		switch e.mode {
+		switch e.mode() {
 		case 0:
-			dst[n] = src[n] - e.offset
+			dst[n] = src[n] - e.offset()
 		case 1:
-			dst[n] = src[n] + e.offset
+			dst[n] = src[n] + e.offset()
 		case 2:
-			dst[n] = (src[n] - e.offset) ^ 0xC3
+			dst[n] = (src[n] - e.offset()) ^ 0xC3
 		case 3:
-			dst[n] = (src[n] + e.offset) ^ 0xC3
+			dst[n] = (src[n] + e.offset()) ^ 0xC3
 		default:
 			return n, errors.New("invalid mode")
 		}
@@ -52,48 +50,58 @@ func (e worldEncoding) decodeFrameList(dst, src []byte) (n int, err error) {
 	return n, nil
 }
 
+func (e worldEncoding) mode() byte {
+	return byte(e.key >> 6 & 0x03)
+}
+
+func (e worldEncoding) offset() byte {
+	return byte(e.key&0xFF + 0x40&0xFF)
+}
+
 func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	var chunks [][]byte
 	for _, chunk := range bytes.Split(src, []byte{0xFF}) {
-		chunks = append(chunks, doDecryptHelper(chunk, [][]byte{}))
+		chunks = append(chunks, e.doDecryptHelper(chunk, [][]byte{}))
 	}
 	result := bytes.Join(chunks, []byte{})
 	copy(dst, result)
 	return len(result), nil
 }
 
-func doDecryptHelper(binary []byte, result [][]byte) []byte {
+func (e worldEncoding) doDecryptHelper(binary []byte, result [][]byte) []byte {
 	if len(binary) == 0 {
-		return []byte(reverseAndJoin(result))
+		return e.reverseAndJoin(result)
 	}
 
 	b := binary[0]
 	rest := binary[1:]
 
 	if b <= 0x7A {
-		var l int
-		if int(b) < len(rest) {
-			l = int(b)
-		} else {
-			l = len(rest)
-		}
-
-		first := rest[:l]
-		second := rest[l:]
+		first, second := e.split(rest, b)
 
 		res := make([]byte, len(first))
 		for _, c := range first {
 			res = append(res, c^0xFF)
 		}
 
-		return doDecryptHelper(second, append([][]byte{res}, result...))
+		return e.doDecryptHelper(second, append([][]byte{res}, result...))
 	} else {
-		first, second := doDecrypt2(rest, b&0x7F)
-		return doDecryptHelper(second, append([][]byte{first}, result...))
+		first, second := e.doDecrypt2(rest, b&0x7F)
+		return e.doDecryptHelper(second, append([][]byte{first}, result...))
 	}
 }
 
-func doDecrypt2(binary []byte, n byte) ([]byte, []byte) {
+func (e worldEncoding) split(rest []byte, b byte) ([]byte, []byte) {
+	var l int
+	if int(b) < len(rest) {
+		l = int(b)
+	} else {
+		l = len(rest)
+	}
+	return rest[:l], rest[l:]
+}
+
+func (e worldEncoding) doDecrypt2(binary []byte, n byte) ([]byte, []byte) {
 	i := 0
 	result := []byte{}
 
@@ -115,7 +123,7 @@ func doDecrypt2(binary []byte, n byte) ([]byte, []byte) {
 	return result, binary
 }
 
-func reverseAndJoin(strings [][]byte) []byte {
+func (e worldEncoding) reverseAndJoin(strings [][]byte) []byte {
 	reversed := [][]byte{}
 	for i := len(strings) - 1; i >= 0; i-- {
 		reversed = append(reversed, strings[i])
