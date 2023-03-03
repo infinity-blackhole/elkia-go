@@ -61,37 +61,39 @@ func (e worldEncoding) offset() byte {
 func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	var chunks [][]byte
 	for _, chunk := range bytes.Split(src, []byte{0xFF}) {
-		chunks = append(chunks, e.doDecryptHelper(chunk, [][]byte{}))
+		chunks = append(chunks, e.doDecryptHelper(chunk))
 	}
 	result := bytes.Join(chunks, []byte{})
 	copy(dst, result)
 	return len(result), nil
 }
 
-func (e worldEncoding) doDecryptHelper(binary []byte, result [][]byte) []byte {
-	if len(binary) == 0 {
-		return e.reverseAndJoin(result)
-	}
+func (e worldEncoding) doDecryptHelper(binary []byte) []byte {
+	result := [][]byte{}
+	for len(binary) > 0 {
+		b := binary[0]
+		rest := binary[1:]
 
-	b := binary[0]
-	rest := binary[1:]
-
-	if b <= 0x7A {
-		n := e.split(rest, b)
-		first := rest[:n]
-		second := rest[n:]
-		res := make([]byte, len(first))
-		for _, c := range first {
-			res = append(res, c^0xFF)
+		if b <= 0x7A {
+			n := e.split(rest, b)
+			first := rest[:n]
+			second := rest[n:]
+			res := make([]byte, len(first))
+			for _, c := range first {
+				res = append(res, c^0xFF)
+			}
+			binary = second
+			result = append(result, res)
+		} else {
+			first := make([]byte, len(rest)*2)
+			ndst, nsrc := e.decryptChunk(first, rest, b&0x7F)
+			first = first[:ndst]
+			second := rest[nsrc:]
+			binary = second
+			result = append(result, first)
 		}
-		return e.doDecryptHelper(second, append([][]byte{res}, result...))
-	} else {
-		first := make([]byte, len(rest)*2)
-		ndst, nsrc := e.decryptChunk(first, rest, b&0x7F)
-		first = first[:ndst]
-		second := rest[nsrc:]
-		return e.doDecryptHelper(second, append([][]byte{first}, result...))
 	}
+	return bytes.Join(result, []byte{})
 }
 
 func (e worldEncoding) split(rest []byte, b byte) int {
@@ -118,14 +120,6 @@ func (e worldEncoding) decryptChunk(dst, src []byte, n byte) (ndst, nsrc int) {
 		}
 	}
 	return ndst, nsrc
-}
-
-func (e worldEncoding) reverseAndJoin(strings [][]byte) []byte {
-	reversed := [][]byte{}
-	for i := len(strings) - 1; i >= 0; i-- {
-		reversed = append(reversed, strings[i])
-	}
-	return bytes.Join(reversed, []byte{})
 }
 
 var table = []byte{
