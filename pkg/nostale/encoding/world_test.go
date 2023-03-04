@@ -11,8 +11,6 @@ func TestWorldEncodingDecodeHandoffPasswordFrame(t *testing.T) {
 		63, 199, 205, 171, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214, 248,
 		193, 160, 65, 218, 193, 224, 66, 241, 205, 63, 10,
 	}
-	// The payload is "49272 9hibwiwiG2e6Nr", the rest is the keep alive
-	// and protocol garbage.
 	expected := []byte("475n5 5355-564 .com49272 9hibwiwiG2e6Nr\xca")
 	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
 	result := make([]byte, WorldEncoding.DecodedLen(len(input)))

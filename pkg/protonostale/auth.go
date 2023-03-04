@@ -369,7 +369,7 @@ func (e *HandoffPasswordFrame) MarshalNosTale() ([]byte, error) {
 }
 
 func (e *HandoffPasswordFrame) UnmarshalNosTale(b []byte) error {
-	bs := bytes.Split(b, []byte(" "))
+	bs := bytes.Split(b[19:len(b)-1], []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
