@@ -38,7 +38,7 @@ LABEL org.opencontainers.image.source https://github.com/infinity-blackhole/elki
 # Copy binary
 COPY --from=build /usr/local/bin/elkia-gateway /usr/local/bin/elkia-gateway
 
-# NosTale gateway
-EXPOSE 4124
+# gRPC API
+EXPOSE 8080
 
 ENTRYPOINT ["elkia-gateway"]

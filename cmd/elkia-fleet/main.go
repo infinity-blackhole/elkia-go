@@ -13,6 +13,7 @@ import (
 	ory "github.com/ory/client-go"
 	"github.com/sirupsen/logrus"
 	etcd "go.etcd.io/etcd/client/v3"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -55,7 +56,10 @@ func main() {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("fleetserver: connected to kubernetes")
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+	)
 	fleet.RegisterPresenceServer(
 		srv,
 		presence.NewPresenceServer(presence.PresenceServerConfig{

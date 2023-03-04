@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-gateway-proxy
+  namespace: elkia
+  labels:
+    app.kubernetes.io/name: elkia-gateway-proxy
+    app.kubernetes.io/instance: elkia-gateway-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: elkia-gateway-proxy
+      app.kubernetes.io/instance: elkia-gateway-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: elkia-gateway-proxy
+        app.kubernetes.io/instance: elkia-gateway-proxy
+    spec:
+      containers:
+        - name: elkia-gateway-proxy
+          image: ghcr.io/infinity-blackhole/elkia-gateway-proxy
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+          ports:
+            - containerPort: 4124
+              name: nswp
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

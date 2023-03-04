@@ -3,8 +3,10 @@ kind: Kustomization
 resources:
   - ../../base
   - ../../../elkia-auth/overlays/default
-  - ../../../elkia-fleet/overlays/default
+  - ../../../elkia-auth-proxy/overlays/default
   - ../../../elkia-gateway/overlays/default
+  - ../../../elkia-gateway-proxy/overlays/default
+  - ../../../elkia-fleet/overlays/default
   - ../../../kratos/overlays/default
   - ../../../kratos-selfservice-ui-node/overlays/default
   - ../../../etcd/overlays/default

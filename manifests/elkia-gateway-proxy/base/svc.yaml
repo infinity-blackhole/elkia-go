@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elkia-gateway-proxy
+  namespace: elkia
+  labels:
+    app.kubernetes.io/name: elkia-gateway-proxy
+    app.kubernetes.io/instance: elkia-gateway-proxy
+    fleet.elkia.io/managed: "true"
+    fleet.elkia.io/world-id: "1"
+    fleet.elkia.io/world-name: Elkia
+    fleet.elkia.io/channel-id: "1"
+    fleet.elkia.io/population: "0"
+    fleet.elkia.io/capacity: "3000"
+    fleet.elkia.io/port: nswp
+spec:
+  ports:
+    - name: nswp
+      port: 4124
+      targetPort: nswp
+  selector:
+    app.kubernetes.io/name: elkia-gateway-proxy
+    app.kubernetes.io/instance: elkia-gateway-proxy

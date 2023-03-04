@@ -38,7 +38,7 @@ LABEL org.opencontainers.image.source https://github.com/infinity-blackhole/elki
 # Copy binary
 COPY --from=build /usr/local/bin/elkia-fleet /usr/local/bin/elkia-fleet
 
-# HTTP Function
+# gRPC API
 EXPOSE 8080
 
 ENTRYPOINT ["elkia-fleet"]

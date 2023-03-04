@@ -7,4 +7,3 @@ components:
   - ../../components/kafka
 patches:
   - path: deployment.patch.yaml
-  - path: svc.patch.yaml
