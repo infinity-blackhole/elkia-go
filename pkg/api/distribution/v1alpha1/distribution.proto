@@ -9,15 +9,14 @@ message ArtifactVerifyRequest {
 }
 
 enum ArtifactVerifyResult {
-  UNKNOWN = 0;
-  SUCCESS = 1;
-  FAILURE = 2;
-  OUTDATED = 3;
+  SUCCESS = 0;
+  FAILURE = 1;
+  OUTDATED = 2;
 }
 
 message ArtifactVerifyResponse { ArtifactVerifyResult result = 1; }
 
-service Client {
+service Registry {
   // ArtifactVerify verifies the artifact with the given version and checksum.
   rpc ArtifactVerify(ArtifactVerifyRequest) returns (ArtifactVerifyResponse) {}
 }

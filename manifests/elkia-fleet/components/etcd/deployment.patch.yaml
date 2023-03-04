@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elkia-fleet
+  name: elkia-apiserver
   namespace: elkia
 spec:
   template:
     spec:
       containers:
-        - name: elkia-fleet
+        - name: elkia-apiserver
           env:
             - name: ETCD_URIS
               value: http://etcd:2379

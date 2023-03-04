@@ -28,12 +28,12 @@ build:
       docker:
         target: build
         dockerfile: cmd/elkia-gateway-proxy/Dockerfile
-    - image: ghcr.io/infinity-blackhole/elkia-fleet
+    - image: ghcr.io/infinity-blackhole/elkia-apiserver
       context: .
       runtimeType: go
       docker:
         target: build
-        dockerfile: cmd/elkia-fleet/Dockerfile
+        dockerfile: cmd/elkia-apiserver/Dockerfile
   local:
     useBuildkit: true
 manifests:

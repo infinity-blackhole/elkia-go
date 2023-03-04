@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: elkia-fleet
+  name: elkia-apiserver
   namespace: elkia
   labels:
-    app.kubernetes.io/name: elkia-fleet
-    app.kubernetes.io/instance: elkia-fleet
+    app.kubernetes.io/name: elkia-apiserver
+    app.kubernetes.io/instance: elkia-apiserver
 spec:
   ports:
     - name: http
       port: 80
       targetPort: http
   selector:
-    app.kubernetes.io/name: elkia-fleet
-    app.kubernetes.io/instance: elkia-fleet
+    app.kubernetes.io/name: elkia-apiserver
+    app.kubernetes.io/instance: elkia-apiserver

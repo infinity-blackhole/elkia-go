@@ -9,6 +9,8 @@ import (
 
 	"github.com/infinity-blackhole/elkia/internal/cluster"
 	"github.com/infinity-blackhole/elkia/internal/presence"
+	"github.com/infinity-blackhole/elkia/internal/registry"
+	distribution "github.com/infinity-blackhole/elkia/pkg/api/distribution/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/sirupsen/logrus"
@@ -30,7 +32,7 @@ func init() {
 }
 
 func main() {
-	logrus.Debugf("Starting fleet server")
+	logrus.Debugf("Starting api server")
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "localhost"
@@ -43,19 +45,19 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleetserver: listening on %s:%s", host, port)
+	logrus.Debugf("api server: listening on %s:%s", host, port)
 	oryClient := newOryClient()
-	logrus.Debugf("fleetserver: connected to ory")
+	logrus.Debugf("api server: connected to ory")
 	etcdClient, err := newEtcd()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleetserver: connected to etcd")
+	logrus.Debugf("api server: connected to etcd")
 	kubeClient, err := NewKubernetesClient()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("fleetserver: connected to kubernetes")
+	logrus.Debugf("api server: connected to kubernetes")
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
@@ -74,7 +76,11 @@ func main() {
 			KubernetesClient: kubeClient,
 		}),
 	)
-	logrus.Debugf("fleetserver: serving grpc")
+	distribution.RegisterRegistryServer(
+		srv,
+		registry.NewServer(registry.ServerConfig{}),
+	)
+	logrus.Debugf("api server: serving grpc")
 	if err := srv.Serve(lis); err != nil {
 		logrus.Fatal(err)
 	}
@@ -116,7 +122,7 @@ func newEtcd() (*etcd.Client, error) {
 	if etcdPassword == "" {
 		return nil, errors.New("etcd password is required")
 	}
-	logrus.Debugf("fleet server connecting to etcd: %s", etcdUris)
+	logrus.Debugf("api server connecting to etcd: %s", etcdUris)
 	return etcd.New(etcd.Config{
 		Endpoints: etcdUris,
 		Username:  etcdUsername,

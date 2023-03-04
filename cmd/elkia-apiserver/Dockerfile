@@ -25,10 +25,10 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build \
     -gcflags="${SKAFFOLD_GO_GCFLAGS}" \
     -ldflags "-linkmode=external" \
-    -o /usr/local/bin/elkia-fleet \
-    ./cmd/elkia-fleet
+    -o /usr/local/bin/elkia-apiserver \
+    ./cmd/elkia-apiserver
 
-CMD ["/usr/local/bin/elkia-fleet"]
+CMD ["/usr/local/bin/elkia-apiserver"]
 
 FROM gcr.io/distroless/base-debian11:nonroot
 
@@ -36,9 +36,9 @@ FROM gcr.io/distroless/base-debian11:nonroot
 LABEL org.opencontainers.image.source https://github.com/infinity-blackhole/elkia-go
 
 # Copy binary
-COPY --from=build /usr/local/bin/elkia-fleet /usr/local/bin/elkia-fleet
+COPY --from=build /usr/local/bin/elkia-apiserver /usr/local/bin/elkia-apiserver
 
 # gRPC API
 EXPOSE 8080
 
-ENTRYPOINT ["elkia-fleet"]
+ENTRYPOINT ["elkia-apiserver"]

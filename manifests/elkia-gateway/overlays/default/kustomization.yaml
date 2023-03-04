@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - ../../base
 components:
-  - ../../components/elkia-fleet
+  - ../../components/elkia-apiserver
   - ../../components/kafka
 patches:
   - path: deployment.patch.yaml

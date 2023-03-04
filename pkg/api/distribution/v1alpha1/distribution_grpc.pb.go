@@ -18,88 +18,88 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ClientClient is the client API for Client service.
+// RegistryClient is the client API for Registry service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ClientClient interface {
+type RegistryClient interface {
 	// ArtifactVerify verifies the artifact with the given version and checksum.
 	ArtifactVerify(ctx context.Context, in *ArtifactVerifyRequest, opts ...grpc.CallOption) (*ArtifactVerifyResponse, error)
 }
 
-type clientClient struct {
+type registryClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewClientClient(cc grpc.ClientConnInterface) ClientClient {
-	return &clientClient{cc}
+func NewRegistryClient(cc grpc.ClientConnInterface) RegistryClient {
+	return &registryClient{cc}
 }
 
-func (c *clientClient) ArtifactVerify(ctx context.Context, in *ArtifactVerifyRequest, opts ...grpc.CallOption) (*ArtifactVerifyResponse, error) {
+func (c *registryClient) ArtifactVerify(ctx context.Context, in *ArtifactVerifyRequest, opts ...grpc.CallOption) (*ArtifactVerifyResponse, error) {
 	out := new(ArtifactVerifyResponse)
-	err := c.cc.Invoke(ctx, "/io.elkia.distribution.v1alpha1.Client/ArtifactVerify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/io.elkia.distribution.v1alpha1.Registry/ArtifactVerify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ClientServer is the server API for Client service.
-// All implementations must embed UnimplementedClientServer
+// RegistryServer is the server API for Registry service.
+// All implementations must embed UnimplementedRegistryServer
 // for forward compatibility
-type ClientServer interface {
+type RegistryServer interface {
 	// ArtifactVerify verifies the artifact with the given version and checksum.
 	ArtifactVerify(context.Context, *ArtifactVerifyRequest) (*ArtifactVerifyResponse, error)
-	mustEmbedUnimplementedClientServer()
+	mustEmbedUnimplementedRegistryServer()
 }
 
-// UnimplementedClientServer must be embedded to have forward compatible implementations.
-type UnimplementedClientServer struct {
+// UnimplementedRegistryServer must be embedded to have forward compatible implementations.
+type UnimplementedRegistryServer struct {
 }
 
-func (UnimplementedClientServer) ArtifactVerify(context.Context, *ArtifactVerifyRequest) (*ArtifactVerifyResponse, error) {
+func (UnimplementedRegistryServer) ArtifactVerify(context.Context, *ArtifactVerifyRequest) (*ArtifactVerifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ArtifactVerify not implemented")
 }
-func (UnimplementedClientServer) mustEmbedUnimplementedClientServer() {}
+func (UnimplementedRegistryServer) mustEmbedUnimplementedRegistryServer() {}
 
-// UnsafeClientServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ClientServer will
+// UnsafeRegistryServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RegistryServer will
 // result in compilation errors.
-type UnsafeClientServer interface {
-	mustEmbedUnimplementedClientServer()
+type UnsafeRegistryServer interface {
+	mustEmbedUnimplementedRegistryServer()
 }
 
-func RegisterClientServer(s grpc.ServiceRegistrar, srv ClientServer) {
-	s.RegisterService(&Client_ServiceDesc, srv)
+func RegisterRegistryServer(s grpc.ServiceRegistrar, srv RegistryServer) {
+	s.RegisterService(&Registry_ServiceDesc, srv)
 }
 
-func _Client_ArtifactVerify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Registry_ArtifactVerify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ArtifactVerifyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).ArtifactVerify(ctx, in)
+		return srv.(RegistryServer).ArtifactVerify(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/io.elkia.distribution.v1alpha1.Client/ArtifactVerify",
+		FullMethod: "/io.elkia.distribution.v1alpha1.Registry/ArtifactVerify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).ArtifactVerify(ctx, req.(*ArtifactVerifyRequest))
+		return srv.(RegistryServer).ArtifactVerify(ctx, req.(*ArtifactVerifyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Client_ServiceDesc is the grpc.ServiceDesc for Client service.
+// Registry_ServiceDesc is the grpc.ServiceDesc for Registry service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Client_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.distribution.v1alpha1.Client",
-	HandlerType: (*ClientServer)(nil),
+var Registry_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.distribution.v1alpha1.Registry",
+	HandlerType: (*RegistryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ArtifactVerify",
-			Handler:    _Client_ArtifactVerify_Handler,
+			Handler:    _Registry_ArtifactVerify_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

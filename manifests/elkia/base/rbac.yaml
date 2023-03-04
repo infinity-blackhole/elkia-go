@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: elkia-fleet-service-agent
+  name: elkia-apiserver-service-agent
   namespace: elkia
 rules:
   - apiGroups: [""]
@@ -11,14 +11,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: elkia-fleet-service-agent
+  name: elkia-apiserver-service-agent
   namespace: elkia
 subjects:
   - kind: ServiceAccount
-    name: elkia-fleet
+    name: elkia-apiserver
     namespace: elkia
     apiGroup: ""
 roleRef:
   kind: Role
-  name: elkia-fleet-service-agent
+  name: elkia-apiserver-service-agent
   apiGroup: rbac.authorization.k8s.io

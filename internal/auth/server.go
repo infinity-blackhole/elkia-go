@@ -4,6 +4,7 @@ import (
 	"math"
 	"net"
 
+	distribution "github.com/infinity-blackhole/elkia/pkg/api/distribution/v1alpha1"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
@@ -14,12 +15,14 @@ import (
 type ServerConfig struct {
 	PresenceClient fleet.PresenceClient
 	ClusterClient  fleet.ClusterClient
+	RegistryClient distribution.RegistryClient
 }
 
 func NewServer(cfg ServerConfig) *Server {
 	return &Server{
 		presence: cfg.PresenceClient,
 		cluster:  cfg.ClusterClient,
+		registry: cfg.RegistryClient,
 	}
 }
 
@@ -27,6 +30,7 @@ type Server struct {
 	eventing.UnimplementedAuthServer
 	presence fleet.PresenceClient
 	cluster  fleet.ClusterClient
+	registry distribution.RegistryClient
 }
 
 func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
@@ -54,6 +58,16 @@ func (s *Server) AuthLoginFrameProduce(
 	m *eventing.AuthLoginFrame,
 	stream eventing.Auth_AuthLoginFrameProduceServer,
 ) error {
+	_, err := s.registry.ArtifactVerify(
+		stream.Context(),
+		&distribution.ArtifactVerifyRequest{
+			Version:  m.ClientVersion,
+			Checksum: m.ClientChecksum,
+		},
+	)
+	if err != nil {
+		return err
+	}
 	handoff, err := s.presence.AuthLogin(
 		stream.Context(),
 		&fleet.AuthLoginRequest{

@@ -9,5 +9,5 @@ spec:
       containers:
         - name: elkia-auth
           env:
-            - name: ELKIA_FLEET_ENDPOINT
-              value: elkia-fleet:80
+            - name: ELKIA_APISERVER_ENDPOINT
+              value: elkia-apiserver:80

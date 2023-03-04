@@ -9,5 +9,5 @@ spec:
       containers:
         - name: elkia-gateway
           env:
-            - name: ELKIA_FLEET_ENDPOINT
-              value: elkia-fleet:8080
+            - name: ELKIA_APISERVER_ENDPOINT
+              value: elkia-apiserver:8080

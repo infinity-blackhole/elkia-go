@@ -27,19 +27,19 @@ func init() {
 }
 
 func main() {
-	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if elkiaFleetEndpoint == "" {
-		elkiaFleetEndpoint = "localhost:8080"
+	elkiaApiServerEndpoint := os.Getenv("ELKIA_APISERVER_ENDPOINT")
+	if elkiaApiServerEndpoint == "" {
+		elkiaApiServerEndpoint = "localhost:8080"
 	}
-	logrus.Debugf("gateway: connecting to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("gateway: connecting to api server at %s", elkiaApiServerEndpoint)
 	conn, err := grpc.Dial(
-		elkiaFleetEndpoint,
+		elkiaApiServerEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("gateway: connected to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("gateway: connected to api server at %s", elkiaApiServerEndpoint)
 	kp, err := NewKafkaProducer()
 	if err != nil {
 		logrus.Fatal(err)

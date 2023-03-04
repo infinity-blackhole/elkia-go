@@ -25,7 +25,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/cmd/elkia-fleet"
+      "program": "${workspaceFolder}/cmd/elkia-apiserver"
     },
     {
       "name": "Attach Elkia Fleet",
@@ -34,7 +34,7 @@
       "mode": "remote",
       "host": "localhost",
       "port": 56268,
-      "cwd": "${workspaceFolder}/cmd/elkia-fleet"
+      "cwd": "${workspaceFolder}/cmd/elkia-apiserver"
     },
     {
       "name": "Launch Elkia Gateway",

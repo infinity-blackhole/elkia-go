@@ -27,13 +27,13 @@ func init() {
 }
 
 func main() {
-	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if elkiaFleetEndpoint == "" {
-		elkiaFleetEndpoint = "localhost:8080"
+	elkiaApiServerEndpoint := os.Getenv("ELKIA_APISERVER_ENDPOINT")
+	if elkiaApiServerEndpoint == "" {
+		elkiaApiServerEndpoint = "localhost:8080"
 	}
-	logrus.Debugf("auth: connecting to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("auth: connecting to api server at %s", elkiaApiServerEndpoint)
 	conn, err := grpc.Dial(
-		elkiaFleetEndpoint,
+		elkiaApiServerEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
