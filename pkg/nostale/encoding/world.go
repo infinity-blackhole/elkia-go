@@ -61,26 +61,26 @@ func (e worldEncoding) offset() byte {
 func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	var chunks [][]byte
 	for _, chunk := range bytes.Split(src, []byte{0xFF}) {
-		chunks = append(chunks, e.decryptChunk(chunk))
+		chunks = append(chunks, e.unpackChunk(chunk))
 	}
 	result := bytes.Join(chunks, []byte{})
 	copy(dst, result)
 	return len(result), nil
 }
 
-func (e worldEncoding) decryptChunk(binary []byte) []byte {
+func (e worldEncoding) unpackChunk(binary []byte) []byte {
 	result := []byte{}
 	for len(binary) > 0 {
 		b := binary[0]
 		rest := binary[1:]
 		if b <= 0x7A {
 			first := make([]byte, len(rest))
-			n := e.decryptLinearChunk(first, rest, b)
+			n := e.decodeLinearChunk(first, rest, b)
 			result = append(result, first[:n]...)
 			binary = rest[n:]
 		} else {
 			first := make([]byte, len(rest)*2)
-			ndst, nsrc := e.decryptCompactChunk(first, rest, b&0x7F)
+			ndst, nsrc := e.decodeCompactChunk(first, rest, b&0x7F)
 			binary = rest[nsrc:]
 			result = append(result, first[:ndst]...)
 		}
@@ -88,7 +88,7 @@ func (e worldEncoding) decryptChunk(binary []byte) []byte {
 	return result
 }
 
-func (e worldEncoding) decryptLinearChunk(dst, src []byte, b byte) (n int) {
+func (e worldEncoding) decodeLinearChunk(dst, src []byte, b byte) (n int) {
 	var l int
 	if int(b) < len(src) {
 		l = int(b)
@@ -101,7 +101,7 @@ func (e worldEncoding) decryptLinearChunk(dst, src []byte, b byte) (n int) {
 	return n
 }
 
-func (e worldEncoding) decryptCompactChunk(dst, src []byte, n byte) (ndst, nsrc int) {
+func (e worldEncoding) decodeCompactChunk(dst, src []byte, n byte) (ndst, nsrc int) {
 	buff := src
 	for ndst, nsrc = 0, 0; ndst < int(n) && len(buff) > 0; ndst, nsrc = ndst+1, nsrc+1 {
 		h := int(buff[0] >> 4)
