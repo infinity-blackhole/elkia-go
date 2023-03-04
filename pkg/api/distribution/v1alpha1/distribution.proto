@@ -1,0 +1,23 @@
+syntax = "proto3";
+package io.elkia.distribution.v1alpha1;
+
+option go_package = "pkg/api/distribution/v1alpha1";
+
+message ArtifactVerifyRequest {
+  string version = 1;
+  string checksum = 2;
+}
+
+enum ArtifactVerifyResult {
+  UNKNOWN = 0;
+  SUCCESS = 1;
+  FAILURE = 2;
+  OUTDATED = 3;
+}
+
+message ArtifactVerifyResponse { ArtifactVerifyResult result = 1; }
+
+service Client {
+  // ArtifactVerify verifies the artifact with the given version and checksum.
+  rpc ArtifactVerify(ArtifactVerifyRequest) returns (ArtifactVerifyResponse) {}
+}
