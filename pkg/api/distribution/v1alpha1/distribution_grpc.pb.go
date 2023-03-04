@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type RegistryClient interface {
 	// ArtifactVerify verifies the artifact with the given version and checksum.
 	ArtifactVerify(ctx context.Context, in *ArtifactVerifyRequest, opts ...grpc.CallOption) (*ArtifactVerifyResponse, error)
+	// ArtifactLatest returns the latest artifact.
+	ArtifactLatest(ctx context.Context, in *ArtifactLatestRequest, opts ...grpc.CallOption) (*ArtifactLatestResponse, error)
 }
 
 type registryClient struct {
@@ -43,12 +45,23 @@ func (c *registryClient) ArtifactVerify(ctx context.Context, in *ArtifactVerifyR
 	return out, nil
 }
 
+func (c *registryClient) ArtifactLatest(ctx context.Context, in *ArtifactLatestRequest, opts ...grpc.CallOption) (*ArtifactLatestResponse, error) {
+	out := new(ArtifactLatestResponse)
+	err := c.cc.Invoke(ctx, "/io.elkia.distribution.v1alpha1.Registry/ArtifactLatest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RegistryServer is the server API for Registry service.
 // All implementations must embed UnimplementedRegistryServer
 // for forward compatibility
 type RegistryServer interface {
 	// ArtifactVerify verifies the artifact with the given version and checksum.
 	ArtifactVerify(context.Context, *ArtifactVerifyRequest) (*ArtifactVerifyResponse, error)
+	// ArtifactLatest returns the latest artifact.
+	ArtifactLatest(context.Context, *ArtifactLatestRequest) (*ArtifactLatestResponse, error)
 	mustEmbedUnimplementedRegistryServer()
 }
 
@@ -58,6 +71,9 @@ type UnimplementedRegistryServer struct {
 
 func (UnimplementedRegistryServer) ArtifactVerify(context.Context, *ArtifactVerifyRequest) (*ArtifactVerifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ArtifactVerify not implemented")
+}
+func (UnimplementedRegistryServer) ArtifactLatest(context.Context, *ArtifactLatestRequest) (*ArtifactLatestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArtifactLatest not implemented")
 }
 func (UnimplementedRegistryServer) mustEmbedUnimplementedRegistryServer() {}
 
@@ -90,6 +106,24 @@ func _Registry_ArtifactVerify_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Registry_ArtifactLatest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtifactLatestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).ArtifactLatest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/io.elkia.distribution.v1alpha1.Registry/ArtifactLatest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).ArtifactLatest(ctx, req.(*ArtifactLatestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Registry_ServiceDesc is the grpc.ServiceDesc for Registry service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +134,10 @@ var Registry_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ArtifactVerify",
 			Handler:    _Registry_ArtifactVerify_Handler,
+		},
+		{
+			MethodName: "ArtifactLatest",
+			Handler:    _Registry_ArtifactLatest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

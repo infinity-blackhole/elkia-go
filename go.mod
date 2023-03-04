@@ -4,11 +4,13 @@ go 1.19
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
+	github.com/coreos/go-semver v0.3.0
 	github.com/ory/client-go v1.1.7
 	github.com/sirupsen/logrus v1.9.0
 	go.etcd.io/etcd/client/v3 v3.5.7
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.39.0
 	go.opentelemetry.io/otel v1.13.0
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
@@ -18,7 +20,6 @@ require (
 )
 
 require (
-	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect

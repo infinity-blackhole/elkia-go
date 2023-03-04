@@ -78,7 +78,11 @@ func main() {
 	)
 	distribution.RegisterRegistryServer(
 		srv,
-		registry.NewServer(registry.ServerConfig{}),
+		registry.NewMemoryServer(registry.MemoryServerConfig{
+			Artifacts: []*registry.Artifact{
+				{Version: "0.0.0", Checksum: ""},
+			},
+		}),
 	)
 	logrus.Debugf("api server: serving grpc")
 	if err := srv.Serve(lis); err != nil {

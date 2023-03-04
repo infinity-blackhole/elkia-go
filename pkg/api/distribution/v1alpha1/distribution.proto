@@ -10,13 +10,27 @@ message ArtifactVerifyRequest {
 
 enum ArtifactVerifyResult {
   SUCCESS = 0;
-  FAILURE = 1;
+  CORRUPTED = 1;
   OUTDATED = 2;
 }
 
 message ArtifactVerifyResponse { ArtifactVerifyResult result = 1; }
 
+enum Channel {
+  STABLE = 0;
+}
+
+message ArtifactLatestRequest { Channel channel = 1; }
+
+message ArtifactLatestResponse {
+  string version = 1;
+  string checksum = 2;
+}
+
 service Registry {
   // ArtifactVerify verifies the artifact with the given version and checksum.
   rpc ArtifactVerify(ArtifactVerifyRequest) returns (ArtifactVerifyResponse) {}
+
+  // ArtifactLatest returns the latest artifact.
+  rpc ArtifactLatest(ArtifactLatestRequest) returns (ArtifactLatestResponse) {}
 }
