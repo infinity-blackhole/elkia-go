@@ -6,6 +6,7 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
+	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -37,7 +38,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
 	return &handoffConn{
 		rwc:     c,
-		dec:     encoding.NewDecoder(c, encoding.SessionEncoding),
+		dec:     encoding.NewDecoder(utils.NewReadLogger("session: ", c), encoding.SessionEncoding),
 		gateway: h.gateway,
 	}
 }
@@ -51,7 +52,7 @@ type handoffConn struct {
 func (c *handoffConn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
-	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
+	logrus.Debugf("gateway: serving connection from %v", c.rwc.RemoteAddr())
 	if err := c.handleMessages(ctx); err != nil {
 		c.rwc.Close()
 	}
@@ -62,6 +63,7 @@ func (c *handoffConn) handleMessages(ctx context.Context) error {
 	if err := c.dec.Decode(&sync); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
+	logrus.Debugf("gateway: received sync frame: %v", sync.String())
 	conn := c.newChannelConn(&sync.SyncFrame)
 	go conn.serve(ctx)
 	return nil
@@ -69,10 +71,11 @@ func (c *handoffConn) handleMessages(ctx context.Context) error {
 
 func (h *handoffConn) newChannelConn(sync *eventing.SyncFrame) *channelConn {
 	e := encoding.WorldEncoding.WithKey(sync.Code)
+	logrus.Debugf("gateway: using encoding: %v", e)
 	return &channelConn{
 		rwc:      h.rwc,
 		gateway:  h.gateway,
-		dec:      encoding.NewDecoder(h.rwc, e),
+		dec:      encoding.NewDecoder(utils.NewReadLogger("gateway: ", h.rwc), e),
 		enc:      encoding.NewEncoder(h.rwc, e),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
@@ -91,18 +94,18 @@ type channelConn struct {
 func (c *channelConn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
-	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
+	logrus.Debugf("gateway: serving connection from %v", c.rwc.RemoteAddr())
 	err := c.handleMessages(ctx)
 	switch e := err.(type) {
 	case *protonostale.Status:
 		if err := c.enc.Encode(e); err != nil {
-			logrus.Errorf("auth: failed to send error: %v", err)
+			logrus.Errorf("gateway: failed to send error: %v", err)
 		}
 	default:
 		if err := c.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		); err != nil {
-			logrus.Errorf("auth: failed to send error: %v", err)
+			logrus.Errorf("gateway: failed to send error: %v", err)
 		}
 	}
 }
@@ -123,6 +126,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
+	logrus.Debugf("gateway: sent sync frame")
 	var handoffLogin protonostale.HandoffFrame
 	if err := c.dec.Decode(&handoffLogin); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)

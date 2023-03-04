@@ -63,7 +63,7 @@ func (e worldEncoding) unpackFrameList(dst, src []byte) (n int, err error) {
 	for _, chunk := range bytes.Split(src, []byte{0xFF}) {
 		chunks = append(chunks, e.unpackChunk(chunk))
 	}
-	result := bytes.Join(chunks, []byte{})
+	result := bytes.Join(chunks, []byte{' '})
 	copy(dst, result)
 	return len(result), nil
 }

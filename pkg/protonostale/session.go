@@ -300,26 +300,24 @@ func (e *HandoffFrame) MarshalNosTale() ([]byte, error) {
 
 func (e *HandoffFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
-	if len(bs) != 2 {
+	if len(bs) != 5 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
-	if err := (&HandoffIdentifierFrame{
-		HandoffIdentifierFrame: eventing.HandoffIdentifierFrame{
-			Sequence:   e.HandoffFrame.IdentifierFrame.Sequence,
-			Identifier: e.HandoffFrame.IdentifierFrame.Identifier,
-		},
-	}).
-		UnmarshalNosTale(bs[0]); err != nil {
+	var identifier HandoffIdentifierFrame
+	if err := identifier.UnmarshalNosTale(bytes.Join(bs[0:2], []byte{' '})); err != nil {
 		return err
 	}
-	if err := (&HandoffPasswordFrame{
-		HandoffPasswordFrame: eventing.HandoffPasswordFrame{
-			Sequence: e.HandoffFrame.PasswordFrame.Sequence,
-			Password: e.HandoffFrame.PasswordFrame.Password,
-		},
-	}).
-		UnmarshalNosTale(bs[1]); err != nil {
+	e.HandoffFrame.IdentifierFrame = &eventing.HandoffIdentifierFrame{
+		Sequence:   identifier.Sequence,
+		Identifier: identifier.Identifier,
+	}
+	var password HandoffPasswordFrame
+	if err := password.UnmarshalNosTale(bytes.Join(bs[2:4], []byte{' '})); err != nil {
 		return err
+	}
+	e.HandoffFrame.PasswordFrame = &eventing.HandoffPasswordFrame{
+		Sequence: password.Sequence,
+		Password: password.Password,
 	}
 	return nil
 }
@@ -369,7 +367,7 @@ func (e *HandoffPasswordFrame) MarshalNosTale() ([]byte, error) {
 }
 
 func (e *HandoffPasswordFrame) UnmarshalNosTale(b []byte) error {
-	bs := bytes.Split(b[19:len(b)-1], []byte(" "))
+	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}

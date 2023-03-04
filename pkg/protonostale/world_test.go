@@ -19,3 +19,33 @@ func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
 }
+
+func TestHandoffFrameUnmarshallNosTale(t *testing.T) {
+	input := []byte("60471 ricofo8350@otanhome.com 60472 9hibwiwiG2e6Nr \x02\xb1\x8d\xff\xca")
+	expected := &eventing.HandoffFrame{
+		IdentifierFrame: &eventing.HandoffIdentifierFrame{
+			Sequence:   60471,
+			Identifier: "ricofo8350@otanhome.com",
+		},
+		PasswordFrame: &eventing.HandoffPasswordFrame{
+			Sequence: 60472,
+			Password: "9hibwiwiG2e6Nr",
+		},
+	}
+	var result HandoffFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if result.IdentifierFrame.Sequence != expected.IdentifierFrame.Sequence {
+		t.Errorf("Expected %v, got %v", expected, result.String())
+	}
+	if result.IdentifierFrame.Identifier != expected.IdentifierFrame.Identifier {
+		t.Errorf("Expected %v, got %v", expected, result.String())
+	}
+	if result.PasswordFrame.Sequence != expected.PasswordFrame.Sequence {
+		t.Errorf("Expected %v, got %v", expected, result.String())
+	}
+	if result.PasswordFrame.Password != expected.PasswordFrame.Password {
+		t.Errorf("Expected %v, got %v", expected, result.String())
+	}
+}

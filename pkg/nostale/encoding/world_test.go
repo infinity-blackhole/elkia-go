@@ -5,13 +5,14 @@ import (
 	"testing"
 )
 
-func TestWorldEncodingDecodeHandoffPasswordFrame(t *testing.T) {
+func TestWorldEncodingDecodeHandoffFrame(t *testing.T) {
 	input := []byte{
-		208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208, 210,
-		63, 199, 205, 171, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214, 248,
-		193, 160, 65, 218, 193, 224, 66, 241, 205, 63, 10,
+		198, 228, 203, 145, 70, 205, 214, 220, 208, 217, 208, 196, 7, 212, 73,
+		255, 208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208,
+		210, 63, 199, 228, 203, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214,
+		248, 193, 160, 65, 218, 193, 224, 66, 241, 205, 63, 10,
 	}
-	expected := []byte("475n5 5355-564 .com49272 9hibwiwiG2e6Nr\xca")
+	expected := []byte("60471 ricofo8350@otanhome.com 60472 9hibwiwiG2e6Nr \x02\xb1\x8d\xff\xca")
 	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
 	result := make([]byte, WorldEncoding.DecodedLen(len(input)))
 	if err := dec.Decode(&result); err != nil {

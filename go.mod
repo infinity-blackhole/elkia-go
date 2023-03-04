@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/ory/client-go v1.1.7
 	github.com/sirupsen/logrus v1.9.0
 	go.etcd.io/etcd/client/v3 v3.5.7
