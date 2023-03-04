@@ -24,12 +24,6 @@ func NewServer(cfg ServerConfig) *Server {
 	}
 }
 
-type ChannelServer struct {
-	eventing.Gateway_ChannelInteractServer
-	Sequence uint32
-	Code     uint32
-}
-
 type Server struct {
 	eventing.UnimplementedGatewayServer
 	presence      fleet.PresenceClient
