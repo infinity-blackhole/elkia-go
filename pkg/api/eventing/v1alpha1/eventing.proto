@@ -19,6 +19,11 @@ message ErrorFrame { Code code = 1; }
 
 message InfoFrame { string content = 1; }
 
+message RawFrame {
+  uint32 sequence = 1;
+  bytes payload = 2;
+}
+
 message AuthLoginFrame {
   string identifier = 2;
   string password = 3;
@@ -41,7 +46,10 @@ message EndpointListFrame {
 }
 
 message AuthInteractRequest {
-  oneof payload { AuthLoginFrame login_frame = 1; }
+  oneof payload {
+    AuthLoginFrame login_frame = 1;
+    RawFrame raw_frame = 2;
+  }
 }
 
 message AuthInteractResponse {
@@ -64,6 +72,8 @@ service Auth {
       returns (stream AuthInteractResponse);
 }
 
+message HeartbeatFrame { uint32 sequence = 1; }
+
 message SyncFrame {
   uint32 sequence = 1;
   uint32 code = 2;
@@ -84,16 +94,15 @@ message HandoffFrame {
   HandoffPasswordFrame password_frame = 2;
 }
 
-message WorldFrame {
-  uint32 sequence = 1;
-  oneof payload { bytes unknown_payload = 2; }
-}
+message WorldFrame { uint32 sequence = 1; }
 
 message ChannelInteractRequest {
   oneof payload {
-    SyncFrame sync_frame = 1;
-    HandoffFrame handoff_frame = 2;
-    WorldFrame world_frame = 3;
+    HeartbeatFrame heartbeat_frame = 1;
+    SyncFrame sync_frame = 2;
+    HandoffFrame handoff_frame = 3;
+    WorldFrame world_frame = 4;
+    RawFrame raw_frame = 5;
   }
 }
 

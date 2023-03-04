@@ -144,15 +144,11 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	for {
-		var m protonostale.WorldFrame
+		var m protonostale.ChannelInteractRequest
 		if err := c.dec.Decode(&m); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
-		if err := stream.Send(&eventing.ChannelInteractRequest{
-			Payload: &eventing.ChannelInteractRequest_WorldFrame{
-				WorldFrame: &m.WorldFrame,
-			},
-		}); err != nil {
+		if err := stream.Send(&m.ChannelInteractRequest); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}

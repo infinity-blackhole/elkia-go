@@ -3,6 +3,8 @@ package encoding
 import (
 	"bytes"
 	"errors"
+
+	"github.com/sirupsen/logrus"
 )
 
 var WorldEncoding worldEncoding
@@ -25,10 +27,12 @@ func (e worldEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
 	if err != nil {
 		return ndst, nsrc, err
 	}
+	logrus.Debugf("decoded %v bytes", dst[:ndst])
 	nsrc, err = e.unpackFrameList(dst, dst[:ndst])
 	if err != nil {
 		return ndst, nsrc, err
 	}
+	logrus.Debugf("unpacked %v bytes", dst[:nsrc])
 	return ndst, nsrc, nil
 }
 

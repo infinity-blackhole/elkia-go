@@ -2,12 +2,10 @@ package gateway
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	"google.golang.org/grpc/metadata"
 )
 
 type ServerConfig struct {
@@ -76,10 +74,9 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		if err != nil {
 			return err
 		}
-		switch m.Payload.(type) {
-		case *eventing.ChannelInteractRequest_WorldFrame:
-			m := m.GetWorldFrame()
-			if s.sequence != m.Sequence {
+		switch p := m.Payload.(type) {
+		case *eventing.ChannelInteractRequest_RawFrame:
+			if s.sequence != p.RawFrame.Sequence {
 				return errors.New("channel: handshake sync protocol error")
 			}
 			s.sequence++
@@ -87,28 +84,4 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			return errors.New("channel: handshake sync protocol error")
 		}
 	}
-}
-
-func GetSequenceFromMetadata(md metadata.MD) (uint32, error) {
-	sequences := md.Get("sequence")
-	if len(sequences) != 1 {
-		return 0, errors.New("channel: handshake metadata error")
-	}
-	sequence, err := strconv.ParseUint(sequences[0], 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(sequence), nil
-}
-
-func GetCodeFromMetadata(md metadata.MD) (uint32, error) {
-	codes := md.Get("code")
-	if len(codes) != 1 {
-		return 0, errors.New("channel: handshake metadata error")
-	}
-	code, err := strconv.ParseUint(codes[0], 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(code), nil
 }
