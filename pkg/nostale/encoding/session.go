@@ -35,5 +35,5 @@ func (e sessionEncoding) DecodedLen(x int) int {
 }
 
 func (e sessionEncoding) Delim() byte {
-	return 0xFF
+	return 0x0E
 }
