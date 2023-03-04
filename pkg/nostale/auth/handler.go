@@ -90,10 +90,13 @@ func (c *conn) handleMessages(ctx context.Context) error {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: received login response: %v", m)
-		switch m.Payload.(type) {
+		switch p := m.Payload.(type) {
 		case *eventing.AuthInteractResponse_EndpointListFrame:
 			ed := protonostale.EndpointListFrame{
-				EndpointListFrame: *m.GetEndpointListFrame(),
+				EndpointListFrame: eventing.EndpointListFrame{
+					Code:      p.EndpointListFrame.Code,
+					Endpoints: p.EndpointListFrame.Endpoints,
+				},
 			}
 			if err := c.enc.Encode(&ed); err != nil {
 				return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
