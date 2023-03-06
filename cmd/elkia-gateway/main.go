@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
@@ -62,8 +65,22 @@ func main() {
 	logrus.Debugf("gateway: subscribing to kafka topics %v", kafkaTopics)
 	kc.SubscribeTopics(kafkaTopics, nil)
 	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				otelgrpc.UnaryServerInterceptor(),
+				grpc_ctxtags.UnaryServerInterceptor(
+					grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor),
+				),
+				grpc_logrus.UnaryServerInterceptor(logrus.NewEntry(logrus.New())),
+			),
+		),
+		grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				otelgrpc.StreamServerInterceptor(),
+				grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+				grpc_logrus.StreamServerInterceptor(logrus.NewEntry(logrus.New())),
+			),
+		),
 	)
 	host := os.Getenv("HOST")
 	if host == "" {
