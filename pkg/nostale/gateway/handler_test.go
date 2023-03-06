@@ -48,7 +48,10 @@ func TestHandlerServeNosTale(t *testing.T) {
 	)
 	defer clientConn.Close()
 	defer serverConn.Close()
-	handler.ServeNosTale(serverConn)
+	wg.Go(func() error {
+		handler.ServeNosTale(serverConn)
+		return nil
+	})
 	syncInput := []byte{
 		158, 166, 180, 192, 197, 132, 199, 230, 143, 14,
 	}
@@ -73,4 +76,5 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if err := clientWriter.Flush(); err != nil {
 		t.Fatalf("Failed to flush message: %v", err)
 	}
+	wg.Wait()
 }

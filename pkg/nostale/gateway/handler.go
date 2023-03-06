@@ -30,53 +30,25 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	conn := h.newHandoffConn(c)
-	logrus.Debugf("gateway: new handshaker from %v", c.RemoteAddr())
-	go conn.serve(ctx)
-}
-
-func (h *Handler) newHandoffConn(c net.Conn) *handoffConn {
-	return &handoffConn{
-		rwc:     c,
-		dec:     encoding.NewDecoder(utils.NewReadLogger("session: ", c), encoding.SessionEncoding),
-		gateway: h.gateway,
-	}
-}
-
-type handoffConn struct {
-	rwc     net.Conn
-	dec     *encoding.Decoder
-	gateway eventing.GatewayClient
-}
-
-func (c *handoffConn) serve(ctx context.Context) {
-	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
-	defer span.End()
-	logrus.Debugf("gateway: serving connection from %v", c.rwc.RemoteAddr())
-	if err := c.handleMessages(ctx); err != nil {
-		c.rwc.Close()
-	}
-}
-
-func (c *handoffConn) handleMessages(ctx context.Context) error {
+	dec := encoding.NewDecoder(utils.NewReadLogger("session: ", c), encoding.SessionEncoding)
 	var sync protonostale.SyncFrame
-	if err := c.dec.Decode(&sync); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+	if err := dec.Decode(&sync); err != nil {
+		c.Close()
+		return
 	}
 	logrus.Debugf("gateway: received sync frame: %v", sync.String())
-	conn := c.newChannelConn(&sync.SyncFrame)
+	conn := h.newChannelConn(c, &sync.SyncFrame)
 	go conn.serve(ctx)
-	return nil
 }
 
-func (h *handoffConn) newChannelConn(sync *eventing.SyncFrame) *channelConn {
+func (h *Handler) newChannelConn(c net.Conn, sync *eventing.SyncFrame) *channelConn {
 	e := encoding.WorldEncoding.WithKey(sync.Code)
 	logrus.Debugf("gateway: using encoding: %v", e)
 	return &channelConn{
-		rwc:      h.rwc,
+		rwc:      c,
 		gateway:  h.gateway,
-		dec:      encoding.NewDecoder(utils.NewReadLogger("gateway: ", h.rwc), e),
-		enc:      encoding.NewEncoder(h.rwc, e),
+		dec:      encoding.NewDecoder(utils.NewReadLogger("gateway: ", c), e),
+		enc:      encoding.NewEncoder(c, e),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}
@@ -127,19 +99,32 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent sync frame")
-	var handoffLogin protonostale.HandoffFrame
-	if err := c.dec.Decode(&handoffLogin); err != nil {
+	var identifier protonostale.IdentifierFrame
+	if err := c.dec.Decode(&identifier); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
-	logrus.Debugf("gateway: read frame: %v", handoffLogin.String())
+	logrus.Debugf("gateway: read identifier frame: %v", identifier.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_HandoffFrame{
-			HandoffFrame: &handoffLogin.HandoffFrame,
+		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
+			IdentifierFrame: &identifier.IdentifierFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent login frame")
+	var password protonostale.PasswordFrame
+	if err := c.dec.Decode(&password); err != nil {
+		return protonostale.NewStatus(eventing.Code_BAD_CASE)
+	}
+	logrus.Debugf("gateway: read password frame: %v", password.String())
+	if err := stream.Send(&eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
+			PasswordFrame: &password.PasswordFrame,
+		},
+	}); err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+	}
+	logrus.Debugf("gateway: sent password frame")
 	if err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}

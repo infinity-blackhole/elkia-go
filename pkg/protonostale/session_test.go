@@ -96,21 +96,3 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }
-
-func TestHandoffPasswordFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("475n5 5355-564 .com49272 9hibwiwiG2e6Nr\xca")
-	expected := &eventing.HandoffPasswordFrame{
-		Sequence: 49272,
-		Password: "9hibwiwiG2e6Nr",
-	}
-	var result HandoffPasswordFrame
-	if err := result.UnmarshalNosTale(input); err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-	if result.Sequence != expected.Sequence {
-		t.Errorf("Expected %v, got %v", expected.Sequence, result.Sequence)
-	}
-	if result.Password != expected.Password {
-		t.Errorf("Expected %v, got %v", expected.Password, result.Password)
-	}
-}

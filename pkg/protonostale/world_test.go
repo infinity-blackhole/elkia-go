@@ -7,7 +7,7 @@ import (
 )
 
 func TestSyncFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("4349270 0 ;;737:584-.37:83898 868 71;481.6; ")
+	input := []byte("4349270 0 ;;")
 	expected := &eventing.SyncFrame{
 		Code: 0,
 	}
@@ -20,32 +20,38 @@ func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 	}
 }
 
-func TestHandoffFrameUnmarshallNosTale(t *testing.T) {
-	input := []byte("60471 ricofo8350@otanhome.com 60472 9hibwiwiG2e6Nr \x02\xb1\x8d\xff\xca")
-	expected := &eventing.HandoffFrame{
-		IdentifierFrame: &eventing.HandoffIdentifierFrame{
-			Sequence:   60471,
-			Identifier: "ricofo8350@otanhome.com",
-		},
-		PasswordFrame: &eventing.HandoffPasswordFrame{
-			Sequence: 60472,
-			Password: "9hibwiwiG2e6Nr",
-		},
+func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("60471 ricofo8350@otanhome.com \xff")
+	expected := &eventing.IdentifierFrame{
+		Sequence:   60471,
+		Identifier: "ricofo8350@otanhome.com",
 	}
-	var result HandoffFrame
+	var result IdentifierFrame
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if result.IdentifierFrame.Sequence != expected.IdentifierFrame.Sequence {
+	if result.Sequence != expected.Sequence {
 		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
-	if result.IdentifierFrame.Identifier != expected.IdentifierFrame.Identifier {
+	if result.Identifier != expected.Identifier {
 		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
-	if result.PasswordFrame.Sequence != expected.PasswordFrame.Sequence {
+}
+
+func TestPasswordFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("60472 9hibwiwiG2e6Nr \xb1\x8d\xff")
+	expected := &eventing.PasswordFrame{
+		Sequence: 60472,
+		Password: "9hibwiwiG2e6Nr",
+	}
+	var result PasswordFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if result.Sequence != expected.Sequence {
 		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
-	if result.PasswordFrame.Password != expected.PasswordFrame.Password {
+	if result.Password != expected.Password {
 		t.Errorf("Expected %v, got %v", expected, result.String())
 	}
 }

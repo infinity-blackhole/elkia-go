@@ -158,5 +158,5 @@ func (e worldEncoding) EncodedLen(x int) int {
 }
 
 func (e worldEncoding) Delim() byte {
-	return '\n'
+	return 0x3F
 }
