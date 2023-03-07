@@ -2,80 +2,82 @@ package encoding
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
-func TestWorldEncodingDecodeHandoffIdentifierFrame(t *testing.T) {
-	input := []byte{
-		198, 228, 203, 145, 70, 205, 214, 220, 208, 217, 208, 196, 7, 212, 73,
-		255, 208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208,
-		210, 63, 199, 228, 203, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214,
-		248, 193, 160, 65, 218, 193, 224, 66, 241, 205, 63,
-	}
-	expected := []byte("60471 ricofo8350@otanhome.com \xff")
-	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
-	result := make([]byte, WorldEncoding.DecodedLen(len(input)))
-	if err := dec.Decode(&result); err != nil {
+func TestWorldReadIdentifierFrame(t *testing.T) {
+	input := []byte(
+		"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff\xd0" +
+			"\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f\xc7\xe4" +
+			"\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41\xda" +
+			"\xc1\xe0\x42\xf1\xcd\x3f",
+	)
+	expected := []byte("60471 ricofo8350@otanhome.com\n60472 9hibwiwiG2e6Nr\n")
+	result, err := io.ReadAll(
+		NewWorldPackReader(NewWorldReader(bytes.NewReader(input), 0)),
+	)
+	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
 
-func TestWorldEncodingDecodeHandoffPasswordFrame(t *testing.T) {
-	input := []byte{
-		199, 228, 203, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214,
-		248, 193, 160, 65, 218, 193, 224, 66, 241, 205, 63,
-	}
-	expected := []byte("60472 9hibwiwiG2e6Nr \xb1\x8d\xff")
-	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
-	result := make([]byte, WorldEncoding.DecodedLen(len(input)))
-	if err := dec.Decode(&result); err != nil {
+func TestWorldPasswordFrame(t *testing.T) {
+	input := []byte(
+		"\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41" +
+			"\xda\xc1\xe0\x42\xf1\xcd\x3f",
+	)
+	expected := []byte("60472 9hibwiwiG2e6Nr\n")
+	result, err := io.ReadAll(
+		NewWorldPackReader(NewWorldReader(bytes.NewReader(input), 0)),
+	)
+	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
-func TestWorldEncodingDecodeModeAndOffset(t *testing.T) {
-	r := WorldEncoding.WithKey(100)
-	if r.mode() != 1 {
-		t.Errorf("Expected mode 74, got %d", r.mode())
+func TestWorldReadModeAndOffset(t *testing.T) {
+	r := NewWorldReader(nil, 100)
+	if r.mode != 1 {
+		t.Errorf("Expected mode 74, got %d", r.mode)
 	}
-	if r.offset() != 164 {
-		t.Errorf("Expected offset 0, got %d", r.offset())
+	if r.offset != 164 {
+		t.Errorf("Expected offset 0, got %d", r.offset)
 	}
-	r = WorldEncoding.WithKey(1)
-	if r.mode() != 0 {
-		t.Errorf("Expected mode 0, got %d", r.mode())
+	r = NewWorldReader(nil, 1)
+	if r.mode != 0 {
+		t.Errorf("Expected mode 0, got %d", r.mode)
 	}
-	if r.offset() != 65 {
-		t.Errorf("Expected offset 65, got %d", r.offset())
+	if r.offset != 65 {
+		t.Errorf("Expected offset 65, got %d", r.offset)
 	}
 }
 
-func TestWorldEncodingDecodeHeartbeatFrame(t *testing.T) {
-	input := []byte{
-		199, 205, 171, 241, 128, 63,
-	}
-	expected := []byte("49277 0")
-	dec := NewDecoder(bytes.NewReader(input), WorldEncoding)
-	result := make([]byte, WorldEncoding.DecodedLen(len(input)))
-	if err := dec.Decode(&result); err != nil {
+func TestWorldReadHeartbeatFrame(t *testing.T) {
+	input := []byte("\xc7\xcd\xab\xf1\x80\x3f")
+	expected := []byte("49277 0\n")
+	result, err := io.ReadAll(
+		NewWorldPackReader(NewWorldReader(bytes.NewReader(input), 0)),
+	)
+	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(result, expected) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
 
-func TestWorldEncodingEncode(t *testing.T) {
-	input := "foo"
-	expected := []byte{3, 153, 144, 144, 10}
+func TestWorldWrite(t *testing.T) {
+	input := []byte("foo\n")
+	expected := []byte("\x03\x99\x90\x90\xff")
 	var result bytes.Buffer
-	enc := NewEncoder(&result, WorldEncoding)
-	if err := enc.Encode(&input); err != nil {
+	w := NewWorldWriter(&result)
+	if _, err := w.Write(input); err != nil {
 		t.Errorf("Error writing line: %s", err)
 	}
 	if !bytes.Equal(expected, result.Bytes()) {

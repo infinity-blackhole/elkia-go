@@ -6,7 +6,6 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -30,7 +29,7 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	dec := encoding.NewDecoder(utils.NewReadLogger("session: ", c), encoding.SessionEncoding)
+	dec := encoding.NewDecoder(encoding.NewSessionReader(c))
 	var sync protonostale.SyncFrame
 	if err := dec.Decode(&sync); err != nil {
 		c.Close()
@@ -42,13 +41,13 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 }
 
 func (h *Handler) newChannelConn(c net.Conn, sync *eventing.SyncFrame) *channelConn {
-	e := encoding.WorldEncoding.WithKey(sync.Code)
-	logrus.Debugf("gateway: using encoding: %v", e)
 	return &channelConn{
-		rwc:      c,
-		gateway:  h.gateway,
-		dec:      encoding.NewDecoder(utils.NewReadLogger("gateway: ", c), e),
-		enc:      encoding.NewEncoder(c, e),
+		rwc:     c,
+		gateway: h.gateway,
+		dec: encoding.NewDecoder(
+			encoding.NewWorldPackReader(encoding.NewWorldReader(c, sync.Code)),
+		),
+		enc:      encoding.NewEncoder(encoding.NewWorldWriter(c)),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}

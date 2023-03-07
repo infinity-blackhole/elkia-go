@@ -6,7 +6,6 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -32,14 +31,14 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	conn := h.newConn(c)
 	logrus.Debugf("auth: new connection from %v", c.RemoteAddr())
-	go conn.serve(ctx)
+	conn.serve(ctx)
 }
 
 func (h *Handler) newConn(c net.Conn) *conn {
 	return &conn{
 		rwc:  c,
-		dec:  encoding.NewDecoder(utils.NewReadLogger("auth: ", c), encoding.AuthEncoding),
-		enc:  encoding.NewEncoder(c, encoding.AuthEncoding),
+		dec:  encoding.NewDecoder(encoding.NewAuthReader(c)),
+		enc:  encoding.NewEncoder(encoding.NewAuthWriter(c)),
 		auth: h.auth,
 	}
 }

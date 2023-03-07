@@ -2,53 +2,52 @@ package encoding
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
+var (
+	_ io.Reader = (*AuthReader)(nil)
+	_ io.Writer = (*AuthWriter)(nil)
+)
+
 func TestAuthEncodingDecodeFrame(t *testing.T) {
-	var input bytes.Buffer
-	input.Write([]byte{
-		156, 187, 159, 2, 5, 3, 5, 242, 255, 4, 1, 6, 2, 255, 10, 242, 177,
-		242, 5, 145, 149, 4, 0, 5, 4, 4, 5, 148, 255, 149, 2, 144, 150, 2, 145,
-		2, 4, 5, 149, 150, 2, 3, 145, 6, 1, 9, 10, 9, 149, 6, 2, 0, 5, 144, 3,
-		9, 150, 1, 255, 9, 255, 2, 145, 0, 145, 10, 143, 5, 3, 150, 4, 144, 6,
-		255, 0, 5, 0, 0, 4, 3, 2, 3, 150, 9, 5, 4, 145, 2, 10, 0, 150, 1, 149,
-		9, 1, 144, 6, 150, 9, 4, 145, 3, 9, 255, 5, 4, 0, 150, 148, 9, 10,
-		148, 150, 2, 255, 143, 9, 150, 143, 148, 3, 6, 255, 143, 9, 143, 3,
-		144, 6, 149, 255, 2, 5, 5, 150, 6, 148, 9, 148, 2, 9, 144, 145, 2, 1,
-		5, 242, 2, 2, 255, 9, 149, 255, 150, 143, 215, 2, 252, 9, 252, 255,
-		252, 255, 2, 3, 1, 242, 2, 242, 143, 3, 150, 0, 5, 2, 255, 144, 150,
-		0, 5, 3, 148, 5, 144, 145, 149, 2, 10, 3, 2, 148, 6, 2, 143, 0, 150,
-		145, 255, 4, 4, 4, 216,
-	})
-	expected := []byte(
-		"NoS0575 3614038 a 5AE625665F3E0BD0A065ED07A41989E4025B79D139" +
-			"30A2A8C57D6B4325226707D956A082D1E91B4D96A793562DF98FD03C9DCF743" +
-			"C9C7B4E3055D4F9F09BA015 0039E3DC\v0.9.3.3071 0 C7D2503BD257F5" +
-			"BAE0870F40C2DA3666\n",
+	input := []byte(
+		"\x9c\xbb\x9f\x02\x05\x03\x05\xf2\xff\xff\x04\x05\xff\x06\x0a\xf2\xc0" +
+			"\xb9\xaf\xbb\xb4\xbb\x0a\xff\x05\x02\x92\xbb\xc6\xb1\xbc\xba\xbb" +
+			"\xbd\xb5\xfc\xaf\xbb\xbd\xf2\x01\x05\x01\xff\x01\x09\x05\x04\x90" +
+			"\x0a\xff\x04\x03\x09\x05\x04\xff\x00\x06\x03\xff\x03\x01\x04\x05" +
+			"\x09\xff\x03\x06\x03\x06\x04\x05\x09\x00\x06\x05\x03\x06\xff\x90" +
+			"\x00\x01\x04\x96\x05\x00\xff\x94\x04\x05\x06\x0a\x95\x00\x03\x90" +
+			"\x00\xf2\x02\x02\x04\x94\x03\x06\x06\x04\xd7\x02\xfc\x09\xfc\xff" +
+			"\xfc\xff\x02\x0a\x04\xd8",
 	)
-	result := make([]byte, AuthEncoding.DecodedLen(len(input.Bytes())))
-	if err := NewDecoder(&input, AuthEncoding).Decode(&result); err != nil {
+	expected := []byte(
+		"NoS0575 3365348 ricofo8350@otanhome.com 15131956B8367956324737165937" +
+			"474659245743B216D523F6548E27B2 006F7446\v0.9.3.3086\n",
+	)
+	result, err := io.ReadAll(NewAuthReader(bytes.NewReader(input)))
+	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
-	if !bytes.Equal(result, expected) {
+	if !bytes.Equal(expected, result) {
 		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
 
 func TestAuthEncodingEncodeFrame(t *testing.T) {
-	input := "fail Hello. This is a basic test"
-	expected := []byte{
-		117, 112, 120, 123, 47, 87, 116, 123, 123, 126, 61, 47, 99, 119, 120,
-		130, 47, 120, 130, 47, 112, 47, 113, 112, 130, 120, 114, 47, 131, 116,
-		130, 131, 216,
-	}
+	input := []byte("fail Hello. This is a basic test\n")
+	expected := []byte(
+		"\x75\x70\x78\x7b\x2f\x57\x74\x7b\x7b\x7e\x3d\x2f\x63\x77\x78\x82\x2f" +
+			"\x78\x82\x2f\x70\x2f\x71\x70\x82\x78\x72\x2f\x83\x74\x82\x83\x19",
+	)
 	var buf bytes.Buffer
-	if err := NewEncoder(&buf, AuthEncoding).Encode(&input); err != nil {
+	n, err := NewAuthWriter(&buf).Write(input)
+	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
 	result := buf.Bytes()
-	if !bytes.Equal(expected, result) {
+	if !bytes.Equal(expected, result[:n]) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }

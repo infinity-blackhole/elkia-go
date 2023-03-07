@@ -52,29 +52,34 @@ func TestHandlerServeNosTale(t *testing.T) {
 		handler.ServeNosTale(serverConn)
 		return nil
 	})
-	syncInput := []byte{
-		158, 166, 180, 192, 197, 132, 199, 230, 143, 14,
+	if _, err := clientWriter.Write(
+		[]byte("\x9e\xa6\xb4\xc0\xc5\x84\xc7\xe6\x8f\x0e"),
+	); err != nil {
+		t.Fatalf("Failed to write sync frame: %v", err)
 	}
-	if _, err := clientWriter.Write(syncInput); err != nil {
-		t.Fatalf("Failed to write message: %v", err)
+	if _, err := clientWriter.Write(
+		[]byte(
+			"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff" +
+				"\xd0\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f",
+		),
+	); err != nil {
+		t.Fatalf("Failed to write identifier frame: %v", err)
 	}
-	handoffInput := []byte{
-		198, 228, 203, 145, 70, 205, 214, 220, 208, 217, 208, 196, 7, 212, 73,
-		255, 208, 203, 222, 209, 215, 208, 210, 218, 193, 112, 67, 220, 208,
-		210, 63, 199, 228, 203, 161, 16, 72, 215, 214, 221, 200, 214, 200, 214,
-		248, 193, 160, 65, 218, 193, 224, 66, 241, 205, 63, 10,
+	if _, err := clientWriter.Write(
+		[]byte(
+			"\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0" +
+				"\x41\xda\xc1\xe0\x42\xf1\xcd\x3f",
+		),
+	); err != nil {
+		t.Fatalf("Failed to write identifier frame: %v", err)
 	}
-	if _, err := clientWriter.Write(handoffInput); err != nil {
-		t.Fatalf("Failed to write message: %v", err)
-	}
-	heartbeatInput := []byte{
-		199, 205, 171, 241, 128, 63, 10,
-	}
-	if _, err := clientWriter.Write(heartbeatInput); err != nil {
-		t.Fatalf("Failed to write message: %v", err)
+	if _, err := clientWriter.Write(
+		[]byte("\xc7\xcd\xab\xf1\x80\x3f\x0a"),
+	); err != nil {
+		t.Fatalf("Failed to write heartbeat frame: %v", err)
 	}
 	if err := clientWriter.Flush(); err != nil {
-		t.Fatalf("Failed to flush message: %v", err)
+		t.Fatalf("Failed to flush frame: %v", err)
 	}
 	wg.Wait()
 }

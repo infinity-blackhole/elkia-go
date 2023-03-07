@@ -21,7 +21,7 @@ func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 }
 
 func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("60471 ricofo8350@otanhome.com \xff")
+	input := []byte("60471 ricofo8350@otanhome.com")
 	expected := &eventing.IdentifierFrame{
 		Sequence:   60471,
 		Identifier: "ricofo8350@otanhome.com",
@@ -39,7 +39,7 @@ func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
 }
 
 func TestPasswordFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("60472 9hibwiwiG2e6Nr \xb1\x8d\xff")
+	input := []byte("60472 9hibwiwiG2e6Nr")
 	expected := &eventing.PasswordFrame{
 		Sequence: 60472,
 		Password: "9hibwiwiG2e6Nr",

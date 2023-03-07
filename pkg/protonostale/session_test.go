@@ -8,7 +8,7 @@ import (
 )
 
 func TestAuthLoginFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086\n")
+	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := &eventing.AuthLoginFrame{
 		Identifier:    "admin",
 		Password:      "s3cr3t",
@@ -52,7 +52,7 @@ func TestDecodePassword(t *testing.T) {
 }
 
 func TestDecodeClientVersion(t *testing.T) {
-	input := []byte("006666A8\v0.9.3.3086\n")
+	input := []byte("006666A8\v0.9.3.3086")
 	expected := "0.9.3+3086"
 	result, err := DecodeClientVersion(input)
 	if err != nil {

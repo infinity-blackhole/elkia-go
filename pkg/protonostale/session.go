@@ -127,7 +127,7 @@ func DecodeClientVersion(b []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	build, err := strconv.ParseUint(string(fields[3][:len(fields[3])-1]), 10, 32)
+	build, err := strconv.ParseUint(string(fields[3]), 10, 32)
 	if err != nil {
 		return "", err
 	}
@@ -280,7 +280,7 @@ func (e *IdentifierFrame) MarshalNosTale() ([]byte, error) {
 
 func (e *IdentifierFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
-	if len(bs) != 3 {
+	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
 	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)
@@ -309,7 +309,7 @@ func (e *PasswordFrame) MarshalNosTale() ([]byte, error) {
 
 func (e *PasswordFrame) UnmarshalNosTale(b []byte) error {
 	bs := bytes.Split(b, []byte(" "))
-	if len(bs) != 3 {
+	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
 	sn, err := strconv.ParseUint(string(bs[0]), 10, 32)

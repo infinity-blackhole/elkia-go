@@ -1,44 +1,49 @@
 package encoding
 
-var AuthEncoding authEncoding
+import (
+	"bufio"
+	"io"
+)
 
-type authEncoding struct {
+type AuthReader struct {
+	r *bufio.Reader
 }
 
-func (e authEncoding) Decode(dst, src []byte) (ndst, nsrc int, err error) {
-	if len(dst) < len(src) {
-		panic("dst buffer is too small")
-	}
-	var n int
-	for n = 0; n < len(src); n++ {
-		if src[n] > 14 {
-			dst[n] = (src[n] - 15) ^ 195
+func NewAuthReader(r io.Reader) *AuthReader {
+	return &AuthReader{bufio.NewReader(r)}
+}
+
+func (e *AuthReader) Read(p []byte) (n int, err error) {
+	for n = 0; n < len(p); n++ {
+		b, err := e.r.ReadByte()
+		if err != nil {
+			return n, err
+		}
+		if b > 14 {
+			p[n] = (b - 15) ^ 195
 		} else {
-			dst[n] = (255 - (14 - src[n])) ^ 195
+			p[n] = (255 - (14 - b)) ^ 195
+		}
+		if p[n] == '\n' {
+			return n + 1, nil
 		}
 	}
-	return n, n, nil
+	return n, nil
 }
 
-func (e authEncoding) DecodedLen(x int) int {
-	return x
+type AuthWriter struct {
+	w *bufio.Writer
 }
 
-func (e authEncoding) Encode(dst, src []byte) (ndst, nsrc int, err error) {
-	if len(dst) < len(src) {
-		panic("dst buffer is too small")
+func NewAuthWriter(w io.Writer) *AuthWriter {
+	return &AuthWriter{bufio.NewWriter(w)}
+}
+
+func (e AuthWriter) Write(p []byte) (n int, err error) {
+	for n = 0; n < len(p); n++ {
+		if err := e.w.WriteByte((p[n] + 15) & 0xFF); err != nil {
+			return n, err
+		}
 	}
-	var n int
-	for n = 0; n < len(src); n++ {
-		dst[n] = (src[n] + 15) & 0xFF
-	}
-	return n, n, nil
-}
-
-func (e authEncoding) EncodedLen(x int) int {
-	return x
-}
-
-func (e authEncoding) Delim() byte {
-	return 0xD8
+	return n, e.w.Flush()
 }

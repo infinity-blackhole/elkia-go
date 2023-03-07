@@ -2,20 +2,18 @@ package encoding
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
 func TestSessionDecodeSyncFrame(t *testing.T) {
-	input := []byte{
-		150, 165, 170, 224, 79, 14,
-	}
+	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
 	expected := []byte("4352579 0 ;;")
-	enc := NewDecoder(bytes.NewReader(input), SessionEncoding)
-	result := make([]byte, SessionEncoding.DecodedLen(len(expected)))
-	if err := enc.Decode(&result); err != nil {
+	result, err := io.ReadAll(NewSessionReader(bytes.NewReader(input)))
+	if err != nil {
 		t.Errorf("Error reading line: %s", err)
 	}
 	if !bytes.Equal(expected, result) {
-		t.Errorf("Expected %v, got %v", expected, result)
+		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
