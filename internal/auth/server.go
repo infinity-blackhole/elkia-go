@@ -66,16 +66,16 @@ func (s *Server) AuthLoginFrameProduce(
 	}
 	logrus.Debugf("auth: create handoff: %v", handoff)
 
-	MemberList, err := s.cluster.MemberList(
+	memberList, err := s.cluster.MemberList(
 		stream.Context(),
 		&fleet.MemberListRequest{},
 	)
 	if err != nil {
 		return err
 	}
-	logrus.Debugf("auth: list members: %v", MemberList)
+	logrus.Debugf("auth: list members: %v", memberList)
 	ms := []*eventing.Endpoint{}
-	for _, m := range MemberList.Members {
+	for _, m := range memberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
 			return err

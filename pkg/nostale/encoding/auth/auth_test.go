@@ -2,13 +2,7 @@ package encoding
 
 import (
 	"bytes"
-	"io"
 	"testing"
-)
-
-var (
-	_ io.Reader = (*AuthReader)(nil)
-	_ io.Writer = (*AuthWriter)(nil)
 )
 
 func TestAuthEncodingDecodeFrame(t *testing.T) {
@@ -26,12 +20,10 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 		"NoS0575 3365348 ricofo8350@otanhome.com 15131956B8367956324737165937" +
 			"474659245743B216D523F6548E27B2 006F7446\v0.9.3.3086\n",
 	)
-	result, err := io.ReadAll(NewAuthReader(bytes.NewReader(input)))
-	if err != nil {
-		t.Errorf("Error reading line: %s", err)
-	}
-	if !bytes.Equal(expected, result) {
-		t.Errorf("Expected %s, got %s", expected, result)
+	result := make([]byte, len(input))
+	n := DecodeFrame(result, input)
+	if !bytes.Equal(expected, result[:n]) {
+		t.Errorf("Expected %s, got %s", expected, result[:n])
 	}
 }
 
@@ -41,12 +33,8 @@ func TestAuthEncodingEncodeFrame(t *testing.T) {
 		"\x75\x70\x78\x7b\x2f\x57\x74\x7b\x7b\x7e\x3d\x2f\x63\x77\x78\x82\x2f" +
 			"\x78\x82\x2f\x70\x2f\x71\x70\x82\x78\x72\x2f\x83\x74\x82\x83\x19",
 	)
-	var buf bytes.Buffer
-	n, err := NewAuthWriter(&buf).Write(input)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	result := buf.Bytes()
+	result := make([]byte, len(input))
+	n := EncodeFrame(result, input)
 	if !bytes.Equal(expected, result[:n]) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
