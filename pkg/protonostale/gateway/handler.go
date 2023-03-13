@@ -29,24 +29,29 @@ type Handler struct {
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	dec := NewSessionDecoder(c)
-	var sync protonostale.SyncFrame
-	if err := dec.Decode(&sync); err != nil {
+	var msg protonostale.SyncFrame
+	if err := dec.Decode(&msg); err != nil {
 		c.Close()
 		return
 	}
-	logrus.Debugf("gateway: received sync frame: %v", sync.String())
-	conn := h.newChannelConn(c, sync.SyncFrame)
+	logrus.Debugf("gateway: received sync frame: %v", msg.String())
+	conn := h.newChannelConn(c, &msg)
 	conn.serve(ctx)
 }
 
-func (h *Handler) newChannelConn(c net.Conn, sync *eventing.SyncFrame) *channelConn {
+func (h *Handler) newChannelConn(
+	c net.Conn,
+	msg *protonostale.SyncFrame,
+) *channelConn {
+	sequence := msg.GetSequence()
+	code := msg.GetCode()
 	return &channelConn{
 		rwc:      c,
 		gateway:  h.gateway,
-		dec:      NewChannelDecoder(c, sync.Code),
+		dec:      NewChannelDecoder(c, code),
 		enc:      NewEncoder(c),
-		Code:     sync.Code,
-		sequence: sync.Sequence,
+		Code:     code,
+		sequence: sequence,
 	}
 }
 
@@ -84,6 +89,29 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: created auth handoff interact stream")
+	if err := c.handleSync(stream); err != nil {
+		return err
+	}
+	if err := c.handleIdentifier(stream); err != nil {
+		return err
+	}
+	logrus.Debugf("gateway: sent sync frame")
+	if err := c.handlePassword(stream); err != nil {
+		return err
+	}
+	logrus.Debugf("gateway: sent login frame")
+	for {
+		var msg protonostale.ChannelInteractRequest
+		if err := c.dec.Decode(&msg); err != nil {
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+		}
+		if err := stream.Send(&msg.ChannelInteractRequest); err != nil {
+			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+		}
+	}
+}
+
+func (c *channelConn) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_SyncFrame{
 			SyncFrame: &eventing.SyncFrame{
@@ -94,43 +122,37 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: sent sync frame")
-	var identifier protonostale.IdentifierFrame
-	if err := c.dec.Decode(&identifier); err != nil {
+	return nil
+}
+
+func (c *channelConn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
+	var msg protonostale.IdentifierFrame
+	if err := c.dec.Decode(&msg); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
-	logrus.Debugf("gateway: read identifier frame: %v", identifier.String())
+	logrus.Debugf("gateway: read identifier frame: %v", msg.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: identifier.IdentifierFrame,
+			IdentifierFrame: &msg.IdentifierFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: sent login frame")
-	var password protonostale.PasswordFrame
-	if err := c.dec.Decode(&password); err != nil {
-		return protonostale.NewStatus(eventing.Code_BAD_CASE)
+	return nil
+}
+
+func (c *channelConn) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
+	var msg protonostale.PasswordFrame
+	if err := c.dec.Decode(&msg); err != nil {
+		return err
 	}
-	logrus.Debugf("gateway: read password frame: %v", password.String())
+	logrus.Debugf("gateway: read password frame: %v", msg.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: password.PasswordFrame,
+			PasswordFrame: &msg.PasswordFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
-	logrus.Debugf("gateway: sent password frame")
-	if err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	for {
-		var msg protonostale.ChannelInteractRequest
-		if err := c.dec.Decode(&msg); err != nil {
-			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-		}
-		if err := stream.Send(msg.ChannelInteractRequest); err != nil {
-			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-		}
-	}
+	return nil
 }

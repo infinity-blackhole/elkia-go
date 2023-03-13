@@ -55,7 +55,7 @@ type PackedChannelScanner struct {
 	s *ChannelScanner
 }
 
-func NewPackedChannelScanner(r io.Reader, key byte) *PackedChannelScanner {
+func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
 	return &PackedChannelScanner{NewChannelScanner(r, key)}
 }
 

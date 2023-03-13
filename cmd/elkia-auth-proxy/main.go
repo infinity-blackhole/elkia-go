@@ -6,7 +6,7 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/auth"
+	"github.com/infinity-blackhole/elkia/pkg/protonostale/auth"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"

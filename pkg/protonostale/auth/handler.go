@@ -53,10 +53,9 @@ func (c *conn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
-	err := c.handleMessages(ctx)
-	switch e := err.(type) {
+	switch err := c.handleMessages(ctx).(type) {
 	case protonostale.Marshaler:
-		if err := c.enc.Encode(e); err != nil {
+		if err := c.enc.Encode(err); err != nil {
 			logrus.Errorf("auth: failed to send error: %v", err)
 		}
 	default:
@@ -69,18 +68,18 @@ func (c *conn) serve(ctx context.Context) {
 }
 
 func (c *conn) handleMessages(ctx context.Context) error {
+	stream, err := c.auth.AuthInteract(ctx)
+	if err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+	}
+	logrus.Debugf("auth: created auth interact stream")
 	for {
 		var msg protonostale.AuthInteractRequest
 		if err := c.dec.Decode(&msg); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: read frame: %v", msg.Payload)
-		stream, err := c.auth.AuthInteract(ctx)
-		if err != nil {
-			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-		}
-		logrus.Debugf("auth: created auth interact stream")
-		if err := stream.Send(msg.AuthInteractRequest); err != nil {
+		if err := stream.Send(&msg.AuthInteractRequest); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debug("auth: sent login request")
@@ -92,7 +91,7 @@ func (c *conn) handleMessages(ctx context.Context) error {
 		switch p := m.Payload.(type) {
 		case *eventing.AuthInteractResponse_EndpointListFrame:
 			ed := protonostale.EndpointListFrame{
-				EndpointListFrame: &eventing.EndpointListFrame{
+				EndpointListFrame: eventing.EndpointListFrame{
 					Code:      p.EndpointListFrame.Code,
 					Endpoints: p.EndpointListFrame.Endpoints,
 				},

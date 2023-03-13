@@ -11,7 +11,7 @@ import (
 func TestLoginFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := AuthInteractRequest{
-		&eventing.AuthInteractRequest{
+		eventing.AuthInteractRequest{
 			Payload: &eventing.AuthInteractRequest_LoginFrame{
 				LoginFrame: &eventing.LoginFrame{
 					Identifier:    "admin",
@@ -25,8 +25,8 @@ func TestLoginFrameUnmarshalNosTale(t *testing.T) {
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if !proto.Equal(expected, result) {
-		t.Errorf("Expected %v, got %v", expected, result)
+	if !proto.Equal(&expected, &result) {
+		t.Errorf("Expected %v, got %v", expected.String(), result.String())
 	}
 }
 
@@ -66,7 +66,7 @@ func TestDecodeClientVersion(t *testing.T) {
 
 func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 	input := &EndpointListFrame{
-		EndpointListFrame: &eventing.EndpointListFrame{
+		EndpointListFrame: eventing.EndpointListFrame{
 			Code: 1,
 			Endpoints: []*eventing.Endpoint{
 				{
@@ -95,5 +95,50 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 	}
 	if !bytes.Equal(result, expected) {
 		t.Errorf("Expected %v, got %v", expected, result)
+	}
+}
+
+func TestSyncFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("4349270 0 ;;")
+	expected := eventing.SyncFrame{
+		Sequence: 4349270,
+		Code:     0,
+	}
+	var result SyncFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if !proto.Equal(&expected, &result) {
+		t.Errorf("Expected %v, got %v", expected.String(), result.String())
+	}
+}
+
+func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("60471 ricofo8350@otanhome.com")
+	expected := eventing.IdentifierFrame{
+		Sequence:   60471,
+		Identifier: "ricofo8350@otanhome.com",
+	}
+	var result IdentifierFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if !proto.Equal(&expected, &result) {
+		t.Errorf("Expected %v, got %v", expected.String(), result.String())
+	}
+}
+
+func TestPasswordFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("60472 9hibwiwiG2e6Nr")
+	expected := eventing.PasswordFrame{
+		Sequence: 60472,
+		Password: "9hibwiwiG2e6Nr",
+	}
+	var result PasswordFrame
+	if err := result.UnmarshalNosTale(input); err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if !proto.Equal(&expected, &result) {
+		t.Errorf("Expected %v, got %v", expected.String(), result.String())
 	}
 }

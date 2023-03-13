@@ -8,62 +8,35 @@ import (
 )
 
 var (
-	SyncOpCode       = "sync"
-	IdentifierOpCode = "id"
-	PasswordOpCode   = "pass"
-	HeartBeatOpCode  = "0"
+	HeartBeatOpCode = "0"
 )
 
 type ChannelInteractRequest struct {
-	*eventing.ChannelInteractRequest
+	eventing.ChannelInteractRequest
 }
 
-func (e *ChannelInteractRequest) MarshalNosTale() ([]byte, error) {
-	return nil, nil
+type ChannelFrame struct {
+	eventing.ChannelFrame
 }
 
-func (e *ChannelInteractRequest) UnmarshalNosTale(b []byte) error {
+func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
 	fields := bytes.SplitN(b, []byte(" "), 3)
-	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
+	sn, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
 	e.Sequence = uint32(sn)
-	switch string(fields[1]) {
+	switch string(fields[0]) {
 	case HeartBeatOpCode:
 		var heartbeat HeartbeatFrame
 		if err := heartbeat.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		e.Payload = &eventing.ChannelInteractRequest_HeartbeatFrame{
-			HeartbeatFrame: heartbeat.HeartbeatFrame,
-		}
-	case SyncOpCode:
-		var identifier SyncFrame
-		if err := identifier.UnmarshalNosTale(fields[1]); err != nil {
-			return err
-		}
-		e.Payload = &eventing.ChannelInteractRequest_SyncFrame{
-			SyncFrame: identifier.SyncFrame,
-		}
-	case IdentifierOpCode:
-		var identifier IdentifierFrame
-		if err := identifier.UnmarshalNosTale(fields[1]); err != nil {
-			return err
-		}
-		e.Payload = &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: identifier.IdentifierFrame,
-		}
-	case PasswordOpCode:
-		var identifier PasswordFrame
-		if err := identifier.UnmarshalNosTale(fields[1]); err != nil {
-			return err
-		}
-		e.Payload = &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: identifier.PasswordFrame,
+		e.Payload = &eventing.ChannelFrame_HeartbeatFrame{
+			HeartbeatFrame: &heartbeat.HeartbeatFrame,
 		}
 	default:
-		e.Payload = &eventing.ChannelInteractRequest_RawFrame{
+		e.Payload = &eventing.ChannelFrame_RawFrame{
 			RawFrame: fields[1],
 		}
 	}
@@ -71,7 +44,7 @@ func (e *ChannelInteractRequest) UnmarshalNosTale(b []byte) error {
 }
 
 type HeartbeatFrame struct {
-	*eventing.HeartbeatFrame
+	eventing.HeartbeatFrame
 }
 
 func (e *HeartbeatFrame) MarshalNosTale() ([]byte, error) {

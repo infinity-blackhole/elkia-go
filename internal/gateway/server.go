@@ -31,29 +31,29 @@ type Server struct {
 }
 
 func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
-	m, err := stream.Recv()
+	msg, err := stream.Recv()
 	if err != nil {
 		return err
 	}
-	sync := m.GetSyncFrame()
+	sync := msg.GetSyncFrame()
 	if sync == nil {
 		return errors.New("handoff: handshake sync protocol error")
 	}
 	s.sequence = sync.Sequence
-	m, err = stream.Recv()
+	msg, err = stream.Recv()
 	if err != nil {
 		return err
 	}
-	identifier := m.GetIdentifierFrame()
+	identifier := msg.GetIdentifierFrame()
 	if identifier.Sequence != s.sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
-	m, err = stream.Recv()
+	s.sequence = identifier.Sequence
+	msg, err = stream.Recv()
 	if err != nil {
 		return err
 	}
-	s.sequence = identifier.Sequence
-	password := m.GetPasswordFrame()
+	password := msg.GetPasswordFrame()
 	if password.Sequence != s.sequence+1 {
 		return errors.New("handoff: handshake sync protocol error")
 	}
@@ -67,16 +67,11 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return err
 	}
 	for {
-		m, err := stream.Recv()
+		msg, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		switch p := m.Payload.(type) {
-		case *eventing.ChannelInteractRequest_RawFrame:
-			if s.sequence != p.RawFrame.Sequence {
-				return errors.New("channel: handshake sync protocol error")
-			}
-			s.sequence++
+		switch msg.Payload.(type) {
 		default:
 			return errors.New("channel: handshake sync protocol error")
 		}

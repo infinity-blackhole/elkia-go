@@ -11,20 +11,16 @@ import (
 
 func TestSessionDecodeSyncFrame(t *testing.T) {
 	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
-	expected := protonostale.ChannelInteractRequest{
-		ChannelInteractRequest: &eventing.ChannelInteractRequest{
-			Sequence: 4352579,
-			Payload: &eventing.ChannelInteractRequest_RawFrame{
-				RawFrame: []byte("0 ;;"),
-			},
-		},
+	expected := eventing.SyncFrame{
+		Sequence: 4352579,
+		Code:     0,
 	}
-	var result protonostale.ChannelInteractRequest
-	enc := NewSessionDecoder(bytes.NewReader(input))
-	if err := enc.Decode(&result); err != nil {
-		t.Fatal(err)
+	dec := NewSessionDecoder(bytes.NewReader(input))
+	var result protonostale.SyncFrame
+	if err := dec.Decode(&result); err != nil {
+		t.Error(err)
 	}
-	if !proto.Equal(expected, result) {
-		t.Errorf("Expected %v, got %v", expected, result)
+	if !proto.Equal(&expected, &result) {
+		t.Errorf("Expected %v, got %v", expected.String(), result.String())
 	}
 }
