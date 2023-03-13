@@ -16,7 +16,7 @@ type PackedChannelScanner struct {
 
 func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
 	s := bufio.NewScanner(r)
-	s.Split(ScanChannelFrame)
+	s.Split(ScanCommandFrame)
 	return &PackedChannelScanner{
 		s:      s,
 		mode:   byte(key >> 6 & 0x03),
@@ -54,7 +54,7 @@ func (s *PackedChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
-func ScanChannelFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func ScanCommandFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}

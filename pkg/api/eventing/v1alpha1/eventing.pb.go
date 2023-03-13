@@ -782,7 +782,7 @@ func (x *HeartbeatFrame) GetSequence() uint32 {
 	return 0
 }
 
-type ChannelFrame struct {
+type CommandFrame struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -790,12 +790,12 @@ type ChannelFrame struct {
 	Sequence uint32 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
 	// Types that are assignable to Payload:
 	//
-	//	*ChannelFrame_RawFrame
-	Payload isChannelFrame_Payload `protobuf_oneof:"payload"`
+	//	*CommandFrame_RawFrame
+	Payload isCommandFrame_Payload `protobuf_oneof:"payload"`
 }
 
-func (x *ChannelFrame) Reset() {
-	*x = ChannelFrame{}
+func (x *CommandFrame) Reset() {
+	*x = CommandFrame{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -803,13 +803,13 @@ func (x *ChannelFrame) Reset() {
 	}
 }
 
-func (x *ChannelFrame) String() string {
+func (x *CommandFrame) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ChannelFrame) ProtoMessage() {}
+func (*CommandFrame) ProtoMessage() {}
 
-func (x *ChannelFrame) ProtoReflect() protoreflect.Message {
+func (x *CommandFrame) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -821,41 +821,41 @@ func (x *ChannelFrame) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ChannelFrame.ProtoReflect.Descriptor instead.
-func (*ChannelFrame) Descriptor() ([]byte, []int) {
+// Deprecated: Use CommandFrame.ProtoReflect.Descriptor instead.
+func (*CommandFrame) Descriptor() ([]byte, []int) {
 	return file_pkg_api_eventing_v1alpha1_eventing_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ChannelFrame) GetSequence() uint32 {
+func (x *CommandFrame) GetSequence() uint32 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-func (m *ChannelFrame) GetPayload() isChannelFrame_Payload {
+func (m *CommandFrame) GetPayload() isCommandFrame_Payload {
 	if m != nil {
 		return m.Payload
 	}
 	return nil
 }
 
-func (x *ChannelFrame) GetRawFrame() []byte {
-	if x, ok := x.GetPayload().(*ChannelFrame_RawFrame); ok {
+func (x *CommandFrame) GetRawFrame() []byte {
+	if x, ok := x.GetPayload().(*CommandFrame_RawFrame); ok {
 		return x.RawFrame
 	}
 	return nil
 }
 
-type isChannelFrame_Payload interface {
-	isChannelFrame_Payload()
+type isCommandFrame_Payload interface {
+	isCommandFrame_Payload()
 }
 
-type ChannelFrame_RawFrame struct {
+type CommandFrame_RawFrame struct {
 	RawFrame []byte `protobuf:"bytes,2,opt,name=raw_frame,json=rawFrame,proto3,oneof"`
 }
 
-func (*ChannelFrame_RawFrame) isChannelFrame_Payload() {}
+func (*CommandFrame_RawFrame) isCommandFrame_Payload() {}
 
 type ChannelInteractRequest struct {
 	state         protoimpl.MessageState
@@ -868,7 +868,7 @@ type ChannelInteractRequest struct {
 	//	*ChannelInteractRequest_IdentifierFrame
 	//	*ChannelInteractRequest_PasswordFrame
 	//	*ChannelInteractRequest_HeartbeatFrame
-	//	*ChannelInteractRequest_ChannelFrame
+	//	*ChannelInteractRequest_CommandFrame
 	Payload isChannelInteractRequest_Payload `protobuf_oneof:"payload"`
 }
 
@@ -939,9 +939,9 @@ func (x *ChannelInteractRequest) GetHeartbeatFrame() *HeartbeatFrame {
 	return nil
 }
 
-func (x *ChannelInteractRequest) GetChannelFrame() *ChannelFrame {
-	if x, ok := x.GetPayload().(*ChannelInteractRequest_ChannelFrame); ok {
-		return x.ChannelFrame
+func (x *ChannelInteractRequest) GetCommandFrame() *CommandFrame {
+	if x, ok := x.GetPayload().(*ChannelInteractRequest_CommandFrame); ok {
+		return x.CommandFrame
 	}
 	return nil
 }
@@ -966,8 +966,8 @@ type ChannelInteractRequest_HeartbeatFrame struct {
 	HeartbeatFrame *HeartbeatFrame `protobuf:"bytes,4,opt,name=heartbeat_frame,json=heartbeatFrame,proto3,oneof"`
 }
 
-type ChannelInteractRequest_ChannelFrame struct {
-	ChannelFrame *ChannelFrame `protobuf:"bytes,5,opt,name=channel_frame,json=channelFrame,proto3,oneof"`
+type ChannelInteractRequest_CommandFrame struct {
+	CommandFrame *CommandFrame `protobuf:"bytes,5,opt,name=command_frame,json=commandFrame,proto3,oneof"`
 }
 
 func (*ChannelInteractRequest_SyncFrame) isChannelInteractRequest_Payload() {}
@@ -978,7 +978,7 @@ func (*ChannelInteractRequest_PasswordFrame) isChannelInteractRequest_Payload() 
 
 func (*ChannelInteractRequest_HeartbeatFrame) isChannelInteractRequest_Payload() {}
 
-func (*ChannelInteractRequest_ChannelFrame) isChannelInteractRequest_Payload() {}
+func (*ChannelInteractRequest_CommandFrame) isChannelInteractRequest_Payload() {}
 
 type ChannelInteractResponse struct {
 	state         protoimpl.MessageState
@@ -1144,8 +1144,8 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x2c, 0x0a, 0x0e, 0x48, 0x65, 0x61,
 	0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73,
 	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73,
-	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x54, 0x0a, 0x0c, 0x43, 0x68, 0x61, 0x6e, 0x6e,
-	0x65, 0x6c, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65,
+	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x54, 0x0a, 0x0c, 0x43, 0x6f, 0x6d, 0x6d, 0x61,
+	0x6e, 0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65,
 	0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65,
 	0x6e, 0x63, 0x65, 0x12, 0x1d, 0x0a, 0x09, 0x72, 0x61, 0x77, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x08, 0x72, 0x61, 0x77, 0x46, 0x72, 0x61,
@@ -1172,12 +1172,12 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_rawDesc = []byte{
 	0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x61, 0x6c,
 	0x70, 0x68, 0x61, 0x31, 0x2e, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x46, 0x72,
 	0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x68, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74,
-	0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x4f, 0x0a, 0x0d, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c,
+	0x46, 0x72, 0x61, 0x6d, 0x65, 0x12, 0x4f, 0x0a, 0x0d, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
 	0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x69,
 	0x6f, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x67,
-	0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65,
-	0x6c, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0c, 0x63, 0x68, 0x61, 0x6e, 0x6e, 0x65,
-	0x6c, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
+	0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e,
+	0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x0c, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e,
+	0x64, 0x46, 0x72, 0x61, 0x6d, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
 	0x64, 0x22, 0xb7, 0x01, 0x0a, 0x17, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x49, 0x6e, 0x74,
 	0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a,
 	0x0b, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x66, 0x72, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
@@ -1258,7 +1258,7 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_goTypes = []interface{}{
 	(*IdentifierFrame)(nil),         // 9: io.elkia.eventing.v1alpha1.IdentifierFrame
 	(*PasswordFrame)(nil),           // 10: io.elkia.eventing.v1alpha1.PasswordFrame
 	(*HeartbeatFrame)(nil),          // 11: io.elkia.eventing.v1alpha1.HeartbeatFrame
-	(*ChannelFrame)(nil),            // 12: io.elkia.eventing.v1alpha1.ChannelFrame
+	(*CommandFrame)(nil),            // 12: io.elkia.eventing.v1alpha1.CommandFrame
 	(*ChannelInteractRequest)(nil),  // 13: io.elkia.eventing.v1alpha1.ChannelInteractRequest
 	(*ChannelInteractResponse)(nil), // 14: io.elkia.eventing.v1alpha1.ChannelInteractResponse
 }
@@ -1273,7 +1273,7 @@ var file_pkg_api_eventing_v1alpha1_eventing_proto_depIdxs = []int32{
 	9,  // 7: io.elkia.eventing.v1alpha1.ChannelInteractRequest.identifier_frame:type_name -> io.elkia.eventing.v1alpha1.IdentifierFrame
 	10, // 8: io.elkia.eventing.v1alpha1.ChannelInteractRequest.password_frame:type_name -> io.elkia.eventing.v1alpha1.PasswordFrame
 	11, // 9: io.elkia.eventing.v1alpha1.ChannelInteractRequest.heartbeat_frame:type_name -> io.elkia.eventing.v1alpha1.HeartbeatFrame
-	12, // 10: io.elkia.eventing.v1alpha1.ChannelInteractRequest.channel_frame:type_name -> io.elkia.eventing.v1alpha1.ChannelFrame
+	12, // 10: io.elkia.eventing.v1alpha1.ChannelInteractRequest.command_frame:type_name -> io.elkia.eventing.v1alpha1.CommandFrame
 	1,  // 11: io.elkia.eventing.v1alpha1.ChannelInteractResponse.error_frame:type_name -> io.elkia.eventing.v1alpha1.ErrorFrame
 	2,  // 12: io.elkia.eventing.v1alpha1.ChannelInteractResponse.info_frame:type_name -> io.elkia.eventing.v1alpha1.InfoFrame
 	6,  // 13: io.elkia.eventing.v1alpha1.Auth.AuthInteract:input_type -> io.elkia.eventing.v1alpha1.AuthInteractRequest
@@ -1428,7 +1428,7 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 			}
 		}
 		file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ChannelFrame); i {
+			switch v := v.(*CommandFrame); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1474,14 +1474,14 @@ func file_pkg_api_eventing_v1alpha1_eventing_proto_init() {
 		(*AuthInteractResponse_EndpointListFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[11].OneofWrappers = []interface{}{
-		(*ChannelFrame_RawFrame)(nil),
+		(*CommandFrame_RawFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[12].OneofWrappers = []interface{}{
 		(*ChannelInteractRequest_SyncFrame)(nil),
 		(*ChannelInteractRequest_IdentifierFrame)(nil),
 		(*ChannelInteractRequest_PasswordFrame)(nil),
 		(*ChannelInteractRequest_HeartbeatFrame)(nil),
-		(*ChannelInteractRequest_ChannelFrame)(nil),
+		(*ChannelInteractRequest_CommandFrame)(nil),
 	}
 	file_pkg_api_eventing_v1alpha1_eventing_proto_msgTypes[13].OneofWrappers = []interface{}{
 		(*ChannelInteractResponse_ErrorFrame)(nil),

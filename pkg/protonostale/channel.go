@@ -12,11 +12,11 @@ type ChannelInteractRequest struct {
 	eventing.ChannelInteractRequest
 }
 
-type ChannelFrame struct {
-	eventing.ChannelFrame
+type CommandFrame struct {
+	eventing.CommandFrame
 }
 
-func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
+func (e *CommandFrame) UnmarshalNosTale(b []byte) error {
 	fields := bytes.SplitN(b, []byte(" "), 3)
 	sn, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
@@ -25,7 +25,7 @@ func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
 	e.Sequence = uint32(sn)
 	switch string(fields[0]) {
 	default:
-		e.Payload = &eventing.ChannelFrame_RawFrame{
+		e.Payload = &eventing.CommandFrame_RawFrame{
 			RawFrame: fields[1],
 		}
 	}
