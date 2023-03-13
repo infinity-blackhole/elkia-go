@@ -81,14 +81,11 @@ message PasswordFrame {
   string password = 2;
 }
 
-message HeartbeatFrame {}
+message HeartbeatFrame { uint32 sequence = 1; }
 
 message ChannelFrame {
   uint32 sequence = 1;
-  oneof payload {
-    bytes raw_frame = 2;
-    HeartbeatFrame heartbeat_frame = 3;
-  }
+  oneof payload { bytes raw_frame = 2; }
 }
 
 message ChannelInteractRequest {
@@ -96,7 +93,8 @@ message ChannelInteractRequest {
     SyncFrame sync_frame = 1;
     IdentifierFrame identifier_frame = 2;
     PasswordFrame password_frame = 3;
-    ChannelFrame channel_frame = 4;
+    HeartbeatFrame heartbeat_frame = 4;
+    ChannelFrame channel_frame = 5;
   }
 }
 

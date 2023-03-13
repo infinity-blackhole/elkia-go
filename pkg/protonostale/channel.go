@@ -2,13 +2,10 @@ package protonostale
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-)
-
-var (
-	HeartBeatOpCode = "0"
 )
 
 type ChannelInteractRequest struct {
@@ -27,14 +24,6 @@ func (e *ChannelFrame) UnmarshalNosTale(b []byte) error {
 	}
 	e.Sequence = uint32(sn)
 	switch string(fields[0]) {
-	case HeartBeatOpCode:
-		var heartbeat HeartbeatFrame
-		if err := heartbeat.UnmarshalNosTale(fields[1]); err != nil {
-			return err
-		}
-		e.Payload = &eventing.ChannelFrame_HeartbeatFrame{
-			HeartbeatFrame: &heartbeat.HeartbeatFrame,
-		}
 	default:
 		e.Payload = &eventing.ChannelFrame_RawFrame{
 			RawFrame: fields[1],
@@ -48,9 +37,22 @@ type HeartbeatFrame struct {
 }
 
 func (e *HeartbeatFrame) MarshalNosTale() ([]byte, error) {
-	return []byte{}, nil
+	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 func (e *HeartbeatFrame) UnmarshalNosTale(b []byte) error {
+	fields := bytes.Split(b, []byte(" "))
+	if len(fields) != 2 {
+		return fmt.Errorf("invalid length: %d", len(fields))
+	}
+	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
+	if err != nil {
+		return err
+	}
+	e.Sequence = uint32(sn)
 	return nil
 }

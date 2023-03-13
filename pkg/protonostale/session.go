@@ -245,6 +245,14 @@ type SyncFrame struct {
 	eventing.SyncFrame
 }
 
+func (e *SyncFrame) MarshalNosTale() ([]byte, error) {
+	var buff bytes.Buffer
+	if _, err := fmt.Fprintf(&buff, "%d %d", e.Sequence, e.Code); err != nil {
+		return nil, err
+	}
+	return buff.Bytes(), nil
+}
+
 func (e *SyncFrame) UnmarshalNosTale(b []byte) error {
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 3 {
@@ -269,6 +277,9 @@ type IdentifierFrame struct {
 
 func (e *IdentifierFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+		return nil, err
+	}
 	if _, err := b.WriteString(e.Identifier); err != nil {
 		return nil, err
 	}
@@ -295,6 +306,9 @@ type PasswordFrame struct {
 
 func (e *PasswordFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
+	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+		return nil, err
+	}
 	if _, err := b.WriteString(e.Password); err != nil {
 		return nil, err
 	}

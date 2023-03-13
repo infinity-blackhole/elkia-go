@@ -63,14 +63,14 @@ func TestChannelDecodePasswordFrame(t *testing.T) {
 }
 
 func TestChannelDecodeModeAndOffset(t *testing.T) {
-	r := NewChannelScanner(nil, 100)
+	r := NewPackedChannelScanner(nil, 100)
 	if r.mode != 1 {
 		t.Errorf("Expected mode 74, got %d", r.mode)
 	}
 	if r.offset != 164 {
 		t.Errorf("Expected offset 0, got %d", r.offset)
 	}
-	r = NewChannelScanner(nil, 1)
+	r = NewPackedChannelScanner(nil, 1)
 	if r.mode != 0 {
 		t.Errorf("Expected mode 0, got %d", r.mode)
 	}
@@ -81,13 +81,12 @@ func TestChannelDecodeModeAndOffset(t *testing.T) {
 
 func TestChannelDecodeHeartbeatFrame(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
-	expected := protonostale.ChannelFrame{
-		ChannelFrame: eventing.ChannelFrame{
+	expected := protonostale.HeartbeatFrame{
+		HeartbeatFrame: eventing.HeartbeatFrame{
 			Sequence: 49277,
-			Payload:  &eventing.ChannelFrame_HeartbeatFrame{},
 		},
 	}
-	var result protonostale.ChannelFrame
+	var result protonostale.HeartbeatFrame
 	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)
