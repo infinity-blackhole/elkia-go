@@ -42,36 +42,35 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newChannelConn(
 	c net.Conn,
 	msg *protonostale.SyncFrame,
-) *channelConn {
+) *conn {
 	sequence := msg.GetSequence()
 	code := msg.GetCode()
-	return &channelConn{
-		rwc:      c,
-		gateway:  h.gateway,
-		dec:      NewChannelDecoder(c, code),
-		enc:      NewEncoder(c),
-		Code:     code,
-		sequence: sequence,
+	return &conn{
+		rwc:          c,
+		gateway:      h.gateway,
+		dec:          NewChannelDecoder(c, code),
+		enc:          NewEncoder(c),
+		Code:         code,
+		lastSequence: sequence,
 	}
 }
 
-type channelConn struct {
-	rwc      net.Conn
-	dec      *ChannelDecoder
-	enc      *Encoder
-	gateway  eventing.GatewayClient
-	Code     uint32
-	sequence uint32
+type conn struct {
+	rwc          net.Conn
+	dec          *ChannelDecoder
+	enc          *Encoder
+	gateway      eventing.GatewayClient
+	Code         uint32
+	lastSequence uint32
 }
 
-func (c *channelConn) serve(ctx context.Context) {
+func (c *conn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	logrus.Debugf("gateway: serving connection from %v", c.rwc.RemoteAddr())
-	err := c.handleMessages(ctx)
-	switch e := err.(type) {
+	switch err := c.handleFrames(ctx).(type) {
 	case *protonostale.Status:
-		if err := c.enc.Encode(e); err != nil {
+		if err := c.enc.Encode(err); err != nil {
 			logrus.Errorf("gateway: failed to send error: %v", err)
 		}
 	default:
@@ -83,7 +82,7 @@ func (c *channelConn) serve(ctx context.Context) {
 	}
 }
 
-func (c *channelConn) handleMessages(ctx context.Context) error {
+func (c *conn) handleFrames(ctx context.Context) error {
 	stream, err := c.gateway.ChannelInteract(ctx)
 	if err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
@@ -111,11 +110,11 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	}
 }
 
-func (c *channelConn) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *conn) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_SyncFrame{
 			SyncFrame: &eventing.SyncFrame{
-				Sequence: c.sequence,
+				Sequence: c.lastSequence,
 				Code:     c.Code,
 			},
 		},
@@ -125,7 +124,7 @@ func (c *channelConn) handleSync(stream eventing.Gateway_ChannelInteractClient) 
 	return nil
 }
 
-func (c *channelConn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *conn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.IdentifierFrame
 	if err := c.dec.Decode(&msg); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
@@ -141,7 +140,7 @@ func (c *channelConn) handleIdentifier(stream eventing.Gateway_ChannelInteractCl
 	return nil
 }
 
-func (c *channelConn) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *conn) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.PasswordFrame
 	if err := c.dec.Decode(&msg); err != nil {
 		return err

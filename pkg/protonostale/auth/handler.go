@@ -53,7 +53,7 @@ func (c *conn) serve(ctx context.Context) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
-	switch err := c.handleMessages(ctx).(type) {
+	switch err := c.handleFrames(ctx).(type) {
 	case protonostale.Marshaler:
 		if err := c.enc.Encode(err); err != nil {
 			logrus.Errorf("auth: failed to send error: %v", err)
@@ -67,7 +67,7 @@ func (c *conn) serve(ctx context.Context) {
 	}
 }
 
-func (c *conn) handleMessages(ctx context.Context) error {
+func (c *conn) handleFrames(ctx context.Context) error {
 	stream, err := c.auth.AuthInteract(ctx)
 	if err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
