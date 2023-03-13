@@ -9,30 +9,30 @@ import (
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
-type ChannelScanner struct {
+type PackedChannelScanner struct {
 	s            *bufio.Scanner
 	mode, offset byte
 }
 
-func NewChannelScanner(r io.Reader, key uint32) *ChannelScanner {
+func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
 	s := bufio.NewScanner(r)
 	s.Split(ScanChannelFrame)
-	return &ChannelScanner{
+	return &PackedChannelScanner{
 		s:      s,
 		mode:   byte(key >> 6 & 0x03),
 		offset: byte(key&0xFF + 0x40&0xFF),
 	}
 }
 
-func (s *ChannelScanner) Scan() bool {
+func (s *PackedChannelScanner) Scan() bool {
 	return s.s.Scan()
 }
 
-func (s *ChannelScanner) Err() error {
+func (s *PackedChannelScanner) Err() error {
 	return s.s.Err()
 }
 
-func (s *ChannelScanner) Bytes() []byte {
+func (s *PackedChannelScanner) Bytes() []byte {
 	bs := s.s.Bytes()
 	result := make([]byte, len(bs))
 	for n := 0; n < len(bs); n++ {
@@ -50,7 +50,7 @@ func (s *ChannelScanner) Bytes() []byte {
 	return result
 }
 
-func (s *ChannelScanner) Text() string {
+func (s *PackedChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
@@ -58,7 +58,7 @@ func ScanChannelFrame(data []byte, atEOF bool) (advance int, token []byte, err e
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}
-	if i := bytes.IndexByte(data, 0xCD); i >= 0 {
+	if i := bytes.IndexByte(data, 0x3F); i >= 0 {
 		// We have a full frames.
 		return i + 1, data[0:i], nil
 	}
@@ -70,23 +70,23 @@ func ScanChannelFrame(data []byte, atEOF bool) (advance int, token []byte, err e
 	return 0, nil, nil
 }
 
-type PackedChannelScanner struct {
-	s *ChannelScanner
+type ChannelScanner struct {
+	s *PackedChannelScanner
 }
 
-func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
-	return &PackedChannelScanner{NewChannelScanner(r, key)}
+func NewChannelScanner(r io.Reader, key uint32) *ChannelScanner {
+	return &ChannelScanner{NewPackedChannelScanner(r, key)}
 }
 
-func (s *PackedChannelScanner) Scan() bool {
+func (s *ChannelScanner) Scan() bool {
 	return s.s.Scan()
 }
 
-func (s *PackedChannelScanner) Err() error {
+func (s *ChannelScanner) Err() error {
 	return s.s.Err()
 }
 
-func (s *PackedChannelScanner) Bytes() []byte {
+func (s *ChannelScanner) Bytes() []byte {
 	bs := s.s.Bytes()
 	result := []byte{}
 	for len(bs) > 0 {
@@ -107,7 +107,7 @@ func (s *PackedChannelScanner) Bytes() []byte {
 	return result
 }
 
-func (s *PackedChannelScanner) decodePackedLinearFrame(dst, src []byte, flag byte) (n int) {
+func (s *ChannelScanner) decodePackedLinearFrame(dst, src []byte, flag byte) (n int) {
 	var l int
 	if int(flag) < len(src) {
 		l = int(flag)
@@ -124,7 +124,7 @@ var permutations = []byte{
 	' ', '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'n',
 }
 
-func (s *PackedChannelScanner) decodePackedCompactFrame(dst, src []byte, flag byte) (ndst, nsrc int) {
+func (s *ChannelScanner) decodePackedCompactFrame(dst, src []byte, flag byte) (ndst, nsrc int) {
 	buff := src
 	for ndst, nsrc = 0, 0; ndst < int(flag) && len(buff) > 0; ndst, nsrc = ndst+1, nsrc+1 {
 		h := int(buff[0] >> 4)
@@ -143,7 +143,7 @@ func (s *PackedChannelScanner) decodePackedCompactFrame(dst, src []byte, flag by
 	return ndst, nsrc
 }
 
-func (s *PackedChannelScanner) Text() string {
+func (s *ChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
