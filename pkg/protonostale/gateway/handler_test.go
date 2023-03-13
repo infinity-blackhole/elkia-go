@@ -5,12 +5,12 @@ import (
 	"context"
 	"net"
 	"testing"
+	"testing/iotest"
 
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	"github.com/infinity-blackhole/elkia/internal/gateway/gatewaytest"
 	"github.com/infinity-blackhole/elkia/internal/presence"
 	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -44,7 +44,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 	})
 	serverConn, clientConn := net.Pipe()
 	clientWriter := bufio.NewWriter(
-		utils.NewWriteLogger(t.Name(), clientConn),
+		iotest.NewWriteLogger(t.Name(), clientConn),
 	)
 	defer clientConn.Close()
 	defer serverConn.Close()
