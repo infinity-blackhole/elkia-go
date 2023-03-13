@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 
@@ -14,8 +15,10 @@ type ChannelScanner struct {
 }
 
 func NewChannelScanner(r io.Reader, key uint32) *ChannelScanner {
+	s := bufio.NewScanner(r)
+	s.Split(ScanChannelFrame)
 	return &ChannelScanner{
-		s:      bufio.NewScanner(r),
+		s:      s,
 		mode:   byte(key >> 6 & 0x03),
 		offset: byte(key&0xFF + 0x40&0xFF),
 	}
@@ -51,6 +54,22 @@ func (s *ChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
+func ScanChannelFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexByte(data, 0xCD); i >= 0 {
+		// We have a full frames.
+		return i + 1, data[0:i], nil
+	}
+	// If we're at EOF, we have a final, non-terminated frame. Return it.
+	if atEOF {
+		return len(data), data, nil
+	}
+	// Request more data.
+	return 0, nil, nil
+}
+
 type PackedChannelScanner struct {
 	s *ChannelScanner
 }
@@ -73,10 +92,7 @@ func (s *PackedChannelScanner) Bytes() []byte {
 	for len(bs) > 0 {
 		flag := bs[0]
 		payload := bs[1:]
-		if flag == 0xFF {
-			bs = payload
-			result = append(result, '\n')
-		} else if flag <= 0x7A {
+		if flag <= 0x7A {
 			first := make([]byte, len(payload))
 			n := s.decodePackedLinearFrame(first, payload, flag)
 			result = append(result, first[:n]...)

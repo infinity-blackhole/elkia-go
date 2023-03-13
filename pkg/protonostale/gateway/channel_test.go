@@ -53,7 +53,7 @@ func TestChannelDecodePasswordFrame(t *testing.T) {
 		},
 	}
 	var result protonostale.PasswordFrame
-	enc := NewSessionDecoder(bytes.NewReader(input))
+	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)
 	}
