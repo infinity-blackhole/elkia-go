@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestSessionReadIdentifierFrame(t *testing.T) {
+func TestChannelDecodeIdentifierFrame(t *testing.T) {
 	input := []byte(
 		"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff\xd0" +
 			"\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f\xc7\xe4" +
@@ -41,7 +41,7 @@ func TestSessionReadIdentifierFrame(t *testing.T) {
 	}
 }
 
-func TestSessionPasswordFrame(t *testing.T) {
+func TestChannelDecodePasswordFrame(t *testing.T) {
 	input := []byte(
 		"\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41" +
 			"\xda\xc1\xe0\x42\xf1\xcd",
@@ -62,7 +62,7 @@ func TestSessionPasswordFrame(t *testing.T) {
 	}
 }
 
-func TestChannelReadModeAndOffset(t *testing.T) {
+func TestChannelDecodeModeAndOffset(t *testing.T) {
 	r := NewChannelScanner(nil, 100)
 	if r.mode != 1 {
 		t.Errorf("Expected mode 74, got %d", r.mode)
@@ -79,7 +79,7 @@ func TestChannelReadModeAndOffset(t *testing.T) {
 	}
 }
 
-func TestChannelReadHeartbeatFrame(t *testing.T) {
+func TestChannelDecodeHeartbeatFrame(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
 	expected := protonostale.ChannelFrame{
 		ChannelFrame: eventing.ChannelFrame{
@@ -99,10 +99,10 @@ func TestChannelReadHeartbeatFrame(t *testing.T) {
 
 func TestChannelWrite(t *testing.T) {
 	input := []byte("foo")
-	expected := []byte("\x03\x99\x90\x90")
+	expected := []byte("\x03\x99\x90\x90\x19")
 	var buff bytes.Buffer
-	enc := NewEncoder(&buff)
-	if err := enc.Encode(input); err != nil {
+	enc := NewWriter(&buff)
+	if err := enc.WriteFrame(input); err != nil {
 		t.Fatal(err)
 	}
 	result := buff.Bytes()

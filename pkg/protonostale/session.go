@@ -247,7 +247,7 @@ type SyncFrame struct {
 
 func (e *SyncFrame) UnmarshalNosTale(b []byte) error {
 	fields := bytes.Split(b, []byte(" "))
-	if len(fields) != 2 {
+	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
 	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
@@ -255,7 +255,7 @@ func (e *SyncFrame) UnmarshalNosTale(b []byte) error {
 		return err
 	}
 	e.Sequence = uint32(sn)
-	code, err := strconv.ParseUint(string(fields[0]), 10, 32)
+	code, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (e *IdentifierFrame) UnmarshalNosTale(b []byte) error {
 		return err
 	}
 	e.Sequence = uint32(sn)
-	e.Identifier = string(fields[0])
+	e.Identifier = string(fields[1])
 	return nil
 }
 
@@ -311,6 +311,6 @@ func (e *PasswordFrame) UnmarshalNosTale(b []byte) error {
 		return err
 	}
 	e.Sequence = uint32(sn)
-	e.Password = string(fields[0])
+	e.Password = string(fields[1])
 	return nil
 }
