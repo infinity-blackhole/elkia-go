@@ -37,7 +37,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	}
 	sync := msg.GetSyncFrame()
 	if sync == nil {
-		return errors.New("handoff: handshake sync protocol error")
+		return errors.New("handoff: session protocol error")
 	}
 	s.sequence = sync.Sequence
 	msg, err = stream.Recv()
@@ -46,7 +46,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	}
 	identifier := msg.GetIdentifierFrame()
 	if identifier.Sequence != s.sequence+1 {
-		return errors.New("handoff: handshake sync protocol error")
+		return errors.New("handoff: session protocol error")
 	}
 	s.sequence = identifier.Sequence
 	msg, err = stream.Recv()
@@ -55,7 +55,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	}
 	password := msg.GetPasswordFrame()
 	if password.Sequence != s.sequence+1 {
-		return errors.New("handoff: handshake sync protocol error")
+		return errors.New("handoff: session protocol error")
 	}
 	s.sequence = password.Sequence
 	_, err = s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
@@ -72,8 +72,14 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			return err
 		}
 		switch msg.Payload.(type) {
+		case *eventing.ChannelInteractRequest_HeartbeatFrame:
+			heartbeat := msg.GetHeartbeatFrame()
+			if heartbeat.Sequence != s.sequence+1 {
+				return errors.New("handoff: channel protocol error")
+			}
+			s.sequence = heartbeat.Sequence
 		default:
-			return errors.New("channel: handshake sync protocol error")
+			return errors.New("channel: channel protocol error")
 		}
 	}
 }
