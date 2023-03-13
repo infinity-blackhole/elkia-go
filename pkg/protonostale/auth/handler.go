@@ -5,7 +5,6 @@ import (
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -37,16 +36,16 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 func (h *Handler) newConn(c net.Conn) *conn {
 	return &conn{
 		rwc:  c,
-		dec:  encoding.NewDecoder(encoding.NewAuthReader(c)),
-		enc:  encoding.NewEncoder(encoding.NewAuthWriter(c)),
+		dec:  NewDecoder(c),
+		enc:  NewEncoder(c),
 		auth: h.auth,
 	}
 }
 
 type conn struct {
 	rwc  net.Conn
-	dec  *encoding.Decoder
-	enc  *encoding.Encoder
+	dec  *Decoder
+	enc  *Encoder
 	auth eventing.AuthClient
 }
 
@@ -56,7 +55,7 @@ func (c *conn) serve(ctx context.Context) {
 	logrus.Debugf("auth: serving connection from %v", c.rwc.RemoteAddr())
 	err := c.handleMessages(ctx)
 	switch e := err.(type) {
-	case *protonostale.Status:
+	case protonostale.Marshaler:
 		if err := c.enc.Encode(e); err != nil {
 			logrus.Errorf("auth: failed to send error: %v", err)
 		}
@@ -81,7 +80,7 @@ func (c *conn) handleMessages(ctx context.Context) error {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debugf("auth: created auth interact stream")
-		if err := stream.Send(&msg.AuthInteractRequest); err != nil {
+		if err := stream.Send(msg.AuthInteractRequest); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 		logrus.Debug("auth: sent login request")
@@ -93,7 +92,7 @@ func (c *conn) handleMessages(ctx context.Context) error {
 		switch p := m.Payload.(type) {
 		case *eventing.AuthInteractResponse_EndpointListFrame:
 			ed := protonostale.EndpointListFrame{
-				EndpointListFrame: eventing.EndpointListFrame{
+				EndpointListFrame: &eventing.EndpointListFrame{
 					Code:      p.EndpointListFrame.Code,
 					Endpoints: p.EndpointListFrame.Endpoints,
 				},

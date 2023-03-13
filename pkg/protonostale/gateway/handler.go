@@ -5,7 +5,6 @@ import (
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/nostale/encoding"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -29,25 +28,23 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	dec := encoding.NewDecoder(encoding.NewSessionReader(c))
+	dec := NewSessionDecoder(c)
 	var sync protonostale.SyncFrame
 	if err := dec.Decode(&sync); err != nil {
 		c.Close()
 		return
 	}
 	logrus.Debugf("gateway: received sync frame: %v", sync.String())
-	conn := h.newChannelConn(c, &sync.SyncFrame)
-	go conn.serve(ctx)
+	conn := h.newChannelConn(c, sync.SyncFrame)
+	conn.serve(ctx)
 }
 
 func (h *Handler) newChannelConn(c net.Conn, sync *eventing.SyncFrame) *channelConn {
 	return &channelConn{
-		rwc:     c,
-		gateway: h.gateway,
-		dec: encoding.NewDecoder(
-			encoding.NewWorldPackReader(encoding.NewWorldReader(c, sync.Code)),
-		),
-		enc:      encoding.NewEncoder(encoding.NewWorldWriter(c)),
+		rwc:      c,
+		gateway:  h.gateway,
+		dec:      NewChannelDecoder(c, sync.Code),
+		enc:      NewEncoder(c),
 		Code:     sync.Code,
 		sequence: sync.Sequence,
 	}
@@ -55,8 +52,8 @@ func (h *Handler) newChannelConn(c net.Conn, sync *eventing.SyncFrame) *channelC
 
 type channelConn struct {
 	rwc      net.Conn
-	dec      *encoding.Decoder
-	enc      *encoding.Encoder
+	dec      *ChannelDecoder
+	enc      *Encoder
 	gateway  eventing.GatewayClient
 	Code     uint32
 	sequence uint32
@@ -105,7 +102,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	logrus.Debugf("gateway: read identifier frame: %v", identifier.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: &identifier.IdentifierFrame,
+			IdentifierFrame: identifier.IdentifierFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
@@ -118,7 +115,7 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 	logrus.Debugf("gateway: read password frame: %v", password.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: &password.PasswordFrame,
+			PasswordFrame: password.PasswordFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
@@ -128,11 +125,11 @@ func (c *channelConn) handleMessages(ctx context.Context) error {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	for {
-		var m protonostale.ChannelInteractRequest
-		if err := c.dec.Decode(&m); err != nil {
+		var msg protonostale.ChannelInteractRequest
+		if err := c.dec.Decode(&msg); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
-		if err := stream.Send(&m.ChannelInteractRequest); err != nil {
+		if err := stream.Send(msg.ChannelInteractRequest); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}

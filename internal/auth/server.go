@@ -51,7 +51,7 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 }
 
 func (s *Server) AuthLoginFrameProduce(
-	m *eventing.AuthLoginFrame,
+	m *eventing.LoginFrame,
 	stream eventing.Auth_AuthLoginFrameProduceServer,
 ) error {
 	handoff, err := s.presence.AuthLogin(

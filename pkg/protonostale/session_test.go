@@ -5,27 +5,28 @@ import (
 	"testing"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	"google.golang.org/protobuf/proto"
 )
 
-func TestAuthLoginFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
-	expected := &eventing.AuthLoginFrame{
-		Identifier:    "admin",
-		Password:      "s3cr3t",
-		ClientVersion: "0.9.3+3086",
+func TestLoginFrameUnmarshalNosTale(t *testing.T) {
+	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
+	expected := AuthInteractRequest{
+		&eventing.AuthInteractRequest{
+			Payload: &eventing.AuthInteractRequest_LoginFrame{
+				LoginFrame: &eventing.LoginFrame{
+					Identifier:    "admin",
+					Password:      "s3cr3t",
+					ClientVersion: "0.9.3+3086",
+				},
+			},
+		},
 	}
-	var result AuthLoginFrame
+	var result AuthInteractRequest
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if result.Identifier != expected.Identifier {
-		t.Errorf("Expected %v, got %v", expected.Identifier, result.Identifier)
-	}
-	if result.Password != expected.Password {
-		t.Errorf("Expected %v, got %v", expected.Password, result.Password)
-	}
-	if result.ClientVersion != expected.ClientVersion {
-		t.Errorf("Expected %v, got %v", expected.ClientVersion, result.ClientVersion)
+	if !proto.Equal(expected, result) {
+		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }
 
@@ -65,7 +66,7 @@ func TestDecodeClientVersion(t *testing.T) {
 
 func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 	input := &EndpointListFrame{
-		EndpointListFrame: eventing.EndpointListFrame{
+		EndpointListFrame: &eventing.EndpointListFrame{
 			Code: 1,
 			Endpoints: []*eventing.Endpoint{
 				{

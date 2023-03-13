@@ -19,12 +19,7 @@ message ErrorFrame { Code code = 1; }
 
 message InfoFrame { string content = 1; }
 
-message RawFrame {
-  uint32 sequence = 1;
-  bytes payload = 2;
-}
-
-message AuthLoginFrame {
+message LoginFrame {
   string identifier = 2;
   string password = 3;
   string client_version = 5;
@@ -47,8 +42,8 @@ message EndpointListFrame {
 
 message AuthInteractRequest {
   oneof payload {
-    AuthLoginFrame login_frame = 1;
-    RawFrame raw_frame = 2;
+    bytes raw_frame = 1;
+    LoginFrame login_frame = 2;
   }
 }
 
@@ -68,37 +63,25 @@ service Auth {
 
   // AuthLoginFrameProduce send a login frame to the auth server and returns a
   // stream of events
-  rpc AuthLoginFrameProduce(AuthLoginFrame)
-      returns (stream AuthInteractResponse);
+  rpc AuthLoginFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
 }
 
-message HeartbeatFrame { uint32 sequence = 1; }
+message HeartbeatFrame {}
 
-message SyncFrame {
-  uint32 sequence = 1;
-  uint32 code = 2;
-}
+message SyncFrame { uint32 code = 1; }
 
-message IdentifierFrame {
-  uint32 sequence = 1;
-  string identifier = 2;
-}
+message IdentifierFrame { string identifier = 1; }
 
-message PasswordFrame {
-  uint32 sequence = 1;
-  string password = 2;
-}
-
-message WorldFrame { uint32 sequence = 1; }
+message PasswordFrame { string password = 1; }
 
 message ChannelInteractRequest {
+  uint32 sequence = 1;
   oneof payload {
-    HeartbeatFrame heartbeat_frame = 1;
-    SyncFrame sync_frame = 2;
-    IdentifierFrame identifier_frame = 3;
-    PasswordFrame password_frame = 4;
-    WorldFrame world_frame = 5;
-    RawFrame raw_frame = 6;
+    bytes raw_frame = 2;
+    HeartbeatFrame heartbeat_frame = 3;
+    SyncFrame sync_frame = 4;
+    IdentifierFrame identifier_frame = 5;
+    PasswordFrame password_frame = 6;
   }
 }
 
