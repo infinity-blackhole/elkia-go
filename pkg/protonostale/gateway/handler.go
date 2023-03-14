@@ -51,13 +51,9 @@ type Proxy struct {
 	sender *ProxySender
 }
 
-func NewProxy(
-	c net.Conn,
-	code uint32,
-	sequence uint32,
-) *Proxy {
+func NewProxy(c net.Conn, code uint32) *Proxy {
 	return &Proxy{
-		sender: NewProxySender(c, code, sequence),
+		sender: NewProxySender(c, code),
 	}
 }
 
@@ -89,7 +85,12 @@ func (p *ProxyUpgrader) Upgrade(
 		return nil, err
 	}
 	logrus.Debugf("gateway: received sync frame: %v", msg.String())
-	return NewProxy(p.conn, msg.GetCode(), msg.GetSequence()), nil
+	if err := stream.Send(msg); err != nil {
+		return nil, p.proxy.SendMsg(
+			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+		)
+	}
+	return NewProxy(p.conn, msg.GetSyncFrame().GetCode()), nil
 }
 
 type SessionProxyClient struct {
@@ -104,22 +105,28 @@ func NewSessionProxyClient(c net.Conn) *SessionProxyClient {
 	}
 }
 
-func (c *SessionProxyClient) Recv() (*protonostale.SyncFrame, error) {
+func (c *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.SyncFrame
 	if err := c.RecvMsg(&msg); err != nil {
 		return nil, c.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
 		)
 	}
-	return &msg, nil
+	return &eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_SyncFrame{
+			SyncFrame: msg.SyncFrame,
+		},
+	}, nil
 }
 
 func (c *SessionProxyClient) RecvMsg(msg any) error {
 	return c.dec.Decode(msg)
 }
 
-func (u *SessionProxyClient) Send(msg *protonostale.SyncFrame) error {
-	return u.enc.Encode(msg)
+func (u *SessionProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
+	return u.enc.Encode(&protonostale.ChannelInteractResponse{
+		ChannelInteractResponse: msg,
+	})
 }
 
 func (c *SessionProxyClient) SendMsg(msg any) error {
@@ -134,29 +141,18 @@ func (c *SessionProxyClient) SendMsg(msg any) error {
 }
 
 type ProxySender struct {
-	dec          *ChannelDecoder
-	proxy        *ChannelProxyClient
-	Code         uint32
-	lastSequence uint32
+	dec   *ChannelDecoder
+	proxy *ChannelProxyClient
 }
 
-func NewProxySender(
-	c net.Conn,
-	code uint32,
-	sequence uint32,
-) *ProxySender {
+func NewProxySender(c net.Conn, code uint32) *ProxySender {
 	return &ProxySender{
-		dec:          NewChannelDecoder(c, code),
-		proxy:        NewChannelProxyClient(c, code),
-		Code:         code,
-		lastSequence: sequence,
+		dec:   NewChannelDecoder(c, code),
+		proxy: NewChannelProxyClient(c, code),
 	}
 }
 
 func (c *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
-	if err := c.handleSync(stream); err != nil {
-		return err
-	}
 	if err := c.handleIdentifier(stream); err != nil {
 		return err
 	}
@@ -174,20 +170,6 @@ func (c *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}
-}
-
-func (c *ProxySender) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
-	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_SyncFrame{
-			SyncFrame: &eventing.SyncFrame{
-				Sequence: c.lastSequence,
-				Code:     c.Code,
-			},
-		},
-	}); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	return nil
 }
 
 func (c *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
