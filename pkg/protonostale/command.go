@@ -12,6 +12,10 @@ type ChannelInteractRequest struct {
 	*eventing.ChannelInteractRequest
 }
 
+type ChannelInteractResponse struct {
+	*eventing.ChannelInteractResponse
+}
+
 type CommandFrame struct {
 	*eventing.CommandFrame
 }
