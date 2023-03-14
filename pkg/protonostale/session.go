@@ -39,28 +39,52 @@ type AuthInteractResponse struct {
 }
 
 func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
-	var b bytes.Buffer
-	switch v := r.Payload.(type) {
+	var buff bytes.Buffer
+	switch p := r.Payload.(type) {
 	case *eventing.AuthInteractResponse_ErrorFrame:
-		if _, err := fmt.Fprintf(&b, "%s ", ErrorOpCode); err != nil {
-			return nil, err
-		}
 		vv := &ErrorFrame{
 			ErrorFrame: eventing.ErrorFrame{
-				Code: v.ErrorFrame.Code,
+				Code: p.ErrorFrame.Code,
 			},
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
 			return nil, err
 		}
-		if _, err := b.Write(fields); err != nil {
+		if _, err := buff.Write(fields); err != nil {
+			return nil, err
+		}
+	case *eventing.AuthInteractResponse_InfoFrame:
+		vv := &InfoFrame{
+			InfoFrame: eventing.InfoFrame{
+				Content: p.InfoFrame.Content,
+			},
+		}
+		fields, err := vv.MarshalNosTale()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buff.Write(fields); err != nil {
+			return nil, err
+		}
+	case *eventing.AuthInteractResponse_EndpointListFrame:
+		vv := &EndpointListFrame{
+			EndpointListFrame: eventing.EndpointListFrame{
+				Endpoints: p.EndpointListFrame.Endpoints,
+				Code:      p.EndpointListFrame.Code,
+			},
+		}
+		fields, err := vv.MarshalNosTale()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buff.Write(fields); err != nil {
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("invalid payload: %v", v)
+		return nil, fmt.Errorf("invalid payload: %v", p)
 	}
-	return b.Bytes(), nil
+	return buff.Bytes(), nil
 }
 
 type LoginFrame struct {
