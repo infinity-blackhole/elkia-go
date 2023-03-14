@@ -47,7 +47,7 @@ func TestChannelDecodePasswordFrame(t *testing.T) {
 			"\xda\xc1\xe0\x42\xf1\xcd",
 	)
 	expected := protonostale.PasswordFrame{
-		PasswordFrame: eventing.PasswordFrame{
+		PasswordFrame: &eventing.PasswordFrame{
 			Sequence: 60472,
 			Password: "9hibwiwiG2e6Nr",
 		},
@@ -82,7 +82,7 @@ func TestChannelDecodeModeAndOffset(t *testing.T) {
 func TestChannelDecodeHeartbeatFrame(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
 	expected := protonostale.HeartbeatFrame{
-		HeartbeatFrame: eventing.HeartbeatFrame{
+		HeartbeatFrame: &eventing.HeartbeatFrame{
 			Sequence: 49277,
 		},
 	}

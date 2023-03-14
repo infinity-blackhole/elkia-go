@@ -104,7 +104,7 @@ func (c *conn) handleFrames(ctx context.Context) error {
 		if err := c.dec.Decode(&msg); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
-		if err := stream.Send(&msg.ChannelInteractRequest); err != nil {
+		if err := stream.Send(msg.ChannelInteractRequest); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}
@@ -132,7 +132,7 @@ func (c *conn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) e
 	logrus.Debugf("gateway: read identifier frame: %v", msg.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: &msg.IdentifierFrame,
+			IdentifierFrame: msg.IdentifierFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
@@ -148,7 +148,7 @@ func (c *conn) handlePassword(stream eventing.Gateway_ChannelInteractClient) err
 	logrus.Debugf("gateway: read password frame: %v", msg.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: &msg.PasswordFrame,
+			PasswordFrame: msg.PasswordFrame,
 		},
 	}); err != nil {
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)

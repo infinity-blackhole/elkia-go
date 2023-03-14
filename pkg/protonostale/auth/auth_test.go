@@ -43,7 +43,7 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 
 func TestAuthEncodingEncodeFrame(t *testing.T) {
 	input := protonostale.InfoFrame{
-		InfoFrame: eventing.InfoFrame{
+		InfoFrame: &eventing.InfoFrame{
 			Content: "fail Hello. This is a basic test",
 		},
 	}

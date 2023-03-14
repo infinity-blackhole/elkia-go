@@ -14,18 +14,19 @@ var (
 )
 
 type ErrorFrame struct {
-	eventing.ErrorFrame
+	*eventing.ErrorFrame
 }
 
-func (e *ErrorFrame) MarshalNosTale() ([]byte, error) {
+func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "failc %d", e.Code); err != nil {
+	if _, err := fmt.Fprintf(&b, "failc %d", f.Code); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *ErrorFrame) UnmarshalNosTale(b []byte) error {
+func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
+	f.ErrorFrame = &eventing.ErrorFrame{}
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -37,23 +38,24 @@ func (e *ErrorFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Code = eventing.Code(code)
+	f.Code = eventing.Code(code)
 	return nil
 }
 
 type InfoFrame struct {
-	eventing.InfoFrame
+	*eventing.InfoFrame
 }
 
-func (e *InfoFrame) MarshalNosTale() ([]byte, error) {
+func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, e.Content); err != nil {
+	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, f.Content); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *InfoFrame) UnmarshalNosTale(b []byte) error {
+func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
+	f.InfoFrame = &eventing.InfoFrame{}
 	bs := bytes.Split(b, []byte(" "))
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -61,14 +63,14 @@ func (e *InfoFrame) UnmarshalNosTale(b []byte) error {
 	if string(bs[0]) != InfoOpCode {
 		return fmt.Errorf("invalid prefix: %s", string(bs[0]))
 	}
-	e.Content = string(bs[1])
+	f.Content = string(bs[1])
 	return nil
 }
 
 func NewStatus(code eventing.Code) *Status {
 	return &Status{
-		s: ErrorFrame{
-			ErrorFrame: eventing.ErrorFrame{
+		&ErrorFrame{
+			ErrorFrame: &eventing.ErrorFrame{
 				Code: code,
 			},
 		},
@@ -76,7 +78,7 @@ func NewStatus(code eventing.Code) *Status {
 }
 
 type Status struct {
-	s ErrorFrame
+	s *ErrorFrame
 }
 
 func (s *Status) Error() string {

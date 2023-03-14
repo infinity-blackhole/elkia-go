@@ -9,23 +9,24 @@ import (
 )
 
 type ChannelInteractRequest struct {
-	eventing.ChannelInteractRequest
+	*eventing.ChannelInteractRequest
 }
 
 type CommandFrame struct {
-	eventing.CommandFrame
+	*eventing.CommandFrame
 }
 
-func (e *CommandFrame) UnmarshalNosTale(b []byte) error {
+func (f *CommandFrame) UnmarshalNosTale(b []byte) error {
+	f.CommandFrame = &eventing.CommandFrame{}
 	fields := bytes.SplitN(b, []byte(" "), 3)
 	sn, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
-	e.Sequence = uint32(sn)
+	f.Sequence = uint32(sn)
 	switch string(fields[0]) {
 	default:
-		e.Payload = &eventing.CommandFrame_RawFrame{
+		f.Payload = &eventing.CommandFrame_RawFrame{
 			RawFrame: fields[1],
 		}
 	}
@@ -33,18 +34,19 @@ func (e *CommandFrame) UnmarshalNosTale(b []byte) error {
 }
 
 type HeartbeatFrame struct {
-	eventing.HeartbeatFrame
+	*eventing.HeartbeatFrame
 }
 
-func (e *HeartbeatFrame) MarshalNosTale() ([]byte, error) {
+func (f *HeartbeatFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *HeartbeatFrame) UnmarshalNosTale(b []byte) error {
+func (f *HeartbeatFrame) UnmarshalNosTale(b []byte) error {
+	f.HeartbeatFrame = &eventing.HeartbeatFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -53,6 +55,6 @@ func (e *HeartbeatFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Sequence = uint32(sn)
+	f.Sequence = uint32(sn)
 	return nil
 }

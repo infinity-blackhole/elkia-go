@@ -133,7 +133,7 @@ func (c *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
 	if err := c.RecvMsg(&msg); err != nil {
 		return nil, c.SendMsg(err)
 	}
-	return &msg.AuthInteractRequest, nil
+	return msg.AuthInteractRequest, nil
 }
 
 func (c *ProxyClient) RecvMsg(msg any) error {
@@ -142,9 +142,7 @@ func (c *ProxyClient) RecvMsg(msg any) error {
 
 func (c *ProxyClient) Send(msg *eventing.AuthInteractResponse) error {
 	return c.SendMsg(&protonostale.AuthInteractResponse{
-		AuthInteractResponse: eventing.AuthInteractResponse{
-			Payload: msg.Payload,
-		},
+		AuthInteractResponse: msg,
 	})
 }
 

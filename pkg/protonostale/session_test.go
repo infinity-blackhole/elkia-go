@@ -11,7 +11,7 @@ import (
 func TestLoginFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := AuthInteractRequest{
-		eventing.AuthInteractRequest{
+		&eventing.AuthInteractRequest{
 			Payload: &eventing.AuthInteractRequest_LoginFrame{
 				LoginFrame: &eventing.LoginFrame{
 					Identifier:    "admin",
@@ -66,7 +66,7 @@ func TestDecodeClientVersion(t *testing.T) {
 
 func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 	input := &EndpointListFrame{
-		EndpointListFrame: eventing.EndpointListFrame{
+		EndpointListFrame: &eventing.EndpointListFrame{
 			Code: 1,
 			Endpoints: []*eventing.Endpoint{
 				{

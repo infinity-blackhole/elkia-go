@@ -13,10 +13,11 @@ var (
 )
 
 type AuthInteractRequest struct {
-	eventing.AuthInteractRequest
+	*eventing.AuthInteractRequest
 }
 
-func (r *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
+func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
+	f.AuthInteractRequest = &eventing.AuthInteractRequest{}
 	fields := bytes.SplitN(b, []byte(" "), 2)
 	opcode := string(fields[0])
 	switch opcode {
@@ -25,8 +26,8 @@ func (r *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 		if err := LoginFrame.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		r.Payload = &eventing.AuthInteractRequest_LoginFrame{
-			LoginFrame: &LoginFrame.LoginFrame,
+		f.Payload = &eventing.AuthInteractRequest_LoginFrame{
+			LoginFrame: LoginFrame.LoginFrame,
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -35,17 +36,15 @@ func (r *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 }
 
 type AuthInteractResponse struct {
-	eventing.AuthInteractResponse
+	*eventing.AuthInteractResponse
 }
 
-func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
+func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
-	switch p := r.Payload.(type) {
+	switch p := f.Payload.(type) {
 	case *eventing.AuthInteractResponse_ErrorFrame:
 		vv := &ErrorFrame{
-			ErrorFrame: eventing.ErrorFrame{
-				Code: p.ErrorFrame.Code,
-			},
+			ErrorFrame: p.ErrorFrame,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -56,9 +55,7 @@ func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		}
 	case *eventing.AuthInteractResponse_InfoFrame:
 		vv := &InfoFrame{
-			InfoFrame: eventing.InfoFrame{
-				Content: p.InfoFrame.Content,
-			},
+			InfoFrame: p.InfoFrame,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -69,10 +66,7 @@ func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		}
 	case *eventing.AuthInteractResponse_EndpointListFrame:
 		vv := &EndpointListFrame{
-			EndpointListFrame: eventing.EndpointListFrame{
-				Endpoints: p.EndpointListFrame.Endpoints,
-				Code:      p.EndpointListFrame.Code,
-			},
+			EndpointListFrame: p.EndpointListFrame,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -88,25 +82,26 @@ func (r *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 }
 
 type LoginFrame struct {
-	eventing.LoginFrame
+	*eventing.LoginFrame
 }
 
-func (e *LoginFrame) UnmarshalNosTale(b []byte) error {
+func (f *LoginFrame) UnmarshalNosTale(b []byte) error {
+	f.LoginFrame = &eventing.LoginFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
-	e.Identifier = string(fields[1])
+	f.Identifier = string(fields[1])
 	password, err := DecodePassword(fields[2])
 	if err != nil {
 		return err
 	}
-	e.Password = password
+	f.Password = password
 	clientVersion, err := DecodeClientVersion(fields[3])
 	if err != nil {
 		return err
 	}
-	e.ClientVersion = clientVersion
+	f.ClientVersion = clientVersion
 	return nil
 }
 
@@ -159,17 +154,17 @@ func DecodeClientVersion(b []byte) (string, error) {
 }
 
 type EndpointListFrame struct {
-	eventing.EndpointListFrame
+	*eventing.EndpointListFrame
 }
 
-func (e *EndpointListFrame) MarshalNosTale() ([]byte, error) {
+func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", e.Code); err != nil {
+	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
 		return nil, err
 	}
-	for _, m := range e.Endpoints {
+	for _, m := range f.Endpoints {
 		b, err := (&Endpoint{
-			eventing.Endpoint{
+			Endpoint: &eventing.Endpoint{
 				Host:      m.Host,
 				Port:      m.Port,
 				Weight:    m.Weight,
@@ -191,7 +186,8 @@ func (e *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (e *EndpointListFrame) UnmarshalNosTale(b []byte) error {
+func (f *EndpointListFrame) UnmarshalNosTale(b []byte) error {
+	f.EndpointListFrame = &eventing.EndpointListFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) < 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -203,50 +199,51 @@ func (e *EndpointListFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Code = uint32(code)
+	f.Code = uint32(code)
 	for _, m := range fields[2:] {
 		var ep Endpoint
 		if err := ep.UnmarshalNosTale(m); err != nil {
 			return err
 		}
-		e.Endpoints = append(e.Endpoints, &ep.Endpoint)
+		f.Endpoints = append(f.Endpoints, ep.Endpoint)
 	}
 	return nil
 }
 
 type Endpoint struct {
-	eventing.Endpoint
+	*eventing.Endpoint
 }
 
-func (e *Endpoint) MarshalNosTale() ([]byte, error) {
+func (f *Endpoint) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&buff,
 		"%s:%s:%d:%d.%d.%s ",
-		e.Host,
-		e.Port,
-		e.Weight,
-		e.WorldId,
-		e.ChannelId,
-		e.WorldName,
+		f.Host,
+		f.Port,
+		f.Weight,
+		f.WorldId,
+		f.ChannelId,
+		f.WorldName,
 	); err != nil {
 		return nil, err
 	}
 	return buff.Bytes(), nil
 }
 
-func (e *Endpoint) UnmarshalNosTale(b []byte) error {
+func (f *Endpoint) UnmarshalNosTale(b []byte) error {
+	f.Endpoint = &eventing.Endpoint{}
 	fields := bytes.Split(b, []byte(":"))
 	if len(fields) != 5 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
-	e.Host = string(fields[0])
-	e.Port = string(fields[1])
+	f.Host = string(fields[0])
+	f.Port = string(fields[1])
 	weight, err := strconv.ParseUint(string(fields[2]), 10, 32)
 	if err != nil {
 		return err
 	}
-	e.Weight = uint32(weight)
+	f.Weight = uint32(weight)
 	fields = bytes.Split(fields[3], []byte("."))
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -255,29 +252,30 @@ func (e *Endpoint) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.WorldId = uint32(worldId)
+	f.WorldId = uint32(worldId)
 	channelId, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
-	e.ChannelId = uint32(channelId)
-	e.WorldName = string(fields[2])
+	f.ChannelId = uint32(channelId)
+	f.WorldName = string(fields[2])
 	return nil
 }
 
 type SyncFrame struct {
-	eventing.SyncFrame
+	*eventing.SyncFrame
 }
 
-func (e *SyncFrame) MarshalNosTale() ([]byte, error) {
+func (f *SyncFrame) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(&buff, "%d %d", e.Sequence, e.Code); err != nil {
+	if _, err := fmt.Fprintf(&buff, "%d %d", f.Sequence, f.Code); err != nil {
 		return nil, err
 	}
 	return buff.Bytes(), nil
 }
 
-func (e *SyncFrame) UnmarshalNosTale(b []byte) error {
+func (f *SyncFrame) UnmarshalNosTale(b []byte) error {
+	f.SyncFrame = &eventing.SyncFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -286,31 +284,32 @@ func (e *SyncFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Sequence = uint32(sn)
+	f.Sequence = uint32(sn)
 	code, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
-	e.Code = uint32(code)
+	f.Code = uint32(code)
 	return nil
 }
 
 type IdentifierFrame struct {
-	eventing.IdentifierFrame
+	*eventing.IdentifierFrame
 }
 
-func (e *IdentifierFrame) MarshalNosTale() ([]byte, error) {
+func (f *IdentifierFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
 		return nil, err
 	}
-	if _, err := b.WriteString(e.Identifier); err != nil {
+	if _, err := b.WriteString(f.Identifier); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *IdentifierFrame) UnmarshalNosTale(b []byte) error {
+func (f *IdentifierFrame) UnmarshalNosTale(b []byte) error {
+	f.IdentifierFrame = &eventing.IdentifierFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -319,27 +318,28 @@ func (e *IdentifierFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Sequence = uint32(sn)
-	e.Identifier = string(fields[1])
+	f.Sequence = uint32(sn)
+	f.Identifier = string(fields[1])
 	return nil
 }
 
 type PasswordFrame struct {
-	eventing.PasswordFrame
+	*eventing.PasswordFrame
 }
 
-func (e *PasswordFrame) MarshalNosTale() ([]byte, error) {
+func (f *PasswordFrame) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%d ", e.Sequence); err != nil {
+	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
 		return nil, err
 	}
-	if _, err := b.WriteString(e.Password); err != nil {
+	if _, err := b.WriteString(f.Password); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
 }
 
-func (e *PasswordFrame) UnmarshalNosTale(b []byte) error {
+func (f *PasswordFrame) UnmarshalNosTale(b []byte) error {
+	f.PasswordFrame = &eventing.PasswordFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -348,7 +348,7 @@ func (e *PasswordFrame) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	e.Sequence = uint32(sn)
-	e.Password = string(fields[1])
+	f.Sequence = uint32(sn)
+	f.Password = string(fields[1])
 	return nil
 }
