@@ -31,8 +31,6 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
-	sender := h.newProxySender(ctx, c)
-	receiver := h.newProxyReceiver(ctx, c)
 	logrus.Debugf("auth: new connection from %v", c.RemoteAddr())
 	stream, err := h.auth.AuthInteract(ctx)
 	if err != nil {
@@ -40,6 +38,8 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		return
 	}
 	logrus.Debugf("auth: created auth interact stream")
+	sender := NewProxySender(c)
+	receiver := NewProxyReceiver(c)
 	ws := errgroup.Group{}
 	ws.Go(func() error {
 		return sender.Serve(stream)
@@ -52,23 +52,14 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	}
 }
 
-func (h *Handler) newProxySender(ctx context.Context, c net.Conn) *ProxySender {
-	return &ProxySender{
-		ctx:   ctx,
-		proxy: NewProxyClient(ctx, c),
-	}
-}
-
-func (h *Handler) newProxyReceiver(ctx context.Context, c net.Conn) *ProxyReceiver {
-	return &ProxyReceiver{
-		ctx:   ctx,
-		proxy: NewProxyClient(ctx, c),
-	}
-}
-
 type ProxySender struct {
-	ctx   context.Context
 	proxy *ProxyClient
+}
+
+func NewProxySender(c net.Conn) *ProxySender {
+	return &ProxySender{
+		proxy: NewProxyClient(c),
+	}
 }
 
 func (p *ProxySender) Serve(stream eventing.Auth_AuthInteractClient) error {
@@ -90,8 +81,13 @@ func (p *ProxySender) Serve(stream eventing.Auth_AuthInteractClient) error {
 }
 
 type ProxyReceiver struct {
-	ctx   context.Context
 	proxy *ProxyClient
+}
+
+func NewProxyReceiver(c net.Conn) *ProxyReceiver {
+	return &ProxyReceiver{
+		proxy: NewProxyClient(c),
+	}
 }
 
 func (c *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
@@ -113,25 +109,23 @@ func (c *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 }
 
 type ProxyClient struct {
-	ctx  context.Context
-	conn net.Conn
-	dec  *Decoder
-	enc  *Encoder
+	dec *Decoder
+	enc *Encoder
 }
 
-func NewProxyClient(ctx context.Context, c net.Conn) *ProxyClient {
+func NewProxyClient(c net.Conn) *ProxyClient {
 	return &ProxyClient{
-		ctx:  ctx,
-		conn: c,
-		dec:  NewDecoder(c),
-		enc:  NewEncoder(c),
+		dec: NewDecoder(c),
+		enc: NewEncoder(c),
 	}
 }
 
 func (c *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
 	var msg protonostale.AuthInteractRequest
 	if err := c.RecvMsg(&msg); err != nil {
-		return nil, c.SendMsg(err)
+		return nil, c.SendMsg(
+			protonostale.NewStatus(eventing.Code_BAD_CASE),
+		)
 	}
 	return msg.AuthInteractRequest, nil
 }
