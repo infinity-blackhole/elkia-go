@@ -8,6 +8,7 @@ import (
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	"golang.org/x/sync/errgroup"
 )
 
 var name = "github.com/infinity-blackhole/elkia/internal/gateway"
@@ -28,66 +29,131 @@ type Handler struct {
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
-	dec := NewSessionDecoder(c)
-	var msg protonostale.SyncFrame
-	if err := dec.Decode(&msg); err != nil {
-		c.Close()
+	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
+	defer span.End()
+	stream, err := h.gateway.ChannelInteract(ctx)
+	if err != nil {
+		logrus.Errorf("auth: error while creating auth interact stream: %v", err)
 		return
 	}
-	logrus.Debugf("gateway: received sync frame: %v", msg.String())
-	conn := h.newChannelConn(c, &msg)
-	conn.serve(ctx)
+	logrus.Debugf("gateway: created auth handoff interact stream")
+	proxy, err := NewProxyUpgrader(c).Upgrade(stream)
+	if err != nil {
+		logrus.Errorf("gateway: error while upgrading connection: %v", err)
+		return
+	}
+	if err := proxy.Serve(stream); err != nil {
+		logrus.Errorf("auth: error while handling connection: %v", err)
+	}
 }
 
-func (h *Handler) newChannelConn(
+type Proxy struct {
+	sender *ProxySender
+}
+
+func NewProxy(
 	c net.Conn,
-	msg *protonostale.SyncFrame,
-) *conn {
-	sequence := msg.GetSequence()
-	code := msg.GetCode()
-	return &conn{
-		rwc:          c,
-		gateway:      h.gateway,
+	code uint32,
+	sequence uint32,
+) *Proxy {
+	return &Proxy{
+		sender: NewProxySender(c, code, sequence),
+	}
+}
+
+func (p *Proxy) Serve(stream eventing.Gateway_ChannelInteractClient) error {
+	ws := errgroup.Group{}
+	ws.Go(func() error {
+		return p.sender.Serve(stream)
+	})
+	return ws.Wait()
+}
+
+type ProxyUpgrader struct {
+	conn  net.Conn
+	proxy *SessionProxyClient
+}
+
+func NewProxyUpgrader(c net.Conn) *ProxyUpgrader {
+	return &ProxyUpgrader{
+		conn:  c,
+		proxy: NewSessionProxyClient(c),
+	}
+}
+
+func (p *ProxyUpgrader) Upgrade(
+	stream eventing.Gateway_ChannelInteractClient,
+) (*Proxy, error) {
+	msg, err := p.proxy.Recv()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("gateway: received sync frame: %v", msg.String())
+	return NewProxy(p.conn, msg.GetCode(), msg.GetSequence()), nil
+}
+
+type SessionProxyClient struct {
+	dec *SessionDecoder
+	enc *Encoder
+}
+
+func NewSessionProxyClient(c net.Conn) *SessionProxyClient {
+	return &SessionProxyClient{
+		dec: NewSessionDecoder(c),
+		enc: NewEncoder(c),
+	}
+}
+
+func (c *SessionProxyClient) Recv() (*protonostale.SyncFrame, error) {
+	var msg protonostale.SyncFrame
+	if err := c.RecvMsg(&msg); err != nil {
+		return nil, c.SendMsg(
+			protonostale.NewStatus(eventing.Code_BAD_CASE),
+		)
+	}
+	return &msg, nil
+}
+
+func (c *SessionProxyClient) RecvMsg(msg any) error {
+	return c.dec.Decode(msg)
+}
+
+func (u *SessionProxyClient) Send(msg *protonostale.SyncFrame) error {
+	return u.enc.Encode(msg)
+}
+
+func (c *SessionProxyClient) SendMsg(msg any) error {
+	switch msg.(type) {
+	case protonostale.Marshaler:
+		return c.enc.Encode(msg)
+	default:
+		return c.enc.Encode(
+			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+		)
+	}
+}
+
+type ProxySender struct {
+	dec          *ChannelDecoder
+	proxy        *ChannelProxyClient
+	Code         uint32
+	lastSequence uint32
+}
+
+func NewProxySender(
+	c net.Conn,
+	code uint32,
+	sequence uint32,
+) *ProxySender {
+	return &ProxySender{
 		dec:          NewChannelDecoder(c, code),
-		enc:          NewEncoder(c),
+		proxy:        NewChannelProxyClient(c, code),
 		Code:         code,
 		lastSequence: sequence,
 	}
 }
 
-type conn struct {
-	rwc          net.Conn
-	dec          *ChannelDecoder
-	enc          *Encoder
-	gateway      eventing.GatewayClient
-	Code         uint32
-	lastSequence uint32
-}
-
-func (c *conn) serve(ctx context.Context) {
-	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
-	defer span.End()
-	logrus.Debugf("gateway: serving connection from %v", c.rwc.RemoteAddr())
-	switch err := c.handleFrames(ctx).(type) {
-	case *protonostale.Status:
-		if err := c.enc.Encode(err); err != nil {
-			logrus.Errorf("gateway: failed to send error: %v", err)
-		}
-	default:
-		if err := c.enc.Encode(
-			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
-		); err != nil {
-			logrus.Errorf("gateway: failed to send error: %v", err)
-		}
-	}
-}
-
-func (c *conn) handleFrames(ctx context.Context) error {
-	stream, err := c.gateway.ChannelInteract(ctx)
-	if err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	logrus.Debugf("gateway: created auth handoff interact stream")
+func (c *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
 	if err := c.handleSync(stream); err != nil {
 		return err
 	}
@@ -100,17 +166,17 @@ func (c *conn) handleFrames(ctx context.Context) error {
 	}
 	logrus.Debugf("gateway: sent login frame")
 	for {
-		var msg protonostale.ChannelInteractRequest
-		if err := c.dec.Decode(&msg); err != nil {
+		msg, err := c.proxy.Recv()
+		if err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
-		if err := stream.Send(msg.ChannelInteractRequest); err != nil {
+		if err := stream.Send(msg); err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}
 }
 
-func (c *conn) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *ProxySender) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
 	if err := stream.Send(&eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_SyncFrame{
 			SyncFrame: &eventing.SyncFrame{
@@ -124,7 +190,7 @@ func (c *conn) handleSync(stream eventing.Gateway_ChannelInteractClient) error {
 	return nil
 }
 
-func (c *conn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.IdentifierFrame
 	if err := c.dec.Decode(&msg); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
@@ -140,7 +206,7 @@ func (c *conn) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) e
 	return nil
 }
 
-func (c *conn) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
+func (c *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.PasswordFrame
 	if err := c.dec.Decode(&msg); err != nil {
 		return err
@@ -154,4 +220,47 @@ func (c *conn) handlePassword(stream eventing.Gateway_ChannelInteractClient) err
 		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	return nil
+}
+
+type ChannelProxyClient struct {
+	dec *ChannelDecoder
+	enc *Encoder
+}
+
+func NewChannelProxyClient(c net.Conn, code uint32) *ChannelProxyClient {
+	return &ChannelProxyClient{
+		dec: NewChannelDecoder(c, code),
+		enc: NewEncoder(c),
+	}
+}
+
+func (c *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+	var msg protonostale.ChannelInteractRequest
+	if err := c.RecvMsg(&msg); err != nil {
+		return nil, c.SendMsg(
+			protonostale.NewStatus(eventing.Code_BAD_CASE),
+		)
+	}
+	return msg.ChannelInteractRequest, nil
+}
+
+func (c *ChannelProxyClient) RecvMsg(msg any) error {
+	return c.dec.Decode(msg)
+}
+
+func (u *ChannelProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
+	return u.enc.Encode(&protonostale.ChannelInteractResponse{
+		ChannelInteractResponse: msg,
+	})
+}
+
+func (c *ChannelProxyClient) SendMsg(msg any) error {
+	switch msg.(type) {
+	case protonostale.Marshaler:
+		return c.enc.Encode(msg)
+	default:
+		return c.enc.Encode(
+			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+		)
+	}
 }
