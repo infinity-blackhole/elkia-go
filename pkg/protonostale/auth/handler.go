@@ -38,18 +38,32 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		return
 	}
 	logrus.Debugf("auth: created auth interact stream")
-	sender := NewProxySender(c)
-	receiver := NewProxyReceiver(c)
-	ws := errgroup.Group{}
-	ws.Go(func() error {
-		return sender.Serve(stream)
-	})
-	ws.Go(func() error {
-		return receiver.Serve(stream)
-	})
-	if err := ws.Wait(); err != nil {
+	if err := NewProxy(c).Serve(stream); err != nil {
 		logrus.Errorf("auth: error while handling connection: %v", err)
 	}
+}
+
+type Proxy struct {
+	s *ProxySender
+	r *ProxyReceiver
+}
+
+func NewProxy(c net.Conn) *Proxy {
+	return &Proxy{
+		s: NewProxySender(c),
+		r: NewProxyReceiver(c),
+	}
+}
+
+func (p *Proxy) Serve(stream eventing.Auth_AuthInteractClient) error {
+	ws := errgroup.Group{}
+	ws.Go(func() error {
+		return p.s.Serve(stream)
+	})
+	ws.Go(func() error {
+		return p.r.Serve(stream)
+	})
+	return ws.Wait()
 }
 
 type ProxySender struct {
