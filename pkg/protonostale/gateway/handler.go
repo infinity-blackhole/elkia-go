@@ -39,7 +39,10 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		return
 	}
 	logrus.Debugf("gateway: created auth handoff interact stream")
-	proxy, err := NewProxyUpgrader(c).Upgrade(stream)
+	proxy, err := NewProxyUpgrader(bufio.NewReadWriter(
+		bufio.NewReader(c),
+		bufio.NewWriter(c),
+	)).Upgrade(stream)
 	if err != nil {
 		logrus.Errorf("gateway: error while upgrading connection: %v", err)
 		return
@@ -72,11 +75,7 @@ type ProxyUpgrader struct {
 	proxy *SessionProxyClient
 }
 
-func NewProxyUpgrader(c net.Conn) *ProxyUpgrader {
-	rwc := bufio.NewReadWriter(
-		bufio.NewReader(c),
-		bufio.NewWriter(c),
-	)
+func NewProxyUpgrader(rwc *bufio.ReadWriter) *ProxyUpgrader {
 	return &ProxyUpgrader{
 		rwc:   rwc,
 		proxy: NewSessionProxyClient(rwc),
@@ -111,10 +110,10 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	}
 }
 
-func (c *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+func (p *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.SyncFrame
-	if err := c.RecvMsg(&msg); err != nil {
-		return nil, c.SendMsg(
+	if err := p.RecvMsg(&msg); err != nil {
+		return nil, p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
 		)
 	}
@@ -125,8 +124,8 @@ func (c *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	}, nil
 }
 
-func (c *SessionProxyClient) RecvMsg(msg any) error {
-	return c.dec.Decode(msg)
+func (p *SessionProxyClient) RecvMsg(msg any) error {
+	return p.dec.Decode(msg)
 }
 
 func (u *SessionProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
@@ -135,12 +134,12 @@ func (u *SessionProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
 	})
 }
 
-func (c *SessionProxyClient) SendMsg(msg any) error {
+func (p *SessionProxyClient) SendMsg(msg any) error {
 	switch msg.(type) {
 	case protonostale.Marshaler:
-		return c.enc.Encode(msg)
+		return p.enc.Encode(msg)
 	default:
-		return c.enc.Encode(
+		return p.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		)
 	}
@@ -158,17 +157,17 @@ func NewProxySender(rw io.ReadWriter, code uint32) *ProxySender {
 	}
 }
 
-func (c *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
-	if err := c.handleIdentifier(stream); err != nil {
+func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
+	if err := p.handleIdentifier(stream); err != nil {
 		return err
 	}
 	logrus.Debugf("gateway: sent sync frame")
-	if err := c.handlePassword(stream); err != nil {
+	if err := p.handlePassword(stream); err != nil {
 		return err
 	}
 	logrus.Debugf("gateway: sent login frame")
 	for {
-		msg, err := c.proxy.Recv()
+		msg, err := p.proxy.Recv()
 		if err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
@@ -178,9 +177,9 @@ func (c *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error
 	}
 }
 
-func (c *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
+func (p *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.IdentifierFrame
-	if err := c.dec.Decode(&msg); err != nil {
+	if err := p.dec.Decode(&msg); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
 	logrus.Debugf("gateway: read identifier frame: %v", msg.String())
@@ -194,9 +193,9 @@ func (c *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractCl
 	return nil
 }
 
-func (c *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
+func (p *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.PasswordFrame
-	if err := c.dec.Decode(&msg); err != nil {
+	if err := p.dec.Decode(&msg); err != nil {
 		return err
 	}
 	logrus.Debugf("gateway: read password frame: %v", msg.String())
@@ -222,18 +221,18 @@ func NewChannelProxyClient(rw io.ReadWriter, code uint32) *ChannelProxyClient {
 	}
 }
 
-func (c *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.ChannelInteractRequest
-	if err := c.RecvMsg(&msg); err != nil {
-		return nil, c.SendMsg(
+	if err := p.RecvMsg(&msg); err != nil {
+		return nil, p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
 		)
 	}
 	return msg.ChannelInteractRequest, nil
 }
 
-func (c *ChannelProxyClient) RecvMsg(msg any) error {
-	return c.dec.Decode(msg)
+func (p *ChannelProxyClient) RecvMsg(msg any) error {
+	return p.dec.Decode(msg)
 }
 
 func (u *ChannelProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
@@ -242,12 +241,12 @@ func (u *ChannelProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
 	})
 }
 
-func (c *ChannelProxyClient) SendMsg(msg any) error {
+func (p *ChannelProxyClient) SendMsg(msg any) error {
 	switch msg.(type) {
 	case protonostale.Marshaler:
-		return c.enc.Encode(msg)
+		return p.enc.Encode(msg)
 	default:
-		return c.enc.Encode(
+		return p.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		)
 	}
