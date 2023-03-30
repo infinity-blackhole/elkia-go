@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bufio"
 	"context"
 	"net"
 
@@ -38,7 +39,10 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 		return
 	}
 	logrus.Debugf("auth: created auth interact stream")
-	if err := NewProxy(c).Serve(stream); err != nil {
+	if err := NewProxy(bufio.NewReadWriter(
+		bufio.NewReader(c),
+		bufio.NewWriter(c),
+	)).Serve(stream); err != nil {
 		logrus.Errorf("auth: error while handling connection: %v", err)
 	}
 }
@@ -48,10 +52,10 @@ type Proxy struct {
 	r *ProxyReceiver
 }
 
-func NewProxy(c net.Conn) *Proxy {
+func NewProxy(rw *bufio.ReadWriter) *Proxy {
 	return &Proxy{
-		s: NewProxySender(c),
-		r: NewProxyReceiver(c),
+		s: NewProxySender(rw),
+		r: NewProxyReceiver(rw),
 	}
 }
 
@@ -70,9 +74,9 @@ type ProxySender struct {
 	proxy *ProxyClient
 }
 
-func NewProxySender(c net.Conn) *ProxySender {
+func NewProxySender(rw *bufio.ReadWriter) *ProxySender {
 	return &ProxySender{
-		proxy: NewProxyClient(c),
+		proxy: NewProxyClient(rw),
 	}
 }
 
@@ -98,23 +102,23 @@ type ProxyReceiver struct {
 	proxy *ProxyClient
 }
 
-func NewProxyReceiver(c net.Conn) *ProxyReceiver {
+func NewProxyReceiver(rw *bufio.ReadWriter) *ProxyReceiver {
 	return &ProxyReceiver{
-		proxy: NewProxyClient(c),
+		proxy: NewProxyClient(rw),
 	}
 }
 
-func (c *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
+func (p *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
-			return c.proxy.SendMsg(
+			return p.proxy.SendMsg(
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
 		logrus.Debugf("auth: read frame: %v", msg.Payload)
-		if err := c.proxy.Send(msg); err != nil {
-			return c.proxy.SendMsg(
+		if err := p.proxy.Send(msg); err != nil {
+			return p.proxy.SendMsg(
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
@@ -123,44 +127,51 @@ func (c *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 }
 
 type ProxyClient struct {
+	rw  *bufio.ReadWriter
 	dec *Decoder
 	enc *Encoder
 }
 
-func NewProxyClient(c net.Conn) *ProxyClient {
+func NewProxyClient(rw *bufio.ReadWriter) *ProxyClient {
 	return &ProxyClient{
-		dec: NewDecoder(c),
-		enc: NewEncoder(c),
+		rw:  rw,
+		dec: NewDecoder(rw),
+		enc: NewEncoder(rw),
 	}
 }
 
-func (c *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
+func (p *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
 	var msg protonostale.AuthInteractRequest
-	if err := c.RecvMsg(&msg); err != nil {
-		return nil, c.SendMsg(
+	if err := p.RecvMsg(&msg); err != nil {
+		return nil, p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
 		)
 	}
 	return msg.AuthInteractRequest, nil
 }
 
-func (c *ProxyClient) RecvMsg(msg any) error {
-	return c.dec.Decode(msg)
+func (p *ProxyClient) RecvMsg(msg any) error {
+	return p.dec.Decode(msg)
 }
 
-func (c *ProxyClient) Send(msg *eventing.AuthInteractResponse) error {
-	return c.SendMsg(&protonostale.AuthInteractResponse{
+func (p *ProxyClient) Send(msg *eventing.AuthInteractResponse) error {
+	return p.SendMsg(&protonostale.AuthInteractResponse{
 		AuthInteractResponse: msg,
 	})
 }
 
-func (c *ProxyClient) SendMsg(msg any) error {
+func (p *ProxyClient) SendMsg(msg any) error {
 	switch msg.(type) {
 	case protonostale.Marshaler:
-		return c.enc.Encode(msg)
+		if err := p.enc.Encode(msg); err != nil {
+			return err
+		}
 	default:
-		return c.enc.Encode(
+		if err := p.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
-		)
+		); err != nil {
+			return err
+		}
 	}
+	return p.rw.Flush()
 }

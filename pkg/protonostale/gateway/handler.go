@@ -3,7 +3,6 @@ package gateway
 import (
 	"bufio"
 	"context"
-	"io"
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -56,7 +55,7 @@ type Proxy struct {
 	sender *ProxySender
 }
 
-func NewProxy(rw io.ReadWriter, code uint32) *Proxy {
+func NewProxy(rw *bufio.ReadWriter, code uint32) *Proxy {
 	return &Proxy{
 		sender: NewProxySender(rw, code),
 	}
@@ -99,12 +98,14 @@ func (p *ProxyUpgrader) Upgrade(
 }
 
 type SessionProxyClient struct {
+	rw  *bufio.ReadWriter
 	dec *SessionDecoder
 	enc *Encoder
 }
 
 func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	return &SessionProxyClient{
+		rw:  rw,
 		dec: NewSessionDecoder(rw.Reader),
 		enc: NewEncoder(rw),
 	}
@@ -137,12 +138,17 @@ func (u *SessionProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
 func (p *SessionProxyClient) SendMsg(msg any) error {
 	switch msg.(type) {
 	case protonostale.Marshaler:
-		return p.enc.Encode(msg)
+		if err := p.enc.Encode(msg); err != nil {
+			return err
+		}
 	default:
-		return p.enc.Encode(
+		if err := p.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
-		)
+		); err != nil {
+			return err
+		}
 	}
+	return p.rw.Flush()
 }
 
 type ProxySender struct {
@@ -150,7 +156,7 @@ type ProxySender struct {
 	proxy *ChannelProxyClient
 }
 
-func NewProxySender(rw io.ReadWriter, code uint32) *ProxySender {
+func NewProxySender(rw *bufio.ReadWriter, code uint32) *ProxySender {
 	return &ProxySender{
 		dec:   NewChannelDecoder(rw, code),
 		proxy: NewChannelProxyClient(rw, code),
@@ -210,12 +216,14 @@ func (p *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClie
 }
 
 type ChannelProxyClient struct {
+	rw  *bufio.ReadWriter
 	dec *ChannelDecoder
 	enc *Encoder
 }
 
-func NewChannelProxyClient(rw io.ReadWriter, code uint32) *ChannelProxyClient {
+func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClient {
 	return &ChannelProxyClient{
+		rw:  rw,
 		dec: NewChannelDecoder(rw, code),
 		enc: NewEncoder(rw),
 	}
@@ -244,10 +252,15 @@ func (u *ChannelProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
 func (p *ChannelProxyClient) SendMsg(msg any) error {
 	switch msg.(type) {
 	case protonostale.Marshaler:
-		return p.enc.Encode(msg)
+		if err := p.enc.Encode(msg); err != nil {
+			return err
+		}
 	default:
-		return p.enc.Encode(
+		if err := p.enc.Encode(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
-		)
+		); err != nil {
+			return err
+		}
 	}
+	return p.rw.Flush()
 }
