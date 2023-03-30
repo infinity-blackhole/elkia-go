@@ -2,33 +2,17 @@ package gateway
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 
 	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 )
 
-type SessionScanner struct {
-	s *bufio.Scanner
-}
-
-func NewSessionScanner(r io.Reader) *SessionScanner {
-	s := bufio.NewScanner(r)
-	s.Split(ScanSessionFrame)
-	return &SessionScanner{s}
-}
-
-func (s *SessionScanner) Scan() bool {
-	return s.s.Scan()
-}
-
-func (s *SessionScanner) Err() error {
-	return s.s.Err()
-}
-
-func (s *SessionScanner) Bytes() []byte {
-	bs := s.s.Bytes()
+func ReadSession(r *bufio.Reader) ([]byte, error) {
+	bs, err := r.ReadBytes(0x0E)
+	if err != nil {
+		return nil, err
+	}
 	buff := make([]byte, len(bs)*2)
 	for n := 0; len(bs) > n; n++ {
 		first_byte := bs[n] - 0xF
@@ -48,46 +32,24 @@ func (s *SessionScanner) Bytes() []byte {
 			}
 		}
 	}
-	return buff
-}
-
-func (s *SessionScanner) Text() string {
-	return string(s.Bytes())
-}
-
-func ScanSessionFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-	if i := bytes.IndexByte(data, 0x0A); i >= 0 {
-		// We have a full frames.
-		return i + 1, data[0:i], nil
-	}
-	// If we're at EOF, we have a final, non-terminated frame. Return it.
-	if atEOF {
-		return len(data), data, nil
-	}
-	// Request more data.
-	return 0, nil, nil
+	return buff, nil
 }
 
 type SessionDecoder struct {
-	s *SessionScanner
+	r *bufio.Reader
 }
 
 func NewSessionDecoder(r io.Reader) *SessionDecoder {
-	return &SessionDecoder{NewSessionScanner(r)}
+	return &SessionDecoder{bufio.NewReader(r)}
 }
 
 func (d *SessionDecoder) Decode(v any) error {
-	if !d.s.Scan() {
-		if err := d.s.Err(); err != nil {
-			return err
-		}
-		return io.EOF
+	buff, err := ReadSession(d.r)
+	if err != nil {
+		return err
 	}
 	if v, ok := v.(protonostale.Unmarshaler); ok {
-		return v.UnmarshalNosTale(d.s.Bytes())
+		return v.UnmarshalNosTale(buff)
 	}
 	return fmt.Errorf("invalid payload: %v", v)
 }

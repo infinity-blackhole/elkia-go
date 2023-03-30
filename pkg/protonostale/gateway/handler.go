@@ -1,7 +1,9 @@
 package gateway
 
 import (
+	"bufio"
 	"context"
+	"io"
 	"net"
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
@@ -51,9 +53,9 @@ type Proxy struct {
 	sender *ProxySender
 }
 
-func NewProxy(c net.Conn, code uint32) *Proxy {
+func NewProxy(rw io.ReadWriter, code uint32) *Proxy {
 	return &Proxy{
-		sender: NewProxySender(c, code),
+		sender: NewProxySender(rw, code),
 	}
 }
 
@@ -66,14 +68,18 @@ func (p *Proxy) Serve(stream eventing.Gateway_ChannelInteractClient) error {
 }
 
 type ProxyUpgrader struct {
-	conn  net.Conn
+	rwc   *bufio.ReadWriter
 	proxy *SessionProxyClient
 }
 
 func NewProxyUpgrader(c net.Conn) *ProxyUpgrader {
+	rwc := bufio.NewReadWriter(
+		bufio.NewReader(c),
+		bufio.NewWriter(c),
+	)
 	return &ProxyUpgrader{
-		conn:  c,
-		proxy: NewSessionProxyClient(c),
+		rwc:   rwc,
+		proxy: NewSessionProxyClient(rwc),
 	}
 }
 
@@ -90,7 +96,7 @@ func (p *ProxyUpgrader) Upgrade(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		)
 	}
-	return NewProxy(p.conn, msg.GetSyncFrame().GetCode()), nil
+	return NewProxy(p.rwc, msg.GetSyncFrame().GetCode()), nil
 }
 
 type SessionProxyClient struct {
@@ -98,10 +104,10 @@ type SessionProxyClient struct {
 	enc *Encoder
 }
 
-func NewSessionProxyClient(c net.Conn) *SessionProxyClient {
+func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	return &SessionProxyClient{
-		dec: NewSessionDecoder(c),
-		enc: NewEncoder(c),
+		dec: NewSessionDecoder(rw.Reader),
+		enc: NewEncoder(rw),
 	}
 }
 
@@ -145,10 +151,10 @@ type ProxySender struct {
 	proxy *ChannelProxyClient
 }
 
-func NewProxySender(c net.Conn, code uint32) *ProxySender {
+func NewProxySender(rw io.ReadWriter, code uint32) *ProxySender {
 	return &ProxySender{
-		dec:   NewChannelDecoder(c, code),
-		proxy: NewChannelProxyClient(c, code),
+		dec:   NewChannelDecoder(rw, code),
+		proxy: NewChannelProxyClient(rw, code),
 	}
 }
 
@@ -209,10 +215,10 @@ type ChannelProxyClient struct {
 	enc *Encoder
 }
 
-func NewChannelProxyClient(c net.Conn, code uint32) *ChannelProxyClient {
+func NewChannelProxyClient(rw io.ReadWriter, code uint32) *ChannelProxyClient {
 	return &ChannelProxyClient{
-		dec: NewChannelDecoder(c, code),
-		enc: NewEncoder(c),
+		dec: NewChannelDecoder(rw, code),
+		enc: NewEncoder(rw),
 	}
 }
 

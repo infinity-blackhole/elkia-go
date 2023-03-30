@@ -53,7 +53,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		return nil
 	})
 	if _, err := clientWriter.Write(
-		[]byte("\x9e\xa6\xb4\xc0\xc5\x84\xc7\xe6\x8f\x0e"),
+		[]byte("\x96\xa5\xaa\xe0\x4f\x0e"),
 	); err != nil {
 		t.Fatalf("Failed to write sync frame: %v", err)
 	}
