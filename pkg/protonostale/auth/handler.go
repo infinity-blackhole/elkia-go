@@ -88,7 +88,7 @@ func (p *ProxySender) Serve(stream eventing.Auth_AuthInteractClient) error {
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
-		logrus.Debugf("auth: read frame: %v", msg.Payload)
+		logrus.Debugf("auth: read frame: %v", msg)
 		if err := stream.Send(msg); err != nil {
 			return p.proxy.SendMsg(
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
@@ -116,7 +116,7 @@ func (p *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
-		logrus.Debugf("auth: read frame: %v", msg.Payload)
+		logrus.Debugf("auth: read frame: %v", msg)
 		if err := p.proxy.Send(msg); err != nil {
 			return p.proxy.SendMsg(
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
