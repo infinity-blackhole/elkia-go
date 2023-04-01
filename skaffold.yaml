@@ -39,7 +39,7 @@ build:
 manifests:
   kustomize:
     paths:
-      - manifests/elkia/overlays/default
+      - manifests/elkia/overlays/shikanime
     buildArgs:
       - --enable-helm
 deploy:
