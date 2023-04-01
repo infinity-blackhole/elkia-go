@@ -45,3 +45,28 @@ manifests:
 deploy:
   statusCheckDeadlineSeconds: 600
   tolerateFailuresUntilDeadline: true
+profiles:
+  - name: debug
+    activation:
+      - command: debug
+    portForward:
+      - resourceType: deployment
+        resourceName: elkia-auth
+        port: 56268
+        localPort: 56269
+      - resourceType: deployment
+        resourceName: elkia-auth-proxy
+        port: 56268
+        localPort: 56270
+      - resourceType: deployment
+        resourceName: elkia-gateway
+        port: 56268
+        localPort: 56271
+      - resourceType: deployment
+        resourceName: elkia-gateway-proxy
+        port: 56268
+        localPort: 56272
+      - resourceType: deployment
+        resourceName: elkia-fleet
+        port: 56268
+        localPort: 56273

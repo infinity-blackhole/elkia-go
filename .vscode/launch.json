@@ -20,6 +20,26 @@
       "request": "attach",
       "mode": "remote",
       "host": "localhost",
+      "port": 56270,
+      "cwd": "${workspaceFolder}",
+      "remotePath": "/go"
+    },
+    {
+      "name": "Attach Elkia Gateway Proxy",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "localhost",
+      "port": 56271,
+      "cwd": "${workspaceFolder}",
+      "remotePath": "/go"
+    },
+    {
+      "name": "Attach Elkia Gateway",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "localhost",
       "port": 56272,
       "cwd": "${workspaceFolder}",
       "remotePath": "/go"
@@ -30,27 +50,7 @@
       "request": "attach",
       "mode": "remote",
       "host": "localhost",
-      "port": 56272,
-      "cwd": "${workspaceFolder}",
-      "remotePath": "/go"
-    },
-    {
-      "name": "Attach Elkia Gateway Proxy",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "host": "localhost",
-      "port": 56270,
-      "cwd": "${workspaceFolder}",
-      "remotePath": "/go"
-    },
-    {
-      "name": "Attach Elkia Gateway",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "host": "localhost",
-      "port": 56271,
+      "port": 56273,
       "cwd": "${workspaceFolder}",
       "remotePath": "/go"
     },
