@@ -11,17 +11,25 @@ import (
 	"github.com/infinity-blackhole/elkia/internal/gateway/gatewaytest"
 	"github.com/infinity-blackhole/elkia/internal/presence"
 	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
+	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 
+// TODO: For the moment we have no idea what is the logout frame
 func TestHandlerServeNosTale(t *testing.T) {
 	ctx := context.Background()
 	wg := errgroup.Group{}
 	fakePresence := presencetest.NewFakePresence(presence.MemoryPresenceServerConfig{
 		Identities: map[uint32]*presence.Identity{
 			1: {
-				Username: "admin",
-				Password: "s3cr3t",
+				Username: "ricofo8350@otanhome.com",
+				Password: "9hibwiwiG2e6Nr",
+			},
+		},
+		Sessions: map[uint32]*fleet.Session{
+			0: {
+				Id:    "0",
+				Token: "0",
 			},
 		},
 		Seed: 1,
@@ -53,13 +61,13 @@ func TestHandlerServeNosTale(t *testing.T) {
 		return nil
 	})
 	if _, err := clientWriter.Write(
-		[]byte("\x96\xa5\xaa\xe0\x4f\x0e"),
+		[]byte("\x96\x94\xa9\xe0\x4f\x0e"),
 	); err != nil {
 		t.Fatalf("Failed to write sync frame: %v", err)
 	}
 	if _, err := clientWriter.Write(
 		[]byte(
-			"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff" +
+			"\xc6\xc5\xdb\x81\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff" +
 				"\xd0\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f",
 		),
 	); err != nil {
@@ -67,19 +75,27 @@ func TestHandlerServeNosTale(t *testing.T) {
 	}
 	if _, err := clientWriter.Write(
 		[]byte(
-			"\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0" +
+			"\xc7\xc5\xdb\x91\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0" +
 				"\x41\xda\xc1\xe0\x42\xf1\xcd\x3f",
 		),
 	); err != nil {
 		t.Fatalf("Failed to write identifier frame: %v", err)
 	}
 	if _, err := clientWriter.Write(
-		[]byte("\xc7\xcd\xab\xf1\x80\x3f\x0a"),
+		[]byte("\xc7\xc5\xdb\xa1\x80\x3f"),
+	); err != nil {
+		t.Fatalf("Failed to write heartbeat frame: %v", err)
+	}
+	if _, err := clientWriter.Write(
+		[]byte("\xc7\xc5\xdb\xb1\x80\x3f"),
 	); err != nil {
 		t.Fatalf("Failed to write heartbeat frame: %v", err)
 	}
 	if err := clientWriter.Flush(); err != nil {
 		t.Fatalf("Failed to flush frame: %v", err)
+	}
+	if err := clientConn.Close(); err != nil {
+		t.Fatalf("Failed to close client connection: %v", err)
 	}
 	wg.Wait()
 }
