@@ -233,7 +233,7 @@ func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClien
 }
 
 func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.ChannelInteractRequest
+	var msg protonostale.CommandFrame
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
@@ -242,7 +242,11 @@ func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 		}
 		return nil, err
 	}
-	return msg.ChannelInteractRequest, nil
+	return &eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_CommandFrame{
+			CommandFrame: msg.CommandFrame,
+		},
+	}, nil
 }
 
 func (p *ChannelProxyClient) RecvMsg(msg any) error {
