@@ -94,7 +94,7 @@ func (p *ProxyUpgrader) Upgrade(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		)
 	}
-	return NewProxy(p.rwc, msg.GetSyncFrame().GetCode()), nil
+	return NewProxy(p.rwc, 0), nil
 }
 
 type SessionProxyClient struct {
