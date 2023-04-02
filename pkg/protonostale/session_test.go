@@ -101,7 +101,7 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("4349270 0 ;;")
 	expected := eventing.SyncFrame{
-		Sequence: 4349270,
+		Sequence: 49270,
 		Code:     0,
 	}
 	var result SyncFrame

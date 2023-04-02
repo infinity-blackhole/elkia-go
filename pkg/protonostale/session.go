@@ -266,21 +266,13 @@ type SyncFrame struct {
 	*eventing.SyncFrame
 }
 
-func (f *SyncFrame) MarshalNosTale() ([]byte, error) {
-	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(&buff, "%d %d", f.Sequence, f.Code); err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
 func (f *SyncFrame) UnmarshalNosTale(b []byte) error {
 	f.SyncFrame = &eventing.SyncFrame{}
 	fields := bytes.Split(b, []byte(" "))
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
-	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
+	sn, err := strconv.ParseUint(string(fields[0][2:]), 10, 32)
 	if err != nil {
 		return err
 	}
