@@ -46,3 +46,7 @@ func (f *FakePresence) Dial(ctx context.Context) (fleet.PresenceClient, error) {
 	}
 	return fleet.NewPresenceClient(conn), nil
 }
+
+func (f *FakePresence) Close() error {
+	return f.lis.Close()
+}

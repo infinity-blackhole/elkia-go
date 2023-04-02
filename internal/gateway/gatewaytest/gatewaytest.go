@@ -46,3 +46,7 @@ func (f *FakeGateway) Dial(ctx context.Context) (eventing.GatewayClient, error) 
 	}
 	return eventing.NewGatewayClient(conn), nil
 }
+
+func (f *FakeGateway) Close() error {
+	return f.lis.Close()
+}

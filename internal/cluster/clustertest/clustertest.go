@@ -46,3 +46,7 @@ func (f *FakeCluster) Dial(ctx context.Context) (fleet.ClusterClient, error) {
 	}
 	return fleet.NewClusterClient(conn), nil
 }
+
+func (f *FakeCluster) Close() error {
+	return f.lis.Close()
+}
