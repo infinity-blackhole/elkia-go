@@ -81,7 +81,7 @@ message PasswordFrame {
   string password = 2;
 }
 
-message HeartbeatFrame { uint32 sequence = 1; }
+message HeartbeatFrame {}
 
 // TODO: unidentified f_stash_end frame
 message FStashEndFrame {}
@@ -137,12 +137,13 @@ message CommandFrame {
   uint32 sequence = 1;
   oneof payload {
     bytes raw_frame = 2;
-    FStashEndFrame f_stash_end_frame = 3;
-    CCloseFrame c_close_frame = 4;
-    LBSFrame lbs_frame = 5;
-    MultiTargetListFrame multi_target_list_frame = 6;
-    RequestFrame request_frame = 7;
-    GlobalOptionsFrame global_options_frame = 8;
+    HeartbeatFrame heartbeat_frame = 3;
+    FStashEndFrame f_stash_end_frame = 4;
+    CCloseFrame c_close_frame = 5;
+    LBSFrame lbs_frame = 6;
+    MultiTargetListFrame multi_target_list_frame = 7;
+    RequestFrame request_frame = 8;
+    GlobalOptionsFrame global_options_frame = 9;
   }
 }
 
@@ -151,7 +152,6 @@ message ChannelInteractRequest {
     SyncFrame sync_frame = 1;
     IdentifierFrame identifier_frame = 2;
     PasswordFrame password_frame = 3;
-    HeartbeatFrame heartbeat_frame = 4;
     CommandFrame command_frame = 5;
   }
 }

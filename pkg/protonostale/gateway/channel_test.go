@@ -81,12 +81,15 @@ func TestChannelDecodeModeAndOffset(t *testing.T) {
 
 func TestChannelDecodeHeartbeatFrame(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
-	expected := protonostale.HeartbeatFrame{
-		HeartbeatFrame: &eventing.HeartbeatFrame{
+	expected := protonostale.CommandFrame{
+		CommandFrame: &eventing.CommandFrame{
 			Sequence: 49277,
+			Payload: &eventing.CommandFrame_HeartbeatFrame{
+				HeartbeatFrame: &eventing.HeartbeatFrame{},
+			},
 		},
 	}
-	var result protonostale.HeartbeatFrame
+	var result protonostale.CommandFrame
 	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)

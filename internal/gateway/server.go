@@ -72,12 +72,15 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			return err
 		}
 		switch msg.Payload.(type) {
-		case *eventing.ChannelInteractRequest_HeartbeatFrame:
-			heartbeat := msg.GetHeartbeatFrame()
-			if heartbeat.Sequence != s.sequence+1 {
-				return errors.New("handoff: channel protocol error")
+		case *eventing.ChannelInteractRequest_CommandFrame:
+			command := msg.GetCommandFrame()
+			switch command.Payload.(type) {
+			case *eventing.CommandFrame_HeartbeatFrame:
+				if command.Sequence != s.sequence+1 {
+					return errors.New("handoff: channel protocol error")
+				}
+				s.sequence = command.Sequence
 			}
-			s.sequence = heartbeat.Sequence
 		default:
 			return errors.New("channel: channel protocol error")
 		}
