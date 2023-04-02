@@ -188,7 +188,7 @@ func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error
 
 func (p *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.IdentifierFrame
-	if err := p.dec.Decode(&msg); err != nil {
+	if err := p.proxy.dec.Decode(&msg); err != nil {
 		return protonostale.NewStatus(eventing.Code_BAD_CASE)
 	}
 	logrus.Debugf("gateway: read identifier frame: %v", msg.String())
@@ -204,7 +204,7 @@ func (p *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractCl
 
 func (p *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
 	var msg protonostale.PasswordFrame
-	if err := p.dec.Decode(&msg); err != nil {
+	if err := p.proxy.dec.Decode(&msg); err != nil {
 		return err
 	}
 	logrus.Debugf("gateway: read password frame: %v", msg.String())
