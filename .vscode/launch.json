@@ -5,52 +5,51 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Elkia Auth",
-      "type": "go",
+      "name": "Launch Skaffold",
+      "type": "cloudcode.kubernetes",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/elkia-auth"
-    },
-    {
-      "name": "Attach Elkia Auth",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "host": "localhost",
-      "port": 56268,
-      "cwd": "${workspaceFolder}/cmd/elkia-auth"
-    },
-    {
-      "name": "Launch Elkia Fleet",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/elkia-fleet"
-    },
-    {
-      "name": "Attach Elkia Fleet",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "host": "localhost",
-      "port": 56268,
-      "cwd": "${workspaceFolder}/cmd/elkia-fleet"
-    },
-    {
-      "name": "Launch Elkia Gateway",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/cmd/elkia-gateway"
-    },
-    {
-      "name": "Attach Elkia Gateway",
-      "type": "go",
-      "request": "attach",
-      "mode": "remote",
-      "host": "localhost",
-      "port": 56268,
-      "cwd": "${workspaceFolder}/cmd/elkia-gatwaey"
-    },
+      "skaffoldConfig": "${workspaceFolder}/skaffold.yaml",
+      "watch": true,
+      "cleanUp": false,
+      "portForward": true,
+      "imageRegistry": "ghcr.io/infinity-blackhole",
+      "debug": [
+        {
+          "image": "ghcr.io/infinity-blackhole/elkia-fleet",
+          "containerName": "elkia-fleet",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
+          }
+        },
+        {
+          "image": "ghcr.io/infinity-blackhole/elkia-gateway",
+          "containerName": "elkia-gateway",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
+          }
+        },
+        {
+          "image": "ghcr.io/infinity-blackhole/elkia-auth-proxy",
+          "containerName": "elkia-auth-proxy",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
+          }
+        },
+        {
+          "image": "ghcr.io/infinity-blackhole/elkia-gateway-proxy",
+          "containerName": "elkia-gateway-proxy",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
+          }
+        },
+        {
+          "image": "ghcr.io/infinity-blackhole/elkia-auth",
+          "containerName": "elkia-auth",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
+          }
+        }
+      ]
+    }
   ]
 }

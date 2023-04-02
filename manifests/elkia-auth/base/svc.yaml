@@ -8,9 +8,9 @@ metadata:
     app.kubernetes.io/instance: elkia-auth
 spec:
   ports:
-    - name: elkia
-      port: 4123
-      targetPort: elkia
+    - name: http
+      port: 80
+      targetPort: http
   selector:
     app.kubernetes.io/name: elkia-auth
     app.kubernetes.io/instance: elkia-auth

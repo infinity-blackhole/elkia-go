@@ -10,24 +10,36 @@ build:
       docker:
         target: build
         dockerfile: cmd/elkia-auth/Dockerfile
-    - image: ghcr.io/infinity-blackhole/elkia-fleet
+    - image: ghcr.io/infinity-blackhole/elkia-auth-proxy
       context: .
       runtimeType: go
       docker:
         target: build
-        dockerfile: cmd/elkia-fleet/Dockerfile
+        dockerfile: cmd/elkia-auth-proxy/Dockerfile
     - image: ghcr.io/infinity-blackhole/elkia-gateway
       context: .
       runtimeType: go
       docker:
         target: build
         dockerfile: cmd/elkia-gateway/Dockerfile
+    - image: ghcr.io/infinity-blackhole/elkia-gateway-proxy
+      context: .
+      runtimeType: go
+      docker:
+        target: build
+        dockerfile: cmd/elkia-gateway-proxy/Dockerfile
+    - image: ghcr.io/infinity-blackhole/elkia-fleet
+      context: .
+      runtimeType: go
+      docker:
+        target: build
+        dockerfile: cmd/elkia-fleet/Dockerfile
   local:
     useBuildkit: true
 manifests:
   kustomize:
     paths:
-      - manifests/elkia/overlays/default
+      - manifests/elkia/overlays/shikanime
     buildArgs:
       - --enable-helm
 deploy:

@@ -4,13 +4,13 @@ go 1.19
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.0.2
-	github.com/google/uuid v1.3.0
 	github.com/ory/client-go v1.1.7
 	github.com/sirupsen/logrus v1.9.0
 	go.etcd.io/etcd/client/v3 v3.5.7
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.39.0
 	go.opentelemetry.io/otel v1.13.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	google.golang.org/grpc v1.52.0
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -40,6 +40,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.7 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.7 // indirect
+	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect

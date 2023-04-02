@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-auth-proxy
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-auth-proxy
+          env:
+            - name: ELKIA_AUTH_ENDPOINT
+              value: elkia-auth:80

@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ../../../elkia-auth/overlays/default
+  - ../../../elkia-auth-proxy/overlays/default
+  - ../../../elkia-gateway/overlays/default
+  - ../../../elkia-gateway-proxy/overlays/default
+  - ../../../elkia-fleet/overlays/shikanime
+  - ../../../etcd/overlays/default
+  - ../../../kafka/overlays/default

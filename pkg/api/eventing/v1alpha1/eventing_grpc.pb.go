@@ -18,45 +18,50 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// AuthBrokerClient is the client API for AuthBroker service.
+// AuthClient is the client API for Auth service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AuthBrokerClient interface {
-	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (AuthBroker_AuthInteractClient, error)
+type AuthClient interface {
+	// AuthInteract is a bi-directional stream that is used to interact with the
+	// auth server
+	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
+	// AuthLoginFrameProduce send a login frame to the auth server and returns a
+	// stream of events
+	AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error)
 }
 
-type authBrokerClient struct {
+type authClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAuthBrokerClient(cc grpc.ClientConnInterface) AuthBrokerClient {
-	return &authBrokerClient{cc}
+func NewAuthClient(cc grpc.ClientConnInterface) AuthClient {
+	return &authClient{cc}
 }
 
-func (c *authBrokerClient) AuthInteract(ctx context.Context, opts ...grpc.CallOption) (AuthBroker_AuthInteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &AuthBroker_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.AuthBroker/AuthInteract", opts...)
+func (c *authClient) AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.Auth/AuthInteract", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &authBrokerAuthInteractClient{stream}
+	x := &authAuthInteractClient{stream}
 	return x, nil
 }
 
-type AuthBroker_AuthInteractClient interface {
+type Auth_AuthInteractClient interface {
 	Send(*AuthInteractRequest) error
 	Recv() (*AuthInteractResponse, error)
 	grpc.ClientStream
 }
 
-type authBrokerAuthInteractClient struct {
+type authAuthInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *authBrokerAuthInteractClient) Send(m *AuthInteractRequest) error {
+func (x *authAuthInteractClient) Send(m *AuthInteractRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *authBrokerAuthInteractClient) Recv() (*AuthInteractResponse, error) {
+func (x *authAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	m := new(AuthInteractResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -64,53 +69,93 @@ func (x *authBrokerAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	return m, nil
 }
 
-// AuthBrokerServer is the server API for AuthBroker service.
-// All implementations must embed UnimplementedAuthBrokerServer
+func (c *authClient) AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Auth/AuthLoginFrameProduce", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &authAuthLoginFrameProduceClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Auth_AuthLoginFrameProduceClient interface {
+	Recv() (*AuthInteractResponse, error)
+	grpc.ClientStream
+}
+
+type authAuthLoginFrameProduceClient struct {
+	grpc.ClientStream
+}
+
+func (x *authAuthLoginFrameProduceClient) Recv() (*AuthInteractResponse, error) {
+	m := new(AuthInteractResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// AuthServer is the server API for Auth service.
+// All implementations must embed UnimplementedAuthServer
 // for forward compatibility
-type AuthBrokerServer interface {
-	AuthInteract(AuthBroker_AuthInteractServer) error
-	mustEmbedUnimplementedAuthBrokerServer()
+type AuthServer interface {
+	// AuthInteract is a bi-directional stream that is used to interact with the
+	// auth server
+	AuthInteract(Auth_AuthInteractServer) error
+	// AuthLoginFrameProduce send a login frame to the auth server and returns a
+	// stream of events
+	AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error
+	mustEmbedUnimplementedAuthServer()
 }
 
-// UnimplementedAuthBrokerServer must be embedded to have forward compatible implementations.
-type UnimplementedAuthBrokerServer struct {
+// UnimplementedAuthServer must be embedded to have forward compatible implementations.
+type UnimplementedAuthServer struct {
 }
 
-func (UnimplementedAuthBrokerServer) AuthInteract(AuthBroker_AuthInteractServer) error {
+func (UnimplementedAuthServer) AuthInteract(Auth_AuthInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthInteract not implemented")
 }
-func (UnimplementedAuthBrokerServer) mustEmbedUnimplementedAuthBrokerServer() {}
+func (UnimplementedAuthServer) AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error {
+	return status.Errorf(codes.Unimplemented, "method AuthLoginFrameProduce not implemented")
+}
+func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
-// UnsafeAuthBrokerServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AuthBrokerServer will
+// UnsafeAuthServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AuthServer will
 // result in compilation errors.
-type UnsafeAuthBrokerServer interface {
-	mustEmbedUnimplementedAuthBrokerServer()
+type UnsafeAuthServer interface {
+	mustEmbedUnimplementedAuthServer()
 }
 
-func RegisterAuthBrokerServer(s grpc.ServiceRegistrar, srv AuthBrokerServer) {
-	s.RegisterService(&AuthBroker_ServiceDesc, srv)
+func RegisterAuthServer(s grpc.ServiceRegistrar, srv AuthServer) {
+	s.RegisterService(&Auth_ServiceDesc, srv)
 }
 
-func _AuthBroker_AuthInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AuthBrokerServer).AuthInteract(&authBrokerAuthInteractServer{stream})
+func _Auth_AuthInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AuthServer).AuthInteract(&authAuthInteractServer{stream})
 }
 
-type AuthBroker_AuthInteractServer interface {
+type Auth_AuthInteractServer interface {
 	Send(*AuthInteractResponse) error
 	Recv() (*AuthInteractRequest, error)
 	grpc.ServerStream
 }
 
-type authBrokerAuthInteractServer struct {
+type authAuthInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *authBrokerAuthInteractServer) Send(m *AuthInteractResponse) error {
+func (x *authAuthInteractServer) Send(m *AuthInteractResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *authBrokerAuthInteractServer) Recv() (*AuthInteractRequest, error) {
+func (x *authAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 	m := new(AuthInteractRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -118,63 +163,91 @@ func (x *authBrokerAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 	return m, nil
 }
 
-// AuthBroker_ServiceDesc is the grpc.ServiceDesc for AuthBroker service.
+func _Auth_AuthLoginFrameProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(LoginFrame)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AuthServer).AuthLoginFrameProduce(m, &authAuthLoginFrameProduceServer{stream})
+}
+
+type Auth_AuthLoginFrameProduceServer interface {
+	Send(*AuthInteractResponse) error
+	grpc.ServerStream
+}
+
+type authAuthLoginFrameProduceServer struct {
+	grpc.ServerStream
+}
+
+func (x *authAuthLoginFrameProduceServer) Send(m *AuthInteractResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+// Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AuthBroker_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.eventing.v1alpha1.AuthBroker",
-	HandlerType: (*AuthBrokerServer)(nil),
+var Auth_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.eventing.v1alpha1.Auth",
+	HandlerType: (*AuthServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "AuthInteract",
-			Handler:       _AuthBroker_AuthInteract_Handler,
+			Handler:       _Auth_AuthInteract_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "AuthLoginFrameProduce",
+			Handler:       _Auth_AuthLoginFrameProduce_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "pkg/api/eventing/v1alpha1/eventing.proto",
 }
 
-// GatewayBrokerClient is the client API for GatewayBroker service.
+// GatewayClient is the client API for Gateway service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GatewayBrokerClient interface {
-	ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (GatewayBroker_ChannelInteractClient, error)
+type GatewayClient interface {
+	// ChannelInteract is a bi-directional stream that is used to interact with
+	// the channel server
+	ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error)
 }
 
-type gatewayBrokerClient struct {
+type gatewayClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGatewayBrokerClient(cc grpc.ClientConnInterface) GatewayBrokerClient {
-	return &gatewayBrokerClient{cc}
+func NewGatewayClient(cc grpc.ClientConnInterface) GatewayClient {
+	return &gatewayClient{cc}
 }
 
-func (c *gatewayBrokerClient) ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (GatewayBroker_ChannelInteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &GatewayBroker_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.GatewayBroker/ChannelInteract", opts...)
+func (c *gatewayClient) ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[0], "/io.elkia.eventing.v1alpha1.Gateway/ChannelInteract", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &gatewayBrokerChannelInteractClient{stream}
+	x := &gatewayChannelInteractClient{stream}
 	return x, nil
 }
 
-type GatewayBroker_ChannelInteractClient interface {
+type Gateway_ChannelInteractClient interface {
 	Send(*ChannelInteractRequest) error
 	Recv() (*ChannelInteractResponse, error)
 	grpc.ClientStream
 }
 
-type gatewayBrokerChannelInteractClient struct {
+type gatewayChannelInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *gatewayBrokerChannelInteractClient) Send(m *ChannelInteractRequest) error {
+func (x *gatewayChannelInteractClient) Send(m *ChannelInteractRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *gatewayBrokerChannelInteractClient) Recv() (*ChannelInteractResponse, error) {
+func (x *gatewayChannelInteractClient) Recv() (*ChannelInteractResponse, error) {
 	m := new(ChannelInteractResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -182,53 +255,55 @@ func (x *gatewayBrokerChannelInteractClient) Recv() (*ChannelInteractResponse, e
 	return m, nil
 }
 
-// GatewayBrokerServer is the server API for GatewayBroker service.
-// All implementations must embed UnimplementedGatewayBrokerServer
+// GatewayServer is the server API for Gateway service.
+// All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
-type GatewayBrokerServer interface {
-	ChannelInteract(GatewayBroker_ChannelInteractServer) error
-	mustEmbedUnimplementedGatewayBrokerServer()
+type GatewayServer interface {
+	// ChannelInteract is a bi-directional stream that is used to interact with
+	// the channel server
+	ChannelInteract(Gateway_ChannelInteractServer) error
+	mustEmbedUnimplementedGatewayServer()
 }
 
-// UnimplementedGatewayBrokerServer must be embedded to have forward compatible implementations.
-type UnimplementedGatewayBrokerServer struct {
+// UnimplementedGatewayServer must be embedded to have forward compatible implementations.
+type UnimplementedGatewayServer struct {
 }
 
-func (UnimplementedGatewayBrokerServer) ChannelInteract(GatewayBroker_ChannelInteractServer) error {
+func (UnimplementedGatewayServer) ChannelInteract(Gateway_ChannelInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method ChannelInteract not implemented")
 }
-func (UnimplementedGatewayBrokerServer) mustEmbedUnimplementedGatewayBrokerServer() {}
+func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
-// UnsafeGatewayBrokerServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GatewayBrokerServer will
+// UnsafeGatewayServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to GatewayServer will
 // result in compilation errors.
-type UnsafeGatewayBrokerServer interface {
-	mustEmbedUnimplementedGatewayBrokerServer()
+type UnsafeGatewayServer interface {
+	mustEmbedUnimplementedGatewayServer()
 }
 
-func RegisterGatewayBrokerServer(s grpc.ServiceRegistrar, srv GatewayBrokerServer) {
-	s.RegisterService(&GatewayBroker_ServiceDesc, srv)
+func RegisterGatewayServer(s grpc.ServiceRegistrar, srv GatewayServer) {
+	s.RegisterService(&Gateway_ServiceDesc, srv)
 }
 
-func _GatewayBroker_ChannelInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GatewayBrokerServer).ChannelInteract(&gatewayBrokerChannelInteractServer{stream})
+func _Gateway_ChannelInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GatewayServer).ChannelInteract(&gatewayChannelInteractServer{stream})
 }
 
-type GatewayBroker_ChannelInteractServer interface {
+type Gateway_ChannelInteractServer interface {
 	Send(*ChannelInteractResponse) error
 	Recv() (*ChannelInteractRequest, error)
 	grpc.ServerStream
 }
 
-type gatewayBrokerChannelInteractServer struct {
+type gatewayChannelInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *gatewayBrokerChannelInteractServer) Send(m *ChannelInteractResponse) error {
+func (x *gatewayChannelInteractServer) Send(m *ChannelInteractResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *gatewayBrokerChannelInteractServer) Recv() (*ChannelInteractRequest, error) {
+func (x *gatewayChannelInteractServer) Recv() (*ChannelInteractRequest, error) {
 	m := new(ChannelInteractRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -236,17 +311,17 @@ func (x *gatewayBrokerChannelInteractServer) Recv() (*ChannelInteractRequest, er
 	return m, nil
 }
 
-// GatewayBroker_ServiceDesc is the grpc.ServiceDesc for GatewayBroker service.
+// Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var GatewayBroker_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.eventing.v1alpha1.GatewayBroker",
-	HandlerType: (*GatewayBrokerServer)(nil),
+var Gateway_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.eventing.v1alpha1.Gateway",
+	HandlerType: (*GatewayServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "ChannelInteract",
-			Handler:       _GatewayBroker_ChannelInteract_Handler,
+			Handler:       _Gateway_ChannelInteract_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
