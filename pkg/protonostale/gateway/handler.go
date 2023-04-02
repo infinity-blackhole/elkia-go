@@ -114,9 +114,12 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 func (p *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.SyncFrame
 	if err := p.RecvMsg(&msg); err != nil {
-		return nil, p.SendMsg(
+		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
-		)
+		); err != nil {
+			return nil, err
+		}
+		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
 		Payload: &eventing.ChannelInteractRequest_SyncFrame{
@@ -232,9 +235,12 @@ func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClien
 func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.ChannelInteractRequest
 	if err := p.RecvMsg(&msg); err != nil {
-		return nil, p.SendMsg(
+		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
-		)
+		); err != nil {
+			return nil, err
+		}
+		return nil, err
 	}
 	return msg.ChannelInteractRequest, nil
 }

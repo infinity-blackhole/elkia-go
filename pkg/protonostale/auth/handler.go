@@ -143,9 +143,12 @@ func NewProxyClient(rw *bufio.ReadWriter) *ProxyClient {
 func (p *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
 	var msg protonostale.AuthInteractRequest
 	if err := p.RecvMsg(&msg); err != nil {
-		return nil, p.SendMsg(
+		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
-		)
+		); err != nil {
+			return nil, err
+		}
+		return nil, err
 	}
 	return msg.AuthInteractRequest, nil
 }
