@@ -28,7 +28,8 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Password: "9hibwiwiG2e6Nr",
 			},
 		},
-		Seed: 1,
+		Sessions: map[uint32]*fleet.Session{},
+		Seed:     1,
 	})
 	wg.Go(fakePresence.Serve)
 	fakePresenceClient, err := fakePresence.Dial(ctx)
