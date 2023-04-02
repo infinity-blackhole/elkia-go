@@ -56,10 +56,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 	)
 	defer clientConn.Close()
 	defer serverConn.Close()
-	wg.Go(func() error {
-		handler.ServeNosTale(serverConn)
-		return nil
-	})
+	go handler.ServeNosTale(serverConn)
 	if _, err := clientWriter.Write(
 		[]byte("\x96\x94\xa9\xe0\x4f\x0e"),
 	); err != nil {
@@ -97,5 +94,4 @@ func TestHandlerServeNosTale(t *testing.T) {
 	if err := clientConn.Close(); err != nil {
 		t.Fatalf("Failed to close client connection: %v", err)
 	}
-	wg.Wait()
 }

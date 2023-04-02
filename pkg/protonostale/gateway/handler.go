@@ -33,6 +33,7 @@ func (h *Handler) ServeNosTale(c net.Conn) {
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
 	stream, err := h.gateway.ChannelInteract(ctx)
+	defer stream.CloseSend()
 	if err != nil {
 		logrus.Errorf("auth: error while creating auth interact stream: %v", err)
 		return
@@ -155,13 +156,11 @@ func (p *SessionProxyClient) SendMsg(msg any) error {
 }
 
 type ProxySender struct {
-	dec   *ChannelDecoder
 	proxy *ChannelProxyClient
 }
 
 func NewProxySender(rw *bufio.ReadWriter, code uint32) *ProxySender {
 	return &ProxySender{
-		dec:   NewChannelDecoder(rw, code),
 		proxy: NewChannelProxyClient(rw, code),
 	}
 }
