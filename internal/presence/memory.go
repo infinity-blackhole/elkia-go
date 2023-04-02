@@ -19,13 +19,14 @@ type Identity struct {
 
 type MemoryPresenceServerConfig struct {
 	Identities map[uint32]*Identity
+	Sessions   map[uint32]*fleet.Session
 	Seed       int64
 }
 
 func NewMemoryPresenceServer(c MemoryPresenceServerConfig) *MemoryPresenceServer {
 	return &MemoryPresenceServer{
 		identities: c.Identities,
-		sessions:   map[uint32]*fleet.Session{},
+		sessions:   c.Sessions,
 		rand:       rand.New(rand.NewSource(c.Seed)),
 	}
 }
@@ -109,6 +110,30 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	return &fleet.AuthRefreshLoginResponse{
 		Code: sessionPut.Code,
 	}, nil
+}
+
+func (s *MemoryPresenceServer) AuthHandoff(
+	ctx context.Context,
+	in *fleet.AuthHandoffRequest,
+) (*fleet.AuthHandoffResponse, error) {
+	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
+		Code: in.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.AuthRefreshLogin(
+		ctx,
+		&fleet.AuthRefreshLoginRequest{
+			Identifier: in.Identifier,
+			Password:   in.Password,
+			Token:      sessionGet.Session.Token,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &fleet.AuthHandoffResponse{}, nil
 }
 
 func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
