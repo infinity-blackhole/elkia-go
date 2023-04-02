@@ -12,7 +12,7 @@ import (
 func TestSessionDecodeSyncFrame(t *testing.T) {
 	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
 	expected := eventing.SyncFrame{
-		Sequence: 4352579,
+		Sequence: 52579,
 		Code:     0,
 	}
 	dec := NewSessionDecoder(bytes.NewReader(input))
