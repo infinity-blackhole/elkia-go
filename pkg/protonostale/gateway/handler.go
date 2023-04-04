@@ -85,7 +85,7 @@ func NewProxyUpgrader(rwc *bufio.ReadWriter) *ProxyUpgrader {
 func (p *ProxyUpgrader) Upgrade(
 	stream eventing.Gateway_ChannelInteractClient,
 ) (*Proxy, error) {
-	msg, err := p.proxy.Recv()
+	msg, err := p.proxy.RecvSync()
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	}
 }
 
-func (p *SessionProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+func (p *SessionProxyClient) RecvSync() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.SyncFrame
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
@@ -166,16 +166,24 @@ func NewProxySender(rw *bufio.ReadWriter, code uint32) *ProxySender {
 }
 
 func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
-	if err := p.handleIdentifier(stream); err != nil {
-		return err
+	msg, err := p.proxy.RecvIdentifier()
+	if err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+	}
+	if err := stream.Send(msg); err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent sync frame")
-	if err := p.handlePassword(stream); err != nil {
-		return err
+	msg, err = p.proxy.RecvPassword()
+	if err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+	}
+	if err := stream.Send(msg); err != nil {
+		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 	}
 	logrus.Debugf("gateway: sent login frame")
 	for {
-		msg, err := p.proxy.Recv()
+		msg, err = p.proxy.RecvCommand()
 		if err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
@@ -183,38 +191,6 @@ func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
 	}
-}
-
-func (p *ProxySender) handleIdentifier(stream eventing.Gateway_ChannelInteractClient) error {
-	var msg protonostale.IdentifierFrame
-	if err := p.proxy.dec.Decode(&msg); err != nil {
-		return protonostale.NewStatus(eventing.Code_BAD_CASE)
-	}
-	logrus.Debugf("gateway: read identifier frame: %v", msg.String())
-	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: msg.IdentifierFrame,
-		},
-	}); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	return nil
-}
-
-func (p *ProxySender) handlePassword(stream eventing.Gateway_ChannelInteractClient) error {
-	var msg protonostale.PasswordFrame
-	if err := p.proxy.dec.Decode(&msg); err != nil {
-		return err
-	}
-	logrus.Debugf("gateway: read password frame: %v", msg.String())
-	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: msg.PasswordFrame,
-		},
-	}); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	return nil
 }
 
 type ChannelProxyClient struct {
@@ -231,7 +207,41 @@ func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClien
 	}
 }
 
-func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+func (p *ChannelProxyClient) RecvIdentifier() (*eventing.ChannelInteractRequest, error) {
+	var msg protonostale.IdentifierFrame
+	if err := p.RecvMsg(&msg); err != nil {
+		if err := p.SendMsg(
+			protonostale.NewStatus(eventing.Code_BAD_CASE),
+		); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+	return &eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
+			IdentifierFrame: msg.IdentifierFrame,
+		},
+	}, nil
+}
+
+func (p *ChannelProxyClient) RecvPassword() (*eventing.ChannelInteractRequest, error) {
+	var msg protonostale.PasswordFrame
+	if err := p.RecvMsg(&msg); err != nil {
+		if err := p.SendMsg(
+			protonostale.NewStatus(eventing.Code_BAD_CASE),
+		); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+	return &eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
+			PasswordFrame: msg.PasswordFrame,
+		},
+	}, nil
+}
+
+func (p *ChannelProxyClient) RecvCommand() (*eventing.ChannelInteractRequest, error) {
 	var msg protonostale.CommandFrame
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
