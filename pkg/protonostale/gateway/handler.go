@@ -166,24 +166,8 @@ func NewProxySender(rw *bufio.ReadWriter, code uint32) *ProxySender {
 }
 
 func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
-	msg, err := p.proxy.RecvIdentifier()
-	if err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	if err := stream.Send(msg); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	logrus.Debugf("gateway: sent sync frame")
-	msg, err = p.proxy.RecvPassword()
-	if err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	if err := stream.Send(msg); err != nil {
-		return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
-	}
-	logrus.Debugf("gateway: sent login frame")
 	for {
-		msg, err = p.proxy.RecvCommand()
+		msg, err := p.proxy.Recv()
 		if err != nil {
 			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
 		}
@@ -194,9 +178,10 @@ func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error
 }
 
 type ChannelProxyClient struct {
-	rw  *bufio.ReadWriter
-	dec *ChannelDecoder
-	enc *Encoder
+	rw    *bufio.ReadWriter
+	dec   *ChannelDecoder
+	enc   *Encoder
+	state int
 }
 
 func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClient {
@@ -204,6 +189,24 @@ func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClien
 		rw:  rw,
 		dec: NewChannelDecoder(rw, code),
 		enc: NewEncoder(rw),
+	}
+}
+
+func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+	const (
+		stateIdentifier = iota
+		statePassword
+		stateCommand
+	)
+	switch p.state {
+	case stateIdentifier:
+		p.state = statePassword
+		return p.RecvIdentifier()
+	case statePassword:
+		p.state = stateCommand
+		return p.RecvPassword()
+	default:
+		return p.RecvCommand()
 	}
 }
 
