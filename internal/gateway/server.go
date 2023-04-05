@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"google.golang.org/protobuf/proto"
 )
 
 type ServerConfig struct {
@@ -71,18 +72,23 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		if err != nil {
 			return err
 		}
-		switch msg.Payload.(type) {
-		case *eventing.ChannelInteractRequest_CommandFrame:
-			command := msg.GetCommandFrame()
-			switch command.Payload.(type) {
-			case *eventing.CommandFrame_HeartbeatFrame:
-				if command.Sequence != s.sequence+1 {
-					return errors.New("handoff: channel protocol error")
-				}
-				s.sequence = command.Sequence
-			}
-		default:
-			return errors.New("channel: channel protocol error")
+		buff, err := proto.Marshal(msg)
+		if err != nil {
+			return err
+		}
+		if err := s.kafkaProducer.Produce(
+			&kafka.Message{
+				Value: buff,
+				Headers: []kafka.Header{
+					{
+						Key:   "identity",
+						Value: []byte(identifier.Identifier),
+					},
+				},
+			},
+			nil,
+		); err != nil {
+			return err
 		}
 	}
 }
