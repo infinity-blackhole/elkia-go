@@ -163,9 +163,21 @@ message ChannelInteractResponse {
   }
 }
 
+message ChannelWatchRequest {
+  uint32 sequence = 1;
+  uint32 code = 2;
+  string identifier = 3;
+  string password = 4;
+}
+
 service Gateway {
   // ChannelInteract is a bi-directional stream that is used to interact with
   // the channel server
   rpc ChannelInteract(stream ChannelInteractRequest)
+      returns (stream ChannelInteractResponse);
+
+  // ChannelWatch is a stream that is used to watch the channel server for
+  // events
+  rpc ChannelWatch(ChannelWatchRequest)
       returns (stream ChannelInteractResponse);
 }

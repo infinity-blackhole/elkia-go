@@ -6,7 +6,12 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
+)
+
+var (
+	ChannelTopic = "world"
 )
 
 type ServerConfig struct {
@@ -67,27 +72,59 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	for {
-		msg, err := stream.Recv()
-		if err != nil {
-			return err
-		}
-		buff, err := proto.Marshal(msg)
-		if err != nil {
-			return err
-		}
-		if err := s.kafkaProducer.Produce(
-			&kafka.Message{
-				Value: buff,
-				Headers: []kafka.Header{
-					{
-						Key:   "identity",
-						Value: []byte(identifier.Identifier),
-					},
-				},
+	wg := &errgroup.Group{}
+	wg.Go(func() error {
+		return s.ChannelWatch(
+			&eventing.ChannelWatchRequest{
+				Sequence:   sync.Sequence,
+				Code:       sync.Code,
+				Identifier: identifier.Identifier,
+				Password:   password.Password,
 			},
-			nil,
-		); err != nil {
+			stream,
+		)
+	})
+	wg.Go(func() error {
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				return err
+			}
+			buff, err := proto.Marshal(msg)
+			if err != nil {
+				return err
+			}
+			if err := s.kafkaProducer.Produce(
+				&kafka.Message{
+					TopicPartition: kafka.TopicPartition{
+						Topic:     &ChannelTopic,
+						Partition: kafka.PartitionAny,
+					},
+					Value: buff,
+				},
+				nil,
+			); err != nil {
+				return err
+			}
+		}
+	})
+	return wg.Wait()
+}
+
+func (s *Server) ChannelWatch(
+	in *eventing.ChannelWatchRequest,
+	stream eventing.Gateway_ChannelWatchServer,
+) error {
+	for {
+		msg, err := s.kafkaConsumer.ReadMessage(-1)
+		if err != nil {
+			return err
+		}
+		var res eventing.ChannelInteractResponse
+		if err := proto.Unmarshal(msg.Value, &res); err != nil {
+			return err
+		}
+		if err := stream.Send(&res); err != nil {
 			return err
 		}
 	}

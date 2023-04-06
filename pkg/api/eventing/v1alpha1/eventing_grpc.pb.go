@@ -214,6 +214,9 @@ type GatewayClient interface {
 	// ChannelInteract is a bi-directional stream that is used to interact with
 	// the channel server
 	ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error)
+	// ChannelWatch is a stream that is used to watch the channel server for
+	// events
+	ChannelWatch(ctx context.Context, in *ChannelWatchRequest, opts ...grpc.CallOption) (Gateway_ChannelWatchClient, error)
 }
 
 type gatewayClient struct {
@@ -255,6 +258,38 @@ func (x *gatewayChannelInteractClient) Recv() (*ChannelInteractResponse, error) 
 	return m, nil
 }
 
+func (c *gatewayClient) ChannelWatch(ctx context.Context, in *ChannelWatchRequest, opts ...grpc.CallOption) (Gateway_ChannelWatchClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Gateway/ChannelWatch", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gatewayChannelWatchClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Gateway_ChannelWatchClient interface {
+	Recv() (*ChannelInteractResponse, error)
+	grpc.ClientStream
+}
+
+type gatewayChannelWatchClient struct {
+	grpc.ClientStream
+}
+
+func (x *gatewayChannelWatchClient) Recv() (*ChannelInteractResponse, error) {
+	m := new(ChannelInteractResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // GatewayServer is the server API for Gateway service.
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
@@ -262,6 +297,9 @@ type GatewayServer interface {
 	// ChannelInteract is a bi-directional stream that is used to interact with
 	// the channel server
 	ChannelInteract(Gateway_ChannelInteractServer) error
+	// ChannelWatch is a stream that is used to watch the channel server for
+	// events
+	ChannelWatch(*ChannelWatchRequest, Gateway_ChannelWatchServer) error
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -271,6 +309,9 @@ type UnimplementedGatewayServer struct {
 
 func (UnimplementedGatewayServer) ChannelInteract(Gateway_ChannelInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method ChannelInteract not implemented")
+}
+func (UnimplementedGatewayServer) ChannelWatch(*ChannelWatchRequest, Gateway_ChannelWatchServer) error {
+	return status.Errorf(codes.Unimplemented, "method ChannelWatch not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -311,6 +352,27 @@ func (x *gatewayChannelInteractServer) Recv() (*ChannelInteractRequest, error) {
 	return m, nil
 }
 
+func _Gateway_ChannelWatch_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ChannelWatchRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GatewayServer).ChannelWatch(m, &gatewayChannelWatchServer{stream})
+}
+
+type Gateway_ChannelWatchServer interface {
+	Send(*ChannelInteractResponse) error
+	grpc.ServerStream
+}
+
+type gatewayChannelWatchServer struct {
+	grpc.ServerStream
+}
+
+func (x *gatewayChannelWatchServer) Send(m *ChannelInteractResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -324,6 +386,11 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _Gateway_ChannelInteract_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "ChannelWatch",
+			Handler:       _Gateway_ChannelWatch_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "pkg/api/eventing/v1alpha1/eventing.proto",
