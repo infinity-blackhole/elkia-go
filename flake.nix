@@ -56,6 +56,14 @@
                 pkgs.protoc-gen-go-grpc
               ];
             }
+            {
+              packages = [
+                pkgs.skaffold
+                pkgs.kustomize
+                pkgs.redis
+                pkgs.apacheKafka
+              ];
+            }
           ];
         };
       }
