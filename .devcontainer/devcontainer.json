@@ -7,19 +7,5 @@
     "ghcr.io/devcontainers/features/docker-in-docker:1": {},
     "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
   },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "googlecloudtools.cloudcode",
-        "jnoortheen.nix-ide",
-        "mkhl.direnv",
-        "yzhang.markdown-all-in-one",
-        "SonarSource.sonarlint-vscode",
-        "golang.go",
-        "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "redhat.vscode-yaml"
-      ]
-    }
-  },
   "updateContentCommand": "direnv allow"
 }
