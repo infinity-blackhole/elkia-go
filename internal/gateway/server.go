@@ -6,12 +6,13 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
 )
 
 var (
-	ChannelTopic = "world"
+	ChannelTopic = "channel"
 )
 
 type ServerConfig struct {
