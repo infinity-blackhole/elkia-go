@@ -50,6 +50,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("gateway: received identifier frame")
 	identifier := msg.GetIdentifierFrame()
 	if identifier.Sequence != s.sequence+1 {
 		return errors.New("handoff: session protocol error")
@@ -59,6 +60,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("gateway: received password frame")
 	password := msg.GetPasswordFrame()
 	if password.Sequence != s.sequence+1 {
 		return errors.New("handoff: session protocol error")
@@ -72,6 +74,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("gateway: auth handoff successful")
 	wg := &errgroup.Group{}
 	wg.Go(func() error {
 		return s.ChannelWatch(
@@ -106,6 +109,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 			); err != nil {
 				return err
 			}
+			logrus.Debugf("gateway: sent message to kafka")
 		}
 	})
 	return wg.Wait()
