@@ -68,7 +68,7 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 	input := &EndpointListFrame{
 		EndpointListFrame: &eventing.EndpointListFrame{
 			Code: 1,
-			Endpoints: []*eventing.Endpoint{
+			EndpointFrames: []*eventing.EndpointFrame{
 				{
 					Host:      "127.0.0.1",
 					Port:      "4124",

@@ -26,7 +26,7 @@ message LoginFrame {
   string client_checksum = 7;
 }
 
-message Endpoint {
+message EndpointFrame {
   string host = 1;
   string port = 2;
   uint32 weight = 3;
@@ -37,7 +37,7 @@ message Endpoint {
 
 message EndpointListFrame {
   uint32 code = 1;
-  repeated Endpoint endpoints = 2;
+  repeated EndpointFrame endpoint_frames = 2;
 }
 
 message AuthInteractRequest {
@@ -55,15 +55,21 @@ message AuthInteractResponse {
   }
 }
 
+message AuthWatchRequest {
+  string identifier = 1;
+  string password = 2;
+  string client_version = 3;
+  string client_checksum = 4;
+}
+
 service Auth {
   // AuthInteract is a bi-directional stream that is used to interact with the
   // auth server
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthLoginFrameProduce send a login frame to the auth server and returns a
-  // stream of events
-  rpc AuthLoginFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
+  // AuthWatch is a stream that is used to watch the auth server for events
+  rpc AuthWatch(AuthWatchRequest) returns (stream AuthInteractResponse);
 }
 
 message SyncFrame {

@@ -25,9 +25,8 @@ type AuthClient interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
-	// AuthLoginFrameProduce send a login frame to the auth server and returns a
-	// stream of events
-	AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error)
+	// AuthWatch is a stream that is used to watch the auth server for events
+	AuthWatch(ctx context.Context, in *AuthWatchRequest, opts ...grpc.CallOption) (Auth_AuthWatchClient, error)
 }
 
 type authClient struct {
@@ -69,12 +68,12 @@ func (x *authAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	return m, nil
 }
 
-func (c *authClient) AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Auth/AuthLoginFrameProduce", opts...)
+func (c *authClient) AuthWatch(ctx context.Context, in *AuthWatchRequest, opts ...grpc.CallOption) (Auth_AuthWatchClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], "/io.elkia.eventing.v1alpha1.Auth/AuthWatch", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &authAuthLoginFrameProduceClient{stream}
+	x := &authAuthWatchClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -84,16 +83,16 @@ func (c *authClient) AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, 
 	return x, nil
 }
 
-type Auth_AuthLoginFrameProduceClient interface {
+type Auth_AuthWatchClient interface {
 	Recv() (*AuthInteractResponse, error)
 	grpc.ClientStream
 }
 
-type authAuthLoginFrameProduceClient struct {
+type authAuthWatchClient struct {
 	grpc.ClientStream
 }
 
-func (x *authAuthLoginFrameProduceClient) Recv() (*AuthInteractResponse, error) {
+func (x *authAuthWatchClient) Recv() (*AuthInteractResponse, error) {
 	m := new(AuthInteractResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -108,9 +107,8 @@ type AuthServer interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(Auth_AuthInteractServer) error
-	// AuthLoginFrameProduce send a login frame to the auth server and returns a
-	// stream of events
-	AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error
+	// AuthWatch is a stream that is used to watch the auth server for events
+	AuthWatch(*AuthWatchRequest, Auth_AuthWatchServer) error
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -121,8 +119,8 @@ type UnimplementedAuthServer struct {
 func (UnimplementedAuthServer) AuthInteract(Auth_AuthInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthInteract not implemented")
 }
-func (UnimplementedAuthServer) AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error {
-	return status.Errorf(codes.Unimplemented, "method AuthLoginFrameProduce not implemented")
+func (UnimplementedAuthServer) AuthWatch(*AuthWatchRequest, Auth_AuthWatchServer) error {
+	return status.Errorf(codes.Unimplemented, "method AuthWatch not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -163,24 +161,24 @@ func (x *authAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 	return m, nil
 }
 
-func _Auth_AuthLoginFrameProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(LoginFrame)
+func _Auth_AuthWatch_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AuthWatchRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(AuthServer).AuthLoginFrameProduce(m, &authAuthLoginFrameProduceServer{stream})
+	return srv.(AuthServer).AuthWatch(m, &authAuthWatchServer{stream})
 }
 
-type Auth_AuthLoginFrameProduceServer interface {
+type Auth_AuthWatchServer interface {
 	Send(*AuthInteractResponse) error
 	grpc.ServerStream
 }
 
-type authAuthLoginFrameProduceServer struct {
+type authAuthWatchServer struct {
 	grpc.ServerStream
 }
 
-func (x *authAuthLoginFrameProduceServer) Send(m *AuthInteractResponse) error {
+func (x *authAuthWatchServer) Send(m *AuthInteractResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -199,8 +197,8 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "AuthLoginFrameProduce",
-			Handler:       _Auth_AuthLoginFrameProduce_Handler,
+			StreamName:    "AuthWatch",
+			Handler:       _Auth_AuthWatch_Handler,
 			ServerStreams: true,
 		},
 	},

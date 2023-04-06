@@ -38,8 +38,14 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 		switch m.Payload.(type) {
 		case *eventing.AuthInteractRequest_LoginFrame:
 			logrus.Debugf("auth: handle handoff")
-			if err := s.AuthLoginFrameProduce(
-				m.GetLoginFrame(),
+			login := m.GetLoginFrame()
+			if err := s.AuthWatch(
+				&eventing.AuthWatchRequest{
+					Identifier:     login.GetIdentifier(),
+					Password:       login.GetPassword(),
+					ClientVersion:  login.GetClientVersion(),
+					ClientChecksum: login.GetClientChecksum(),
+				},
 				stream,
 			); err != nil {
 				return err
@@ -50,9 +56,9 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	}
 }
 
-func (s *Server) AuthLoginFrameProduce(
-	m *eventing.LoginFrame,
-	stream eventing.Auth_AuthLoginFrameProduceServer,
+func (s *Server) AuthWatch(
+	m *eventing.AuthWatchRequest,
+	stream eventing.Auth_AuthWatchServer,
 ) error {
 	handoff, err := s.presence.AuthLogin(
 		stream.Context(),
@@ -74,13 +80,13 @@ func (s *Server) AuthLoginFrameProduce(
 		return err
 	}
 	logrus.Debugf("auth: list members: %v", memberList)
-	ms := []*eventing.Endpoint{}
+	ms := []*eventing.EndpointFrame{}
 	for _, m := range memberList.Members {
 		host, port, err := net.SplitHostPort(m.Address)
 		if err != nil {
 			return err
 		}
-		ms = append(ms, &eventing.Endpoint{
+		ms = append(ms, &eventing.EndpointFrame{
 			Host:      host,
 			Port:      port,
 			Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
@@ -92,8 +98,8 @@ func (s *Server) AuthLoginFrameProduce(
 	return stream.Send(&eventing.AuthInteractResponse{
 		Payload: &eventing.AuthInteractResponse_EndpointListFrame{
 			EndpointListFrame: &eventing.EndpointListFrame{
-				Code:      handoff.Code,
-				Endpoints: ms,
+				Code:           handoff.Code,
+				EndpointFrames: ms,
 			},
 		},
 	})

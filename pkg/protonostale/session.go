@@ -162,9 +162,9 @@ func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
 		return nil, err
 	}
-	for _, m := range f.Endpoints {
-		b, err := (&Endpoint{
-			Endpoint: &eventing.Endpoint{
+	for _, m := range f.EndpointFrames {
+		b, err := (&EndpointFrame{
+			EndpointFrame: &eventing.EndpointFrame{
 				Host:      m.Host,
 				Port:      m.Port,
 				Weight:    m.Weight,
@@ -201,20 +201,20 @@ func (f *EndpointListFrame) UnmarshalNosTale(b []byte) error {
 	}
 	f.Code = uint32(code)
 	for _, m := range fields[2:] {
-		var ep Endpoint
+		var ep EndpointFrame
 		if err := ep.UnmarshalNosTale(m); err != nil {
 			return err
 		}
-		f.Endpoints = append(f.Endpoints, ep.Endpoint)
+		f.EndpointFrames = append(f.EndpointFrames, ep.EndpointFrame)
 	}
 	return nil
 }
 
-type Endpoint struct {
-	*eventing.Endpoint
+type EndpointFrame struct {
+	*eventing.EndpointFrame
 }
 
-func (f *Endpoint) MarshalNosTale() ([]byte, error) {
+func (f *EndpointFrame) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(
 		&buff,
@@ -231,8 +231,8 @@ func (f *Endpoint) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (f *Endpoint) UnmarshalNosTale(b []byte) error {
-	f.Endpoint = &eventing.Endpoint{}
+func (f *EndpointFrame) UnmarshalNosTale(b []byte) error {
+	f.EndpointFrame = &eventing.EndpointFrame{}
 	fields := bytes.Split(b, []byte(":"))
 	if len(fields) != 5 {
 		return fmt.Errorf("invalid length: %d", len(fields))
