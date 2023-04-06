@@ -32,18 +32,18 @@ type PresenceServer struct {
 	etcd *etcd.Client
 }
 
-func (i *PresenceServer) AuthLogin(
+func (s *PresenceServer) AuthLogin(
 	ctx context.Context,
 	in *fleet.AuthLoginRequest,
 ) (*fleet.AuthLoginResponse, error) {
-	flow, _, err := i.ory.FrontendApi.
+	flow, _, err := s.ory.FrontendApi.
 		CreateNativeLoginFlow(ctx).
 		Execute()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: created native login flow: %v", flow)
-	successLogin, _, err := i.ory.FrontendApi.
+	successLogin, _, err := s.ory.FrontendApi.
 		UpdateLoginFlow(ctx).
 		Flow(flow.Id).
 		UpdateLoginFlowBody(
@@ -60,7 +60,7 @@ func (i *PresenceServer) AuthLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
+	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
 		Session: &fleet.Session{
 			Id:    successLogin.Session.Id,
 			Token: *successLogin.SessionToken,
