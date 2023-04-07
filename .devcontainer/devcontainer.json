@@ -7,5 +7,8 @@
     "ghcr.io/devcontainers/features/docker-in-docker:1": {},
     "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
   },
-  "updateContentCommand": "direnv allow"
+  "updateContentCommand": "direnv allow",
+  "mounts": [
+    "source=nix,target=/nix,type=volume"
+  ]
 }

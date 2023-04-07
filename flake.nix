@@ -60,6 +60,8 @@
               packages = [
                 pkgs.skaffold
                 pkgs.kustomize
+                pkgs.kubectl
+                pkgs.kubernetes-helm
                 pkgs.redis
                 pkgs.apacheKafka
               ];
