@@ -1,16 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-helmCharts:
-  - name: etcd
-    namespace: elkia
-    repo: https://charts.bitnami.com/bitnami
-    version: "8.7.3"
-    releaseName: etcd
-    valuesInline:
-      auth:
-        rbac:
-          existingSecret: etcd
-          existingSecretPasswordKey: password
+resources:
+  - ../../base
+components:
+  - ../../components/elkia-fleet
 secretGenerator:
   - name: etcd
     namespace: elkia
@@ -19,4 +12,14 @@ secretGenerator:
       - password=7c^8i$33V$2&dU
     type: kubernetes.io/basic-auth
     options:
-      disableNameSuffixHash: true
+      labels:
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/instance: etcd
+  - name: etcd-jwt-token
+    namespace: elkia
+    files:
+      - etcd/jwt-token.pem
+    options:
+      labels:
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/instance: etcd
