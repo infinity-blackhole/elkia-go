@@ -58,6 +58,7 @@
             }
             {
               packages = [
+                pkgs.kind
                 pkgs.skaffold
                 pkgs.kustomize
                 pkgs.kubectl
