@@ -12,12 +12,12 @@ metadata:
     fleet.elkia.io/channel-id: "1"
     fleet.elkia.io/population: "0"
     fleet.elkia.io/capacity: "3000"
-    fleet.elkia.io/port: nswp
+    fleet.elkia.io/port: client
 spec:
   ports:
-    - name: nswp
+    - name: client
       port: 4124
-      targetPort: nswp
+      targetPort: client
   selector:
     app.kubernetes.io/name: elkia-gateway-proxy
     app.kubernetes.io/instance: elkia-gateway-proxy
