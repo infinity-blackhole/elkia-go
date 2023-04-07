@@ -63,6 +63,7 @@
                 pkgs.kustomize
                 pkgs.kubectl
                 pkgs.kubernetes-helm
+                pkgs.google-cloud-sdk
                 pkgs.redis
                 pkgs.apacheKafka
               ];
