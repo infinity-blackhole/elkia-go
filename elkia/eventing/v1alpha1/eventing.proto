@@ -1,0 +1,189 @@
+syntax = "proto3";
+package io.elkia.eventing.v1alpha1;
+
+option go_package = "elkia-api-go/pkg/eventing/v1alpha1";
+
+enum Code {
+  OUTDATED_CLIENT = 0;
+  UNEXPECTED_ERROR = 1;
+  MAINTENANCE = 2;
+  SESSION_ALREADY_USED = 3;
+  UNVALID_CREDENTIALS = 4;
+  CANT_AUTHENTICATE = 5;
+  USER_BLOCKLISTED = 6;
+  COUNTRY_BLACKLISTED = 7;
+  BAD_CASE = 8;
+}
+
+message ErrorFrame { Code code = 1; }
+
+message InfoFrame { string content = 1; }
+
+message LoginFrame {
+  string identifier = 2;
+  string password = 3;
+  string client_version = 5;
+  string client_checksum = 7;
+}
+
+message EndpointFrame {
+  string host = 1;
+  string port = 2;
+  uint32 weight = 3;
+  uint32 world_id = 4;
+  uint32 channel_id = 5;
+  string world_name = 6;
+}
+
+message EndpointListFrame {
+  uint32 code = 1;
+  repeated EndpointFrame endpoint_frames = 2;
+}
+
+message AuthInteractRequest {
+  oneof payload {
+    bytes raw_frame = 1;
+    LoginFrame login_frame = 2;
+  }
+}
+
+message AuthInteractResponse {
+  oneof payload {
+    ErrorFrame error_frame = 1;
+    InfoFrame info_frame = 2;
+    EndpointListFrame endpoint_list_frame = 3;
+  }
+}
+
+message AuthWatchRequest {
+  string identifier = 1;
+  string password = 2;
+  string client_version = 3;
+  string client_checksum = 4;
+}
+
+service Auth {
+  // AuthInteract is a bi-directional stream that is used to interact with the
+  // auth server
+  rpc AuthInteract(stream AuthInteractRequest)
+      returns (stream AuthInteractResponse);
+
+  // AuthWatch is a stream that is used to watch the auth server for events
+  rpc AuthWatch(AuthWatchRequest) returns (stream AuthInteractResponse);
+}
+
+message SyncFrame {
+  uint32 sequence = 1;
+  uint32 code = 2;
+}
+
+message IdentifierFrame {
+  uint32 sequence = 1;
+  string identifier = 2;
+}
+
+message PasswordFrame {
+  uint32 sequence = 1;
+  string password = 2;
+}
+
+message HeartbeatFrame {}
+
+// TODO: unidentified f_stash_end frame
+message FStashEndFrame {}
+
+// TODO: unidentified c_close frame
+message CCloseFrame {}
+
+// TODO: unidentified lbs frame
+message LBSFrame { int32 type = 1; }
+
+message MultiTargetFrame {
+  string skill_id = 1;
+  uint32 target_id = 2;
+}
+
+message MultiTargetListFrame {
+  uint32 target_amount = 1;
+  repeated MultiTargetFrame targets = 2;
+}
+
+enum RequestType {
+  REQUESTED = 0;
+  LIST = 1;
+  CONFIRMED = 2;
+  CANCELLED = 3;
+  DECLINED = 4;
+}
+
+message RequestFrame {
+  uint32 character_id = 1;
+  RequestType type = 2;
+}
+
+enum CharacterOptions {
+  EXCHANGE_BLOCKED = 0;
+  FRIEND_REQUEST_BLOCKED = 1;
+  FAMILY_REQUEST_BLOCKED = 2;
+  WHISPER_BLOCKED = 3;
+  GROUP_REQUEST_BLOCKED = 4;
+  GROUP_SHARING = 5;
+  MOUSE_AIM_LOCK = 6;
+  HERO_CHAT_BLOCKED = 7;
+  EMOTICONS_BLOCKED = 8;
+  QUICK_GET_UP = 9;
+  HP_BLOCKED = 10;
+  BUFF_BLOCKED = 11;
+  MINILAND_INVITE_BLOCKED = 12;
+}
+
+message GlobalOptionsFrame { CharacterOptions option = 1; }
+
+message CommandFrame {
+  uint32 sequence = 1;
+  oneof payload {
+    bytes raw_frame = 2;
+    HeartbeatFrame heartbeat_frame = 3;
+    FStashEndFrame f_stash_end_frame = 4;
+    CCloseFrame c_close_frame = 5;
+    LBSFrame lbs_frame = 6;
+    MultiTargetListFrame multi_target_list_frame = 7;
+    RequestFrame request_frame = 8;
+    GlobalOptionsFrame global_options_frame = 9;
+  }
+}
+
+message ChannelInteractRequest {
+  oneof payload {
+    SyncFrame sync_frame = 1;
+    IdentifierFrame identifier_frame = 2;
+    PasswordFrame password_frame = 3;
+    CommandFrame command_frame = 5;
+  }
+}
+
+message ChannelInteractResponse {
+  oneof payload {
+    ErrorFrame error_frame = 1;
+    InfoFrame info_frame = 2;
+  }
+}
+
+message ChannelWatchRequest {
+  uint32 sequence = 1;
+  uint32 code = 2;
+  string identifier = 3;
+  string password = 4;
+}
+
+service Gateway {
+  // ChannelInteract is a bi-directional stream that is used to interact with
+  // the channel server
+  rpc ChannelInteract(stream ChannelInteractRequest)
+      returns (stream ChannelInteractResponse);
+
+  // ChannelWatch is a stream that is used to watch the channel server for
+  // events
+  rpc ChannelWatch(ChannelWatchRequest)
+      returns (stream ChannelInteractResponse);
+}

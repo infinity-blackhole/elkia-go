@@ -1,7 +1,7 @@
 syntax = "proto3";
 package io.elkia.fleet.v1alpha1;
 
-option go_package = "pkg/api/fleet/v1alpha1";
+option go_package = "elkia-api-go/pkg/fleet/v1alpha1";
 
 message Member {
   string id = 1;

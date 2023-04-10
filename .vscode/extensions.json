@@ -4,9 +4,11 @@
 		"jnoortheen.nix-ide",
 		"mkhl.direnv",
 		"yzhang.markdown-all-in-one",
-		"SonarSource.sonarlint-vscode",
+		"sonarsource.sonarlint-vscode",
 		"golang.go",
 		"ms-kubernetes-tools.vscode-kubernetes-tools",
-		"redhat.vscode-yaml"
+		"redhat.vscode-yaml",
+		"erlang-ls.erlang-ls",
+		"jakebecker.elixir-ls"
 	],
 }

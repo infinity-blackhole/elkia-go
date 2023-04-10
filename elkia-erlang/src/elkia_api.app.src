@@ -1,0 +1,14 @@
+{application, elkia_api,
+ [{description, "Elki API"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["agpl-3.0"]},
+  {links, []}
+ ]}.

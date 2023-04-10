@@ -68,6 +68,13 @@
                 pkgs.apacheKafka
               ];
             }
+            {
+              packages = [
+                pkgs.erlang
+                pkgs.rebar3
+                pkgs.elixir
+              ];
+            }
           ];
         };
       }
