@@ -1,4 +1,4 @@
-{application, elkia_api,
+{application, elkia,
  [{description, "Elki API"},
   {vsn, "0.1.0"},
   {registered, []},

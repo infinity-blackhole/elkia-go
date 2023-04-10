@@ -12,6 +12,6 @@
     ok | grpcbox_stream:grpc_error_response().
 
 %% 
--callback auth_watch(v1alpha1_eventing_pb:auth_watch_request(), grpcbox_stream:t()) ->
+-callback auth_watch(elkia_v1alpha1_eventing_pb:auth_watch_request(), grpcbox_stream:t()) ->
     ok | grpcbox_stream:grpc_error_response().
 

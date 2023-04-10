@@ -8,18 +8,18 @@
 -module(io_elkia_world_v_1alpha_1_bridge_bhvr).
 
 %% Unary RPC
--callback character_add(ctx:t(), v1alpha1_world_pb:character_add_request()) ->
-    {ok, v1alpha1_world_pb:character_add_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
+-callback character_add(ctx:t(), elkia_v1alpha1_world_pb:character_add_request()) ->
+    {ok, elkia_v1alpha1_world_pb:character_add_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
 
 %% Unary RPC
--callback character_remove(ctx:t(), v1alpha1_world_pb:character_remove_request()) ->
-    {ok, v1alpha1_world_pb:character_remove_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
+-callback character_remove(ctx:t(), elkia_v1alpha1_world_pb:character_remove_request()) ->
+    {ok, elkia_v1alpha1_world_pb:character_remove_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
 
 %% Unary RPC
--callback character_update(ctx:t(), v1alpha1_world_pb:character_update_request()) ->
-    {ok, v1alpha1_world_pb:character_update_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
+-callback character_update(ctx:t(), elkia_v1alpha1_world_pb:character_update_request()) ->
+    {ok, elkia_v1alpha1_world_pb:character_update_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
 
 %% Unary RPC
--callback character_list(ctx:t(), v1alpha1_world_pb:character_list_request()) ->
-    {ok, v1alpha1_world_pb:character_list_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
+-callback character_list(ctx:t(), elkia_v1alpha1_world_pb:character_list_request()) ->
+    {ok, elkia_v1alpha1_world_pb:character_list_response(), ctx:t()} | grpcbox_stream:grpc_error_response().
 

@@ -1,7 +1,7 @@
 .PHONY: all
-all:
+all: gen
 	@rebar3 compile
 
 .PHONY: gen
 gen:
-	@rebar3 grpc sync
+	@rebar3 grpc gen

@@ -12,6 +12,6 @@
     ok | grpcbox_stream:grpc_error_response().
 
 %% 
--callback channel_watch(v1alpha1_eventing_pb:channel_watch_request(), grpcbox_stream:t()) ->
+-callback channel_watch(elkia_v1alpha1_eventing_pb:channel_watch_request(), grpcbox_stream:t()) ->
     ok | grpcbox_stream:grpc_error_response().
 
