@@ -1,0 +1,10 @@
+{application,grpcbox_plugin,
+             [{description,"Rebar3 plugin to generate behaviours for grpc services"},
+              {vsn,"0.9.0"},
+              {registered,[]},
+              {applications,[kernel,stdlib,gpb,providers]},
+              {env,[]},
+              {modules,[]},
+              {licenses,["Apache 2.0"]},
+              {links,[{"Github",
+                       "https://github.com/tsloughter/grpcbox_plugin"}]}]}.
