@@ -27,13 +27,13 @@ func init() {
 }
 
 func main() {
-	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if elkiaFleetEndpoint == "" {
-		elkiaFleetEndpoint = "localhost:8080"
+	fleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
+	if fleetEndpoint == "" {
+		fleetEndpoint = "localhost:8080"
 	}
-	logrus.Debugf("auth: connecting to fleet at %s", elkiaFleetEndpoint)
-	conn, err := grpc.Dial(
-		elkiaFleetEndpoint,
+	logrus.Debugf("auth: connecting to fleet at %s", fleetEndpoint)
+	fleetConn, err := grpc.Dial(
+		fleetEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
@@ -60,8 +60,8 @@ func main() {
 	eventing.RegisterAuthServer(
 		srv,
 		auth.NewServer(auth.ServerConfig{
-			PresenceClient: fleet.NewPresenceClient(conn),
-			ClusterClient:  fleet.NewClusterClient(conn),
+			PresenceClient: fleet.NewPresenceClient(fleetConn),
+			ClusterClient:  fleet.NewClusterClient(fleetConn),
 		}),
 	)
 	logrus.Debugf("auth server: listening on %s:%s", host, port)

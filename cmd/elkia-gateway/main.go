@@ -27,19 +27,19 @@ func init() {
 }
 
 func main() {
-	elkiaFleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if elkiaFleetEndpoint == "" {
-		elkiaFleetEndpoint = "localhost:8080"
+	fleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
+	if fleetEndpoint == "" {
+		fleetEndpoint = "localhost:8080"
 	}
-	logrus.Debugf("gateway: connecting to fleet at %s", elkiaFleetEndpoint)
-	conn, err := grpc.Dial(
-		elkiaFleetEndpoint,
+	logrus.Debugf("gateway: connecting to fleet at %s", fleetEndpoint)
+	fleetConn, err := grpc.Dial(
+		fleetEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	logrus.Debugf("gateway: connected to fleet at %s", elkiaFleetEndpoint)
+	logrus.Debugf("gateway: connected to fleet at %s", fleetEndpoint)
 	kp, err := NewKafkaProducer()
 	if err != nil {
 		logrus.Fatal(err)
@@ -80,7 +80,7 @@ func main() {
 	eventing.RegisterGatewayServer(
 		srv,
 		gateway.NewServer(gateway.ServerConfig{
-			PresenceClient: fleet.NewPresenceClient(conn),
+			PresenceClient: fleet.NewPresenceClient(fleetConn),
 			KafkaProducer:  kp,
 			KafkaConsumer:  kc,
 		}),
