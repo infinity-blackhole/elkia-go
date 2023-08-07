@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/infinity-blackhole/elkia/internal/gateway"
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -40,27 +40,11 @@ func main() {
 		logrus.Fatal(err)
 	}
 	logrus.Debugf("gateway: connected to fleet at %s", fleetEndpoint)
-	kp, err := NewKafkaProducer()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	logrus.Debugf("gateway: connected to kafka producer")
-	defer kp.Close()
-	kc, err := NewKafkaConsumer()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	logrus.Debugf("gateway: connected to kafka consumer")
-	defer kc.Close()
-	kafkaTopicsStr := os.Getenv("KAFKA_TOPICS")
-	var kafkaTopics []string
-	if kafkaTopicsStr != "" {
-		kafkaTopics = strings.Split(kafkaTopicsStr, ",")
-	} else {
-		kafkaTopics = []string{"identity"}
-	}
-	logrus.Debugf("gateway: subscribing to kafka topics %v", kafkaTopics)
-	kc.SubscribeTopics(kafkaTopics, nil)
+	redisClient := redis.NewUniversalClient(&redis.UniversalOptions{
+		Addrs:    []string{"localhost:6379"},
+		Password: "",
+	})
+	logrus.Debugf("gateway: connected to redis")
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
@@ -81,8 +65,7 @@ func main() {
 		srv,
 		gateway.NewServer(gateway.ServerConfig{
 			PresenceClient: fleet.NewPresenceClient(fleetConn),
-			KafkaProducer:  kp,
-			KafkaConsumer:  kc,
+			RedisClient:    redisClient,
 		}),
 	)
 	logrus.Debugf("auth server: listening on %s:%s", host, port)
