@@ -108,11 +108,7 @@ func (s *Server) Push(stream eventing.Gateway_ChannelInteractServer) error {
 
 func (s *Server) Poll(stream eventing.Gateway_ChannelInteractServer) error {
 	pubsub := s.redis.Subscribe(stream.Context(), "elkia:channel:response")
-	for {
-		msg, err := pubsub.ReceiveMessage(stream.Context())
-		if err != nil {
-			return err
-		}
+	for msg := range pubsub.Channel() {
 		var frame eventing.ChannelInteractResponse
 		if err := proto.Unmarshal([]byte(msg.Payload), &frame); err != nil {
 			return err
@@ -121,4 +117,5 @@ func (s *Server) Poll(stream eventing.Gateway_ChannelInteractServer) error {
 			return err
 		}
 	}
+	return nil
 }
