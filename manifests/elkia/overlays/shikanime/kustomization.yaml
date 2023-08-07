@@ -7,5 +7,4 @@ resources:
   - ../../../elkia-gateway/overlays/default
   - ../../../elkia-gateway-proxy/overlays/default
   - ../../../elkia-fleet/overlays/shikanime
-  - ../../../etcd/overlays/default
-  - ../../../kafka/overlays/default
+  - ../../../redis/overlays/default

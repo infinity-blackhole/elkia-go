@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: elkia-fleet
+  name: elkia-gateway
   namespace: elkia
 spec:
   template:
     spec:
       containers:
-        - name: elkia-fleet
+        - name: elkia-gateway
           env:
-            - name: ETCD_URIS
-              value: http://etcd:2379
-            - name: ETCD_USERNAME
+            - name: REDIS_ADDRESSES
+              value: redis:2379
+            - name: REDIS_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: etcd
+                  name: redis
                   key: username
-            - name: ETCD_PASSWORD
+            - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: etcd
+                  name: redis
                   key: password

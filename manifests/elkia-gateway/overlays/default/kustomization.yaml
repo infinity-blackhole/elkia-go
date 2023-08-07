@@ -4,6 +4,5 @@ resources:
   - ../../base
 components:
   - ../../components/elkia-fleet
-  - ../../components/kafka
 patches:
   - path: deployment.patch.yaml

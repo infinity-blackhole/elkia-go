@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - ../../base
 components:
-  - ../../components/etcd
+  - ../../components/redis
   - ../../components/kratos
 patches:
   - path: deployment.patch.yaml
