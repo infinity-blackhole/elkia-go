@@ -3,33 +3,36 @@ package presence
 import (
 	"context"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"hash/fnv"
+	"time"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
-	etcd "go.etcd.io/etcd/client/v3"
 	"google.golang.org/protobuf/proto"
 )
 
 type PresenceServerConfig struct {
-	OryClient  *ory.APIClient
-	EtcdClient *etcd.Client
+	OryClient   *ory.APIClient
+	RedisClient redis.UniversalClient
+	SessionTTL  time.Duration
 }
 
 func NewPresenceServer(config PresenceServerConfig) *PresenceServer {
 	return &PresenceServer{
-		ory:  config.OryClient,
-		etcd: config.EtcdClient,
+		ory:        config.OryClient,
+		redis:      config.RedisClient,
+		sessionTTL: config.SessionTTL,
 	}
 }
 
 type PresenceServer struct {
 	fleet.UnimplementedPresenceServer
-	ory  *ory.APIClient
-	etcd *etcd.Client
+	ory        *ory.APIClient
+	redis      redis.UniversalClient
+	sessionTTL time.Duration
 }
 
 func (i *PresenceServer) AuthLogin(
@@ -171,16 +174,17 @@ func (s *PresenceServer) SessionGet(
 	ctx context.Context,
 	in *fleet.SessionGetRequest,
 ) (*fleet.SessionGetResponse, error) {
-	res, err := s.etcd.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
+	cmd := s.redis.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
+	if err := cmd.Err(); err != nil {
+		return nil, err
+	}
+	res, err := cmd.Bytes()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: got %d handoff sessions", len(res.Kvs))
-	if len(res.Kvs) == 1 {
-		return nil, errors.New("invalid code")
-	}
+	logrus.Debugf("fleet: got %s handoff sessions", res)
 	var session fleet.Session
-	if err := proto.Unmarshal(res.Kvs[0].Value, &session); err != nil {
+	if err := proto.Unmarshal(res, &session); err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got handoff session: %v", session.String())
@@ -201,11 +205,11 @@ func (s *PresenceServer) SessionPut(
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.etcd.Put(ctx, fmt.Sprintf("sessions:%d", code), string(d))
-	if err != nil {
+	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", code), d, s.sessionTTL)
+	if err := cmd.Err(); err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: set handoff session: %v", res)
+	logrus.Debugf("fleet: set handoff session: %d", code)
 	return &fleet.SessionPutResponse{
 		Code: code,
 	}, nil
@@ -225,10 +229,10 @@ func (s *PresenceServer) SessionDelete(
 	ctx context.Context,
 	in *fleet.SessionDeleteRequest,
 ) (*fleet.SessionDeleteResponse, error) {
-	res, err := s.etcd.Delete(ctx, fmt.Sprintf("sessions:%d", in.Code))
-	if err != nil {
+	cmd := s.redis.Del(ctx, fmt.Sprintf("sessions:%d", in.Code))
+	if err := cmd.Err(); err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: deleted handoff session: %v", res)
+	logrus.Debugf("fleet: deleted handoff session: %d", in.Code)
 	return &fleet.SessionDeleteResponse{}, nil
 }
