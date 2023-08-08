@@ -46,9 +46,11 @@ func NewRedisClient() redis.UniversalClient {
 	} else {
 		redisEndpoints = []string{"localhost:6379"}
 	}
+	redisUser := os.Getenv("REDIS_USERNAME")
 	redisPwd := os.Getenv("REDIS_PASSWORD")
 	redisClient := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:    redisEndpoints,
+		Username: redisUser,
 		Password: redisPwd,
 	})
 	return redisClient
