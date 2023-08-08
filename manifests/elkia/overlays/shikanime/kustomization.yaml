@@ -4,7 +4,6 @@ resources:
   - ../../base
   - ../../../elkia-auth/overlays/default
   - ../../../elkia-auth-proxy/overlays/default
-  - ../../../elkia-gateway/overlays/default
+  - ../../../elkia-gateway/overlays/shikanime
   - ../../../elkia-gateway-proxy/overlays/default
   - ../../../elkia-fleet/overlays/shikanime
-  - svc.yaml
