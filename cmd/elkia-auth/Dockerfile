@@ -1,4 +1,4 @@
-FROM golang:1.19 as base
+FROM golang:1.19 AS base
 
 # Change path to Go source
 WORKDIR /go/src/github.com/infinity-blackhole/elkia
@@ -13,7 +13,7 @@ COPY cmd cmd
 COPY internal internal
 COPY pkg pkg
 
-FROM base as build
+FROM base AS build
 
 # Enable all tracing
 ENV GOTRACEBACK=all
