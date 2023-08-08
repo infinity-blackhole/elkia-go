@@ -49,7 +49,7 @@
             {
               pre-commit.hooks.gofmt.enable = true;
               packages = [
-                pkgs.kind
+                pkgs.minikube
                 pkgs.kubectl
                 pkgs.skaffold
                 pkgs.kustomize
