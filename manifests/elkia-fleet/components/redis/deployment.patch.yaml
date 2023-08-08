@@ -9,7 +9,7 @@ spec:
       containers:
         - name: elkia-fleet
           env:
-            - name: REDIS_ADDRESSES
+            - name: REDIS_ENDPOINTS
               value: redis:2379
             - name: REDIS_USERNAME
               valueFrom:

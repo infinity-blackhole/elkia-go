@@ -39,16 +39,16 @@ func NewOryClient() *ory.APIClient {
 }
 
 func NewRedisClient() redis.UniversalClient {
-	redisAddrsStr := os.Getenv("REDIS_ADDRESSES")
-	var redisAddrs []string
-	if redisAddrsStr != "" {
-		redisAddrs = strings.Split(redisAddrsStr, ",")
+	redisEndpointsStr := os.Getenv("REDIS_ENDPOINTS")
+	var redisEndpoints []string
+	if redisEndpointsStr != "" {
+		redisEndpoints = strings.Split(redisEndpointsStr, ",")
 	} else {
-		redisAddrs = []string{"localhost:6379"}
+		redisEndpoints = []string{"localhost:6379"}
 	}
 	redisPwd := os.Getenv("REDIS_PASSWORD")
 	redisClient := redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs:    redisAddrs,
+		Addrs:    redisEndpoints,
 		Password: redisPwd,
 	})
 	return redisClient
