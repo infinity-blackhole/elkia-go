@@ -42,13 +42,14 @@
               };
               packages = [
                 pkgs.nixpkgs-fmt
-                pkgs.docker
-                pkgs.gnumake
               ];
             }
             {
               pre-commit.hooks.gofmt.enable = true;
               packages = [
+                pkgs.nodejs
+                pkgs.docker
+                pkgs.gnumake
                 pkgs.minikube
                 pkgs.kubectl
                 pkgs.skaffold
