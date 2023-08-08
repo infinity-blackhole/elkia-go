@@ -14,4 +14,4 @@ spec:
             - name: KRATOS_URIS
               value: https://hungry-wilson-nrizdiygxs.projects.oryapis.com
             - name: REDIS_ENDPOINTS
-              value: redis-12998.c304.europe-west1-2.gce.cloud.redislabs.com:6379
+              value: redis-12998.c304.europe-west1-2.gce.cloud.redislabs.com:12998
