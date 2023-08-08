@@ -59,10 +59,14 @@ func main() {
 			RedisClient: redisClient,
 		}),
 	)
+	myNs := os.Getenv("MY_NAMESPACE")
+	if myNs == "" {
+		myNs = "elkia"
+	}
 	fleet.RegisterClusterServer(
 		srv,
 		cluster.NewKubernetesClusterServer(cluster.KubernetesClusterServerConfig{
-			Namespace:        "elkia",
+			Namespace:        myNs,
 			KubernetesClient: kubeCs,
 		}),
 	)
