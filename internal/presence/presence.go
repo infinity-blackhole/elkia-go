@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"hash/fnv"
-	"time"
 
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
@@ -17,22 +16,19 @@ import (
 type PresenceServerConfig struct {
 	OryClient   *ory.APIClient
 	RedisClient redis.UniversalClient
-	SessionTTL  time.Duration
 }
 
 func NewPresenceServer(config PresenceServerConfig) *PresenceServer {
 	return &PresenceServer{
-		ory:        config.OryClient,
-		redis:      config.RedisClient,
-		sessionTTL: config.SessionTTL,
+		ory:   config.OryClient,
+		redis: config.RedisClient,
 	}
 }
 
 type PresenceServer struct {
 	fleet.UnimplementedPresenceServer
-	ory        *ory.APIClient
-	redis      redis.UniversalClient
-	sessionTTL time.Duration
+	ory   *ory.APIClient
+	redis redis.UniversalClient
 }
 
 func (i *PresenceServer) AuthLogin(
@@ -205,7 +201,7 @@ func (s *PresenceServer) SessionPut(
 	if err != nil {
 		return nil, err
 	}
-	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", code), d, s.sessionTTL)
+	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", code), d, 0)
 	if err := cmd.Err(); err != nil {
 		return nil, err
 	}
