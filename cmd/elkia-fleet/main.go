@@ -42,7 +42,7 @@ func main() {
 	oryClient := clients.NewOryClient()
 	logrus.Debugf("fleetserver: connected to ory")
 	redisClient := clients.NewRedisClient()
-	logrus.Debugf("gateway: connected to redis")
+	logrus.Debugf("fleetserver: connected to redis")
 	kubeCs, err := clients.NewKubernetesClientSet()
 	if err != nil {
 		logrus.Fatal(err)
