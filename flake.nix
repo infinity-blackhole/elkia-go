@@ -48,6 +48,8 @@
             {
               pre-commit.hooks.gofmt.enable = true;
               packages = [
+                pkgs.kind
+                pkgs.kubectl
                 pkgs.skaffold
                 pkgs.kustomize
                 pkgs.kubernetes-helm
