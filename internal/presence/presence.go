@@ -172,6 +172,7 @@ func (s *PresenceServer) SessionGet(
 ) (*fleet.SessionGetResponse, error) {
 	cmd := s.redis.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
 	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
 	res, err := cmd.Bytes()
@@ -203,6 +204,7 @@ func (s *PresenceServer) SessionPut(
 	}
 	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", code), d, 0)
 	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
 	logrus.Debugf("fleet: set handoff session: %d", code)
@@ -227,6 +229,7 @@ func (s *PresenceServer) SessionDelete(
 ) (*fleet.SessionDeleteResponse, error) {
 	cmd := s.redis.Del(ctx, fmt.Sprintf("sessions:%d", in.Code))
 	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
 	logrus.Debugf("fleet: deleted handoff session: %d", in.Code)
