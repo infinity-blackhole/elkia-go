@@ -59,6 +59,7 @@
                 pkgs.protobuf
                 pkgs.protoc-gen-go
                 pkgs.protoc-gen-go-grpc
+                pkgs.google-cloud-sdk
               ];
             }
           ];
