@@ -6,12 +6,3 @@ metadata:
 spec:
   type: ExternalName
   externalName: redis-12998.c304.europe-west1-2.gce.cloud.redislabs.com
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kratos-public
-  namespace: elkia
-spec:
-  type: ExternalName
-  externalName: hungry-wilson-nrizdiygxs.projects.oryapis.com
