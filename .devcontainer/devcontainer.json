@@ -18,16 +18,16 @@
   "customizations": {
     "vscode": {
       "extensions": [
-		"googlecloudtools.cloudcode",
-		"jnoortheen.nix-ide",
-		"mkhl.direnv",
-		"yzhang.markdown-all-in-one",
-		"SonarSource.sonarlint-vscode",
-		"golang.go",
-		"ms-kubernetes-tools.vscode-kubernetes-tools",
-		"redhat.vscode-yaml",
-		"ms-kubernetes-tools.kind-vscode"
-	]
+        "googlecloudtools.cloudcode",
+        "jnoortheen.nix-ide",
+        "mkhl.direnv",
+        "yzhang.markdown-all-in-one",
+        "SonarSource.sonarlint-vscode",
+        "golang.go",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml",
+        "ms-kubernetes-tools.kind-vscode"
+      ]
     }
   }
 }
