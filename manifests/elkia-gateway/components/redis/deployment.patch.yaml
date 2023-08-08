@@ -10,7 +10,7 @@ spec:
         - name: elkia-gateway
           env:
             - name: REDIS_ENDPOINTS
-              value: redis:2379
+              value: redis-master
             - name: REDIS_USERNAME
               valueFrom:
                 secretKeyRef:
