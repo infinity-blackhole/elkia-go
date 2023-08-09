@@ -1,4 +1,4 @@
-module github.com/infinity-blackhole/elkia
+module go.shikanime.studio/elkia
 
 go 1.19
 

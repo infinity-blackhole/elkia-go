@@ -5,14 +5,14 @@ import (
 	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/auth"
-	"github.com/infinity-blackhole/elkia/internal/clients"
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/auth"
+	"go.shikanime.studio/elkia/internal/clients"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 
-	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+	_ "go.shikanime.studio/elkia/internal/monitoring"
 )
 
 func main() {

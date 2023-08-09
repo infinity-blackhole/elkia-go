@@ -4,9 +4,9 @@ import (
 	"math"
 	"net"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

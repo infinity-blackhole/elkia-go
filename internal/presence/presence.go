@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"hash/fnv"
 
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strconv"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net"
 
-	"github.com/infinity-blackhole/elkia/internal/cluster"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"go.shikanime.studio/elkia/internal/cluster"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

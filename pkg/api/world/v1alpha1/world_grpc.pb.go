@@ -19,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Lobby_CharacterAdd_FullMethodName    = "/io.elkia.world.v1alpha1.Lobby/CharacterAdd"
-	Lobby_CharacterRemove_FullMethodName = "/io.elkia.world.v1alpha1.Lobby/CharacterRemove"
-	Lobby_CharacterUpdate_FullMethodName = "/io.elkia.world.v1alpha1.Lobby/CharacterUpdate"
-	Lobby_CharacterList_FullMethodName   = "/io.elkia.world.v1alpha1.Lobby/CharacterList"
+	Lobby_CharacterAdd_FullMethodName    = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterAdd"
+	Lobby_CharacterRemove_FullMethodName = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterRemove"
+	Lobby_CharacterUpdate_FullMethodName = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterUpdate"
+	Lobby_CharacterList_FullMethodName   = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterList"
 )
 
 // LobbyClient is the client API for Lobby service.
@@ -203,7 +203,7 @@ func _Lobby_CharacterList_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Lobby_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.world.v1alpha1.Lobby",
+	ServiceName: "shikanime.elkia.world.v1alpha1.Lobby",
 	HandlerType: (*LobbyServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

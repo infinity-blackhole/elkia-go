@@ -19,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Cluster_MemberAdd_FullMethodName    = "/io.elkia.fleet.v1alpha1.Cluster/MemberAdd"
-	Cluster_MemberRemove_FullMethodName = "/io.elkia.fleet.v1alpha1.Cluster/MemberRemove"
-	Cluster_MemberUpdate_FullMethodName = "/io.elkia.fleet.v1alpha1.Cluster/MemberUpdate"
-	Cluster_MemberList_FullMethodName   = "/io.elkia.fleet.v1alpha1.Cluster/MemberList"
+	Cluster_MemberAdd_FullMethodName    = "/shikanime.elkia.fleet.v1alpha1.Cluster/MemberAdd"
+	Cluster_MemberRemove_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Cluster/MemberRemove"
+	Cluster_MemberUpdate_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Cluster/MemberUpdate"
+	Cluster_MemberList_FullMethodName   = "/shikanime.elkia.fleet.v1alpha1.Cluster/MemberList"
 )
 
 // ClusterClient is the client API for Cluster service.
@@ -203,7 +203,7 @@ func _Cluster_MemberList_Handler(srv interface{}, ctx context.Context, dec func(
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Cluster_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.fleet.v1alpha1.Cluster",
+	ServiceName: "shikanime.elkia.fleet.v1alpha1.Cluster",
 	HandlerType: (*ClusterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -228,15 +228,15 @@ var Cluster_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	Presence_AuthCreateHandoffFlow_FullMethodName   = "/io.elkia.fleet.v1alpha1.Presence/AuthCreateHandoffFlow"
-	Presence_AuthCompleteHandoffFlow_FullMethodName = "/io.elkia.fleet.v1alpha1.Presence/AuthCompleteHandoffFlow"
-	Presence_AuthLogin_FullMethodName               = "/io.elkia.fleet.v1alpha1.Presence/AuthLogin"
-	Presence_AuthRefreshLogin_FullMethodName        = "/io.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin"
-	Presence_AuthWhoAmI_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/AuthWhoAmI"
-	Presence_AuthLogout_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/AuthLogout"
-	Presence_SessionGet_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/SessionGet"
-	Presence_SessionPut_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/SessionPut"
-	Presence_SessionDelete_FullMethodName           = "/io.elkia.fleet.v1alpha1.Presence/SessionDelete"
+	Presence_AuthCreateHandoffFlow_FullMethodName   = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthCreateHandoffFlow"
+	Presence_AuthCompleteHandoffFlow_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthCompleteHandoffFlow"
+	Presence_AuthLogin_FullMethodName               = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthLogin"
+	Presence_AuthRefreshLogin_FullMethodName        = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin"
+	Presence_AuthWhoAmI_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthWhoAmI"
+	Presence_AuthLogout_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthLogout"
+	Presence_SessionGet_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionGet"
+	Presence_SessionPut_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionPut"
+	Presence_SessionDelete_FullMethodName           = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionDelete"
 )
 
 // PresenceClient is the client API for Presence service.
@@ -595,7 +595,7 @@ func _Presence_SessionDelete_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Presence_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.fleet.v1alpha1.Presence",
+	ServiceName: "shikanime.elkia.fleet.v1alpha1.Presence",
 	HandlerType: (*PresenceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

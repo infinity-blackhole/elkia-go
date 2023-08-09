@@ -6,15 +6,15 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/lobby"
-	world "github.com/infinity-blackhole/elkia/pkg/api/world/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/lobby"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+	_ "go.shikanime.studio/elkia/internal/monitoring"
 )
 
 func main() {
@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	world.RegisterLobbyServer(
+	eventing.RegisterLobbyServer(
 		srv,
 		lobby.NewLobbyServer(lobby.LobbyServerConfig{
 			DB: db,

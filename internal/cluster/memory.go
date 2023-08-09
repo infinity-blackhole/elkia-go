@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 )
 
 type MemoryClusterServerConfig struct {

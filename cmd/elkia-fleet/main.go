@@ -5,15 +5,15 @@ import (
 	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/clients"
-	"github.com/infinity-blackhole/elkia/internal/cluster"
-	"github.com/infinity-blackhole/elkia/internal/presence"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/clients"
+	"go.shikanime.studio/elkia/internal/cluster"
+	"go.shikanime.studio/elkia/internal/presence"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 
-	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+	_ "go.shikanime.studio/elkia/internal/monitoring"
 )
 
 func main() {

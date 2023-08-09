@@ -3,17 +3,16 @@ package gateway
 import (
 	"errors"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
-	world "github.com/infinity-blackhole/elkia/pkg/api/world/v1alpha1"
 	"github.com/redis/go-redis/v9"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
 )
 
 type ServerConfig struct {
 	PresenceClient fleet.PresenceClient
-	LobbyClient    world.LobbyClient
+	LobbyClient    eventing.LobbyClient
 	RedisClient    redis.UniversalClient
 }
 
@@ -28,7 +27,7 @@ func NewServer(cfg ServerConfig) *Server {
 type Server struct {
 	eventing.UnimplementedGatewayServer
 	presence fleet.PresenceClient
-	lobby    world.LobbyClient
+	lobby    eventing.LobbyClient
 	redis    redis.UniversalClient
 	sequence uint32
 }
@@ -75,9 +74,12 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	lobbyCharacters, err := s.lobby.CharacterList(stream.Context(), &world.CharacterListRequest{
+	lobbyCharacters, err := s.lobby.CharacterList(stream.Context(), &eventing.CharacterListRequest{
 		IdentityId: whoami.IdentityId,
 	})
+	if err != nil {
+		return err
+	}
 	var characters []*eventing.CharacterFrame
 	for _, character := range lobbyCharacters.Characters {
 		characters = append(characters, &eventing.CharacterFrame{

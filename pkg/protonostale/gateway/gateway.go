@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/infinity-blackhole/elkia/pkg/protonostale"
+	"go.shikanime.studio/elkia/pkg/protonostale"
 )
 
 type Writer struct {

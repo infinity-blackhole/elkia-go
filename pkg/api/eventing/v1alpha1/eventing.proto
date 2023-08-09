@@ -1,7 +1,7 @@
 syntax = "proto3";
-package io.elkia.eventing.v1alpha1;
+package shikanime.elkia.eventing.v1alpha1;
 
-option go_package = "pkg/api/eventing/v1alpha1";
+option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
 
 enum Code {
   OUTDATED_CLIENT = 0;
@@ -196,6 +196,28 @@ enum Faction {
   Demon = 2;
 }
 
+message Character {
+  string id = 1;
+  CharacterClass class = 2;
+  Sex sex = 3;
+  CharacterHairColor hair_color = 4;
+  CharacterHairStyle hair_style = 5;
+  Faction faction = 6;
+  int32 reputation = 7;
+  int32 dignity = 8;
+  int32 compliment = 9;
+  int32 health = 10;
+  int32 mana = 11;
+  string name = 12;
+  int32 hero_experience = 13;
+  int32 hero_level = 14;
+  int32 job_experience = 15;
+  int32 job_level = 16;
+  int32 experience = 17;
+  int32 level = 18;
+}
+
+
 message CharacterFrame {
   string id = 1;
   CharacterClass class = 2;
@@ -236,3 +258,49 @@ service Gateway {
   rpc ChannelInteract(stream ChannelInteractRequest)
       returns (stream ChannelInteractResponse);
 }
+
+message CharacterAddRequest {
+  string id = 1;
+  string name = 2;
+  CharacterClass class = 3;
+  Sex sex = 4;
+  CharacterHairColor hair_color = 5;
+  CharacterHairStyle hair_style = 6;
+}
+
+message CharacterAddResponse {}
+
+message CharacterRemoveRequest { string id = 1; }
+
+message CharacterRemoveResponse {}
+
+message CharacterUpdateRequest {
+  string id = 1;
+  optional uint32 world_id = 2;
+  optional uint32 channel_id = 3;
+  optional string name = 4;
+  optional string address = 5;
+  optional uint32 population = 6;
+  optional uint32 capacity = 7;
+}
+
+message CharacterUpdateResponse {}
+
+message CharacterListRequest { string identity_id = 1; }
+
+message CharacterListResponse { repeated Character characters = 1; }
+
+service Lobby {
+  // CharacterAdd adds a new character to the world.
+  rpc CharacterAdd(CharacterAddRequest) returns (CharacterAddResponse);
+
+  // CharacterRemove removes an existing character from the world.
+  rpc CharacterRemove(CharacterRemoveRequest) returns (CharacterRemoveResponse);
+
+  // CharacterUpdate updates an existing character in the world.
+  rpc CharacterUpdate(CharacterUpdateRequest) returns (CharacterUpdateResponse);
+
+  // CharacterList lists all characters in the world.
+  rpc CharacterList(CharacterListRequest) returns (CharacterListResponse);
+}
+

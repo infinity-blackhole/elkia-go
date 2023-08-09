@@ -1,5 +1,5 @@
 syntax = "proto3";
-package io.elkia.fleet.v1alpha1;
+package shikanime.elkia.fleet.v1alpha1;
 
 option go_package = "pkg/api/fleet/v1alpha1";
 

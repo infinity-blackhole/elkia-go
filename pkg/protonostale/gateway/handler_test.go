@@ -7,11 +7,11 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/infinity-blackhole/elkia/internal/gateway"
-	"github.com/infinity-blackhole/elkia/internal/gateway/gatewaytest"
-	"github.com/infinity-blackhole/elkia/internal/presence"
-	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"go.shikanime.studio/elkia/internal/gateway"
+	"go.shikanime.studio/elkia/internal/gateway/gatewaytest"
+	"go.shikanime.studio/elkia/internal/presence"
+	"go.shikanime.studio/elkia/internal/presence/presencetest"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 

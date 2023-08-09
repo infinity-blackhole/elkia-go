@@ -8,13 +8,13 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/infinity-blackhole/elkia/internal/auth"
-	"github.com/infinity-blackhole/elkia/internal/auth/authtest"
-	"github.com/infinity-blackhole/elkia/internal/cluster"
-	"github.com/infinity-blackhole/elkia/internal/cluster/clustertest"
-	"github.com/infinity-blackhole/elkia/internal/presence"
-	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"go.shikanime.studio/elkia/internal/auth"
+	"go.shikanime.studio/elkia/internal/auth/authtest"
+	"go.shikanime.studio/elkia/internal/cluster"
+	"go.shikanime.studio/elkia/internal/cluster/clustertest"
+	"go.shikanime.studio/elkia/internal/presence"
+	"go.shikanime.studio/elkia/internal/presence/presencetest"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 

@@ -5,11 +5,11 @@ import (
 	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/clients"
-	"github.com/infinity-blackhole/elkia/internal/gateway"
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/clients"
+	"go.shikanime.studio/elkia/internal/gateway"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 )
 

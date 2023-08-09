@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/clients"
-	"github.com/infinity-blackhole/elkia/pkg/nostale"
-	"github.com/infinity-blackhole/elkia/pkg/protonostale/auth"
 	"github.com/sirupsen/logrus"
+	"go.shikanime.studio/elkia/internal/clients"
+	"go.shikanime.studio/elkia/pkg/nostale"
+	"go.shikanime.studio/elkia/pkg/protonostale/auth"
 
-	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+	_ "go.shikanime.studio/elkia/internal/monitoring"
 )
 
 func main() {

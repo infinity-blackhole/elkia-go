@@ -5,14 +5,14 @@ import (
 	"context"
 	"net"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	"go.shikanime.studio/elkia/pkg/protonostale"
 	"golang.org/x/sync/errgroup"
 )
 
-var name = "github.com/infinity-blackhole/elkia/internal/gateway"
+var name = "go.shikanime.studio/elkia/internal/gateway"
 
 type HandlerConfig struct {
 	GatewayClient eventing.GatewayClient

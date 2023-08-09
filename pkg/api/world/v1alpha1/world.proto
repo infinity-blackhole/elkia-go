@@ -1,7 +1,7 @@
 syntax = "proto3";
-package io.elkia.world.v1alpha1;
+package shikanime.elkia.world.v1alpha1;
 
-option go_package = "pkg/api/world/v1alpha1";
+option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
 
 enum CharacterClass {
   ADVENTURER = 0;
