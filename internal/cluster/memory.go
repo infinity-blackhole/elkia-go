@@ -30,7 +30,7 @@ func (s *MemoryClusterServer) MemberAdd(
 		WorldId:    in.WorldId,
 		ChannelId:  in.ChannelId,
 		Name:       in.Name,
-		Address:    in.Address,
+		Addresses:  in.Addresses,
 		Population: in.Population,
 		Capacity:   in.Capacity,
 	})
@@ -65,8 +65,8 @@ func (s *MemoryClusterServer) MemberUpdate(
 			if in.Name != nil {
 				member.Name = *in.Name
 			}
-			if in.Address != nil {
-				member.Address = *in.Address
+			if in.Addresses != nil {
+				member.Addresses = in.Addresses
 			}
 			if in.Population != nil {
 				member.Population = *in.Population

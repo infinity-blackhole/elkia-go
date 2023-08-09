@@ -51,7 +51,7 @@ func (s *KubernetesClusterServer) MemberList(
 		return nil, err
 	}
 	logrus.Debugf("fleet: found %d members", len(svcs.Items))
-	members := make([]*fleet.Member, len(svcs.Items))
+	members := []*fleet.Member{}
 	for i, ns := range svcs.Items {
 		members[i], err = s.getMemberFromService(&ns)
 		if err != nil {
@@ -80,7 +80,7 @@ func (s *KubernetesClusterServer) getMemberFromService(
 	if err != nil {
 		return nil, err
 	}
-	addr, err := s.getGatewayAddrFromService(svc)
+	addresses, err := s.listGatewayAddrFromService(svc)
 	if err != nil {
 		return nil, err
 	}
@@ -103,44 +103,50 @@ func (s *KubernetesClusterServer) getMemberFromService(
 		WorldId:    uint32(worldIdUint),
 		ChannelId:  uint32(channelIdUint),
 		Name:       svc.Labels["fleet.elkia.io/world-name"],
-		Address:    addr,
+		Addresses:  addresses,
 		Population: uint32(populationUint),
 		Capacity:   uint32(capacityUint),
 	}, nil
 }
 
-func (s *KubernetesClusterServer) getGatewayAddrFromService(
+func (s *KubernetesClusterServer) listGatewayAddrFromService(
 	svc *corev1.Service,
-) (string, error) {
-	ip, err := s.getGatewayIpFromService(svc)
+) ([]string, error) {
+	endpoints, err := s.listGatewayIpFromService(svc)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	port, err := s.getGatewayPortFromService(svc)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return net.JoinHostPort(ip, port), nil
+	addresses := make([]string, len(endpoints))
+	for i, endpoint := range endpoints {
+		addresses[i] = net.JoinHostPort(endpoint, port)
+	}
+	return addresses, nil
 }
 
-func (s *KubernetesClusterServer) getGatewayIpFromService(
+func (s *KubernetesClusterServer) listGatewayIpFromService(
 	svc *corev1.Service,
-) (string, error) {
-	// TODO: We might want to support multiple IPs in the future
+) ([]string, error) {
+	endpoints := make([]string, 0)
 	for _, ingress := range svc.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
-			return ingress.IP, nil
-		}
-		if ingress.Hostname != "" {
-			return ingress.Hostname, nil
+			endpoints = append(endpoints, ingress.IP)
+		} else if ingress.Hostname != "" {
+			endpoints = append(endpoints, ingress.Hostname)
 		}
 	}
-	logrus.Warnf(
-		"fleet: service %s/%s has no ingress defaulting to 127.0.0.1",
-		svc.Namespace,
-		svc.Name,
-	)
-	return "127.0.0.1", nil
+	if len(endpoints) == 0 {
+		logrus.Warnf(
+			"fleet: service %s/%s has no ingress defaulting to 127.0.0.1",
+			svc.Namespace,
+			svc.Name,
+		)
+		return []string{"127.0.0.1"}, nil
+	}
+	return endpoints, nil
 }
 
 func (s *KubernetesClusterServer) getGatewayPortFromService(

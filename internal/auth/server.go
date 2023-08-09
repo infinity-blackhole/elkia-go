@@ -76,18 +76,20 @@ func (s *Server) AuthLoginFrameProduce(
 	logrus.Debugf("auth: list members: %v", memberList)
 	ms := []*eventing.Endpoint{}
 	for _, m := range memberList.Members {
-		host, port, err := net.SplitHostPort(m.Address)
-		if err != nil {
-			return err
+		for _, a := range m.Addresses {
+			host, port, err := net.SplitHostPort(a)
+			if err != nil {
+				return err
+			}
+			ms = append(ms, &eventing.Endpoint{
+				Host:      host,
+				Port:      port,
+				Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
+				WorldId:   m.WorldId,
+				ChannelId: m.ChannelId,
+				WorldName: m.Name,
+			})
 		}
-		ms = append(ms, &eventing.Endpoint{
-			Host:      host,
-			Port:      port,
-			Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
-			WorldId:   m.WorldId,
-			ChannelId: m.ChannelId,
-			WorldName: m.Name,
-		})
 	}
 	return stream.Send(&eventing.AuthInteractResponse{
 		Payload: &eventing.AuthInteractResponse_EndpointListFrame{
