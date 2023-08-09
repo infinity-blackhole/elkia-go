@@ -135,11 +135,12 @@ func (s *KubernetesClusterServer) getGatewayIpFromService(
 			return ingress.Hostname, nil
 		}
 	}
-	return "", fmt.Errorf(
-		"service %s/%s has no ingress",
+	logrus.Warnf(
+		"fleet: service %s/%s has no ingress defaulting to 127.0.0.1",
 		svc.Namespace,
 		svc.Name,
 	)
+	return "127.0.0.1", nil
 }
 
 func (s *KubernetesClusterServer) getGatewayPortFromService(
