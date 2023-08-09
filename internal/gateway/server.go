@@ -91,10 +91,14 @@ func (s *Server) Push(stream eventing.Gateway_ChannelInteractServer) error {
 				}
 				s.sequence = command.Sequence
 			default:
+				msg, err := proto.Marshal(command)
+				if err != nil {
+					return err
+				}
 				cmdRes := s.redis.Publish(
 					stream.Context(),
 					"elkia:channel:command",
-					command,
+					msg,
 				)
 				if err := cmdRes.Err(); err != nil {
 					return err
