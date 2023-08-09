@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	AuthLoginOpCode = "NoS0575"
+	AuthCreateHandoffFlowOpCode = "NoS0575"
 )
 
 type AuthInteractRequest struct {
@@ -21,7 +21,7 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	fields := bytes.SplitN(b, FieldSeparator, 2)
 	opcode := string(fields[0])
 	switch opcode {
-	case AuthLoginOpCode:
+	case AuthCreateHandoffFlowOpCode:
 		var LoginFrame LoginFrame
 		if err := LoginFrame.UnmarshalNosTale(fields[1]); err != nil {
 			return err

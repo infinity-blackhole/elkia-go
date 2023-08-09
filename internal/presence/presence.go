@@ -31,6 +31,30 @@ type PresenceServer struct {
 	redis redis.UniversalClient
 }
 
+func (i *PresenceServer) AuthCreateHandoffFlow(
+	ctx context.Context,
+	in *fleet.AuthCreateHandoffFlowRequest,
+) (*fleet.AuthCreateHandoffFlowResponse, error) {
+	login, err := i.AuthLogin(ctx, &fleet.AuthLoginRequest{
+		Identifier: in.Identifier,
+		Password:   in.Password,
+	})
+	if err != nil {
+		return nil, err
+	}
+	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
+		Session: &fleet.Session{
+			Token: login.Token,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &fleet.AuthCreateHandoffFlowResponse{
+		Code: sessionPut.Code,
+	}, nil
+}
+
 func (i *PresenceServer) AuthLogin(
 	ctx context.Context,
 	in *fleet.AuthLoginRequest,
@@ -59,17 +83,8 @@ func (i *PresenceServer) AuthLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    successLogin.Session.Id,
-			Token: *successLogin.SessionToken,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
 	return &fleet.AuthLoginResponse{
-		Code: sessionPut.Code,
+		Token: *successLogin.SessionToken,
 	}, nil
 }
 
@@ -104,22 +119,15 @@ func (s *PresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	_, err = s.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    successLogin.Session.Id,
-			Token: *successLogin.SessionToken,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &fleet.AuthRefreshLoginResponse{}, nil
+	return &fleet.AuthRefreshLoginResponse{
+		Token: *successLogin.SessionToken,
+	}, nil
 }
 
-func (s *PresenceServer) AuthHandoff(
+func (s *PresenceServer) AuthCompleteHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthHandoffRequest,
-) (*fleet.AuthHandoffResponse, error) {
+	in *fleet.AuthCompleteHandoffFlowRequest,
+) (*fleet.AuthCompleteHandoffFlowResponse, error) {
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
 		Code: in.Code,
 	})
@@ -127,7 +135,7 @@ func (s *PresenceServer) AuthHandoff(
 		return nil, err
 	}
 	logrus.Debugf("fleet: got session: %v", sessionGet)
-	_, err = s.AuthRefreshLogin(
+	refreshLogin, err := s.AuthRefreshLogin(
 		ctx,
 		&fleet.AuthRefreshLoginRequest{
 			Identifier: in.Identifier,
@@ -138,8 +146,33 @@ func (s *PresenceServer) AuthHandoff(
 	if err != nil {
 		return nil, err
 	}
+	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+		Code: in.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
 	logrus.Debugf("fleet: refreshed login")
-	return &fleet.AuthHandoffResponse{}, nil
+	return &fleet.AuthCompleteHandoffFlowResponse{
+		Token: refreshLogin.Token,
+	}, nil
+}
+
+func (s *PresenceServer) AuthWhoAmI(
+	ctx context.Context,
+	in *fleet.AuthWhoAmIRequest,
+) (*fleet.AuthWhoAmIResponse, error) {
+	whoami, _, err := s.ory.FrontendApi.
+		ToSession(ctx).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("fleet: whoami: %v", whoami)
+	return &fleet.AuthWhoAmIResponse{
+		Id:         whoami.Id,
+		IdentityId: whoami.Identity.Id,
+	}, nil
 }
 
 func (s *PresenceServer) AuthLogout(

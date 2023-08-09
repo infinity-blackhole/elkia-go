@@ -59,12 +59,12 @@ service Cluster {
   rpc MemberList(MemberListRequest) returns (MemberListResponse);
 }
 
-message AuthLoginRequest {
+message AuthCreateHandoffFlowRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthLoginResponse { uint32 code = 1; }
+message AuthCreateHandoffFlowResponse { uint32 code = 1; }
 
 message AuthRefreshLoginRequest {
   string identifier = 1;
@@ -72,15 +72,33 @@ message AuthRefreshLoginRequest {
   string token = 3;
 }
 
-message AuthRefreshLoginResponse { uint32 code = 1; }
+message AuthRefreshLoginResponse { string token = 1; }
 
-message AuthHandoffRequest {
+message AuthCompleteHandoffFlowRequest {
   uint32 code = 1;
   string identifier = 2;
   string password = 3;
 }
 
-message AuthHandoffResponse {}
+message AuthCompleteHandoffFlowResponse {
+  string token = 1;
+}
+
+message AuthLoginRequest {
+  string identifier = 1;
+  string password = 2;
+}
+
+message AuthLoginResponse {
+  string token = 1;
+}
+
+message AuthWhoAmIRequest { string token = 1; }
+
+message AuthWhoAmIResponse {
+  string id = 1;
+  string identity_id = 2;
+}
 
 message AuthLogoutRequest { uint32 code = 1; }
 
@@ -104,17 +122,25 @@ message SessionDeleteRequest { uint32 code = 1; }
 message SessionDeleteResponse {}
 
 service Presence {
-  // Audthenticate authenticates a session with a given identifier and token.
+  // AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+  // password.
+  rpc AuthCreateHandoffFlow(AuthCreateHandoffFlowRequest) returns (AuthCreateHandoffFlowResponse);
+
+  // AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+  // code.
+  rpc AuthCompleteHandoffFlow(AuthCompleteHandoffFlowRequest) returns (AuthCompleteHandoffFlowResponse);
+
+  // AuthLogin hands off a session to a gateway with a given token and
+  // code.
   rpc AuthLogin(AuthLoginRequest) returns (AuthLoginResponse);
 
-  // AuthRefreshLogin authenticates a gateway with a given identifier and
+  // AuthRefreshLogin authenticates a gateway with a given identifier, password, and
   // token.
   rpc AuthRefreshLogin(AuthRefreshLoginRequest)
       returns (AuthRefreshLoginResponse);
 
-  // AuthHandoff hands off a session to a gateway with a given token and
-  // code.
-  rpc AuthHandoff(AuthHandoffRequest) returns (AuthHandoffResponse);
+  // AuthWhoAmI returns the session associated with a given token.
+  rpc AuthWhoAmI(AuthWhoAmIRequest) returns (AuthWhoAmIResponse);
 
   // AuthLogout logs out a session with a given code.
   rpc AuthLogout(AuthLogoutRequest) returns (AuthLogoutResponse);

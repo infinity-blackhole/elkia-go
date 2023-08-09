@@ -5,6 +5,7 @@ import (
 
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	world "github.com/infinity-blackhole/elkia/pkg/api/world/v1alpha1"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
@@ -12,12 +13,14 @@ import (
 
 type ServerConfig struct {
 	PresenceClient fleet.PresenceClient
+	LobbyClient    world.LobbyClient
 	RedisClient    redis.UniversalClient
 }
 
 func NewServer(cfg ServerConfig) *Server {
 	return &Server{
 		presence: cfg.PresenceClient,
+		lobby:    cfg.LobbyClient,
 		redis:    cfg.RedisClient,
 	}
 }
@@ -25,6 +28,7 @@ func NewServer(cfg ServerConfig) *Server {
 type Server struct {
 	eventing.UnimplementedGatewayServer
 	presence fleet.PresenceClient
+	lobby    world.LobbyClient
 	redis    redis.UniversalClient
 	sequence uint32
 }
@@ -57,12 +61,52 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return errors.New("handoff: session protocol error")
 	}
 	s.sequence = password.Sequence
-	_, err = s.presence.AuthHandoff(stream.Context(), &fleet.AuthHandoffRequest{
+	handoff, err := s.presence.AuthCompleteHandoffFlow(stream.Context(), &fleet.AuthCompleteHandoffFlowRequest{
 		Code:       sync.Code,
 		Identifier: identifier.Identifier,
 		Password:   password.Password,
 	})
 	if err != nil {
+		return err
+	}
+	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
+		Token: handoff.Token,
+	})
+	if err != nil {
+		return err
+	}
+	lobbyCharacters, err := s.lobby.CharacterList(stream.Context(), &world.CharacterListRequest{
+		IdentityId: whoami.IdentityId,
+	})
+	var characters []*eventing.CharacterFrame
+	for _, character := range lobbyCharacters.Characters {
+		characters = append(characters, &eventing.CharacterFrame{
+			Id:             character.Id,
+			Class:          character.Class,
+			HairColor:      character.HairColor,
+			HairStyle:      character.HairStyle,
+			Faction:        character.Faction,
+			Reputation:     character.Reputation,
+			Dignity:        character.Dignity,
+			Compliment:     character.Compliment,
+			Health:         character.Health,
+			Mana:           character.Mana,
+			Name:           character.Name,
+			HeroExperience: character.HeroExperience,
+			HeroLevel:      character.HeroLevel,
+			JobExperience:  character.JobExperience,
+			JobLevel:       character.JobLevel,
+			Experience:     character.Experience,
+			Level:          character.Level,
+		})
+	}
+	if err := stream.Send(&eventing.ChannelInteractResponse{
+		Payload: &eventing.ChannelInteractResponse_CharacterListFrame{
+			CharacterListFrame: &eventing.CharacterListFrame{
+				Characters: characters,
+			},
+		},
+	}); err != nil {
 		return err
 	}
 	wg := errgroup.Group{}

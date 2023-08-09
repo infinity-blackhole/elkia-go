@@ -38,10 +38,10 @@ type MemoryPresenceServer struct {
 	rand       *rand.Rand
 }
 
-func (s *MemoryPresenceServer) AuthLogin(
+func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthLoginRequest,
-) (*fleet.AuthLoginResponse, error) {
+	in *fleet.AuthCreateHandoffFlowRequest,
+) (*fleet.AuthCreateHandoffFlowResponse, error) {
 	var identity *Identity
 	for _, i := range s.identities {
 		if i.Username == in.Identifier && i.Password == in.Password {
@@ -65,7 +65,7 @@ func (s *MemoryPresenceServer) AuthLogin(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthLoginResponse{
+	return &fleet.AuthCreateHandoffFlowResponse{
 		Code: sessionPut.Code,
 	}, nil
 }
@@ -98,24 +98,15 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if err != nil {
 		return nil, err
 	}
-	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    strconv.Itoa(s.rand.Int()),
-			Token: sessionToken,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
 	return &fleet.AuthRefreshLoginResponse{
-		Code: sessionPut.Code,
+		Token: sessionToken,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) AuthHandoff(
+func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthHandoffRequest,
-) (*fleet.AuthHandoffResponse, error) {
+	in *fleet.AuthCompleteHandoffFlowRequest,
+) (*fleet.AuthCompleteHandoffFlowResponse, error) {
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
 		Code: in.Code,
 	})
@@ -133,7 +124,13 @@ func (s *MemoryPresenceServer) AuthHandoff(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthHandoffResponse{}, nil
+	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+		Code: in.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &fleet.AuthCompleteHandoffFlowResponse{}, nil
 }
 
 func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {

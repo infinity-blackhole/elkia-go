@@ -61,9 +61,9 @@ service Auth {
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthLoginFrameProduce send a login frame to the auth server and returns a
+  // AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
   // stream of events
-  rpc AuthLoginFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
+  rpc AuthCreateHandoffFlowFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
 }
 
 message SyncFrame {
@@ -156,10 +156,77 @@ message ChannelInteractRequest {
   }
 }
 
+enum CharacterClass {
+  ADVENTURER = 0;
+  SORCERER = 1;
+  ARCHER = 2;
+  SWORDMAN = 3;
+  MARTIAL_ARTIST = 4;
+}
+
+enum Sex {
+  Male = 0;
+  Female = 1;
+}
+
+enum CharacterHairColor {
+  MauveTaupe = 0;
+  Cerise = 1;
+  SanMarino = 2;
+  Affair = 3;
+  Dixie = 4;
+  Raven = 5;
+  Killarney = 6;
+  Nutmeg = 7;
+  Saddle = 8;
+  Red = 9;
+}
+
+enum CharacterHairStyle {
+  StyleA = 0;
+  StyleB = 1;
+  StyleC = 2;
+  StyleD = 3;
+  Shaved = 4;
+}
+
+enum Faction {
+  Neutral = 0;
+  Angel = 1;
+  Demon = 2;
+}
+
+message CharacterFrame {
+  string id = 1;
+  CharacterClass class = 2;
+  Sex sex = 3;
+  CharacterHairColor hair_color = 4;
+  CharacterHairStyle hair_style = 5;
+  Faction faction = 6;
+  int32 reputation = 7;
+  int32 dignity = 8;
+  int32 compliment = 9;
+  int32 health = 10;
+  int32 mana = 11;
+  string name = 12;
+  int32 hero_experience = 13;
+  int32 hero_level = 14;
+  int32 job_experience = 15;
+  int32 job_level = 16;
+  int32 experience = 17;
+  int32 level = 18;
+}
+
+message CharacterListFrame {
+  uint32 code = 1;
+  repeated CharacterFrame characters = 2;
+}
+
 message ChannelInteractResponse {
   oneof payload {
     ErrorFrame error_frame = 1;
     InfoFrame info_frame = 2;
+    CharacterListFrame character_list_frame = 3;
   }
 }
 

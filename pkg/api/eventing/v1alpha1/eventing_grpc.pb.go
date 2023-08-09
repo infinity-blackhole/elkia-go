@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Auth_AuthInteract_FullMethodName          = "/io.elkia.eventing.v1alpha1.Auth/AuthInteract"
-	Auth_AuthLoginFrameProduce_FullMethodName = "/io.elkia.eventing.v1alpha1.Auth/AuthLoginFrameProduce"
+	Auth_AuthInteract_FullMethodName                      = "/io.elkia.eventing.v1alpha1.Auth/AuthInteract"
+	Auth_AuthCreateHandoffFlowFrameProduce_FullMethodName = "/io.elkia.eventing.v1alpha1.Auth/AuthCreateHandoffFlowFrameProduce"
 )
 
 // AuthClient is the client API for Auth service.
@@ -30,9 +30,9 @@ type AuthClient interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
-	// AuthLoginFrameProduce send a login frame to the auth server and returns a
+	// AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
 	// stream of events
-	AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error)
+	AuthCreateHandoffFlowFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthCreateHandoffFlowFrameProduceClient, error)
 }
 
 type authClient struct {
@@ -74,12 +74,12 @@ func (x *authAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	return m, nil
 }
 
-func (c *authClient) AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthLoginFrameProduceClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], Auth_AuthLoginFrameProduce_FullMethodName, opts...)
+func (c *authClient) AuthCreateHandoffFlowFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthCreateHandoffFlowFrameProduceClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], Auth_AuthCreateHandoffFlowFrameProduce_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &authAuthLoginFrameProduceClient{stream}
+	x := &authAuthCreateHandoffFlowFrameProduceClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -89,16 +89,16 @@ func (c *authClient) AuthLoginFrameProduce(ctx context.Context, in *LoginFrame, 
 	return x, nil
 }
 
-type Auth_AuthLoginFrameProduceClient interface {
+type Auth_AuthCreateHandoffFlowFrameProduceClient interface {
 	Recv() (*AuthInteractResponse, error)
 	grpc.ClientStream
 }
 
-type authAuthLoginFrameProduceClient struct {
+type authAuthCreateHandoffFlowFrameProduceClient struct {
 	grpc.ClientStream
 }
 
-func (x *authAuthLoginFrameProduceClient) Recv() (*AuthInteractResponse, error) {
+func (x *authAuthCreateHandoffFlowFrameProduceClient) Recv() (*AuthInteractResponse, error) {
 	m := new(AuthInteractResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -113,9 +113,9 @@ type AuthServer interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(Auth_AuthInteractServer) error
-	// AuthLoginFrameProduce send a login frame to the auth server and returns a
+	// AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
 	// stream of events
-	AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error
+	AuthCreateHandoffFlowFrameProduce(*LoginFrame, Auth_AuthCreateHandoffFlowFrameProduceServer) error
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -126,8 +126,8 @@ type UnimplementedAuthServer struct {
 func (UnimplementedAuthServer) AuthInteract(Auth_AuthInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthInteract not implemented")
 }
-func (UnimplementedAuthServer) AuthLoginFrameProduce(*LoginFrame, Auth_AuthLoginFrameProduceServer) error {
-	return status.Errorf(codes.Unimplemented, "method AuthLoginFrameProduce not implemented")
+func (UnimplementedAuthServer) AuthCreateHandoffFlowFrameProduce(*LoginFrame, Auth_AuthCreateHandoffFlowFrameProduceServer) error {
+	return status.Errorf(codes.Unimplemented, "method AuthCreateHandoffFlowFrameProduce not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -168,24 +168,24 @@ func (x *authAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 	return m, nil
 }
 
-func _Auth_AuthLoginFrameProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _Auth_AuthCreateHandoffFlowFrameProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(LoginFrame)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(AuthServer).AuthLoginFrameProduce(m, &authAuthLoginFrameProduceServer{stream})
+	return srv.(AuthServer).AuthCreateHandoffFlowFrameProduce(m, &authAuthCreateHandoffFlowFrameProduceServer{stream})
 }
 
-type Auth_AuthLoginFrameProduceServer interface {
+type Auth_AuthCreateHandoffFlowFrameProduceServer interface {
 	Send(*AuthInteractResponse) error
 	grpc.ServerStream
 }
 
-type authAuthLoginFrameProduceServer struct {
+type authAuthCreateHandoffFlowFrameProduceServer struct {
 	grpc.ServerStream
 }
 
-func (x *authAuthLoginFrameProduceServer) Send(m *AuthInteractResponse) error {
+func (x *authAuthCreateHandoffFlowFrameProduceServer) Send(m *AuthInteractResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -204,8 +204,8 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "AuthLoginFrameProduce",
-			Handler:       _Auth_AuthLoginFrameProduce_Handler,
+			StreamName:    "AuthCreateHandoffFlowFrameProduce",
+			Handler:       _Auth_AuthCreateHandoffFlowFrameProduce_Handler,
 			ServerStreams: true,
 		},
 	},

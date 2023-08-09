@@ -3,6 +3,7 @@ module github.com/infinity-blackhole/elkia
 go 1.19
 
 require (
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/ory/client-go v1.1.7
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sirupsen/logrus v1.9.0
@@ -11,6 +12,8 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
+	gorm.io/driver/mysql v1.5.1
+	gorm.io/gorm v1.25.2
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
@@ -31,6 +34,8 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

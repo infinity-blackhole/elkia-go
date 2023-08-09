@@ -228,27 +228,35 @@ var Cluster_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	Presence_AuthLogin_FullMethodName        = "/io.elkia.fleet.v1alpha1.Presence/AuthLogin"
-	Presence_AuthRefreshLogin_FullMethodName = "/io.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin"
-	Presence_AuthHandoff_FullMethodName      = "/io.elkia.fleet.v1alpha1.Presence/AuthHandoff"
-	Presence_AuthLogout_FullMethodName       = "/io.elkia.fleet.v1alpha1.Presence/AuthLogout"
-	Presence_SessionGet_FullMethodName       = "/io.elkia.fleet.v1alpha1.Presence/SessionGet"
-	Presence_SessionPut_FullMethodName       = "/io.elkia.fleet.v1alpha1.Presence/SessionPut"
-	Presence_SessionDelete_FullMethodName    = "/io.elkia.fleet.v1alpha1.Presence/SessionDelete"
+	Presence_AuthCreateHandoffFlow_FullMethodName   = "/io.elkia.fleet.v1alpha1.Presence/AuthCreateHandoffFlow"
+	Presence_AuthCompleteHandoffFlow_FullMethodName = "/io.elkia.fleet.v1alpha1.Presence/AuthCompleteHandoffFlow"
+	Presence_AuthLogin_FullMethodName               = "/io.elkia.fleet.v1alpha1.Presence/AuthLogin"
+	Presence_AuthRefreshLogin_FullMethodName        = "/io.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin"
+	Presence_AuthWhoAmI_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/AuthWhoAmI"
+	Presence_AuthLogout_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/AuthLogout"
+	Presence_SessionGet_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/SessionGet"
+	Presence_SessionPut_FullMethodName              = "/io.elkia.fleet.v1alpha1.Presence/SessionPut"
+	Presence_SessionDelete_FullMethodName           = "/io.elkia.fleet.v1alpha1.Presence/SessionDelete"
 )
 
 // PresenceClient is the client API for Presence service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PresenceClient interface {
-	// Audthenticate authenticates a session with a given identifier and token.
+	// AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+	// password.
+	AuthCreateHandoffFlow(ctx context.Context, in *AuthCreateHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCreateHandoffFlowResponse, error)
+	// AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+	// code.
+	AuthCompleteHandoffFlow(ctx context.Context, in *AuthCompleteHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCompleteHandoffFlowResponse, error)
+	// AuthLogin hands off a session to a gateway with a given token and
+	// code.
 	AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error)
-	// AuthRefreshLogin authenticates a gateway with a given identifier and
+	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
 	// token.
 	AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error)
-	// AuthHandoff hands off a session to a gateway with a given token and
-	// code.
-	AuthHandoff(ctx context.Context, in *AuthHandoffRequest, opts ...grpc.CallOption) (*AuthHandoffResponse, error)
+	// AuthWhoAmI returns the session associated with a given token.
+	AuthWhoAmI(ctx context.Context, in *AuthWhoAmIRequest, opts ...grpc.CallOption) (*AuthWhoAmIResponse, error)
 	// AuthLogout logs out a session with a given code.
 	AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error)
 	// SessionGet gets a session with a given code.
@@ -265,6 +273,24 @@ type presenceClient struct {
 
 func NewPresenceClient(cc grpc.ClientConnInterface) PresenceClient {
 	return &presenceClient{cc}
+}
+
+func (c *presenceClient) AuthCreateHandoffFlow(ctx context.Context, in *AuthCreateHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCreateHandoffFlowResponse, error) {
+	out := new(AuthCreateHandoffFlowResponse)
+	err := c.cc.Invoke(ctx, Presence_AuthCreateHandoffFlow_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *presenceClient) AuthCompleteHandoffFlow(ctx context.Context, in *AuthCompleteHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCompleteHandoffFlowResponse, error) {
+	out := new(AuthCompleteHandoffFlowResponse)
+	err := c.cc.Invoke(ctx, Presence_AuthCompleteHandoffFlow_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error) {
@@ -285,9 +311,9 @@ func (c *presenceClient) AuthRefreshLogin(ctx context.Context, in *AuthRefreshLo
 	return out, nil
 }
 
-func (c *presenceClient) AuthHandoff(ctx context.Context, in *AuthHandoffRequest, opts ...grpc.CallOption) (*AuthHandoffResponse, error) {
-	out := new(AuthHandoffResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthHandoff_FullMethodName, in, out, opts...)
+func (c *presenceClient) AuthWhoAmI(ctx context.Context, in *AuthWhoAmIRequest, opts ...grpc.CallOption) (*AuthWhoAmIResponse, error) {
+	out := new(AuthWhoAmIResponse)
+	err := c.cc.Invoke(ctx, Presence_AuthWhoAmI_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -334,14 +360,20 @@ func (c *presenceClient) SessionDelete(ctx context.Context, in *SessionDeleteReq
 // All implementations must embed UnimplementedPresenceServer
 // for forward compatibility
 type PresenceServer interface {
-	// Audthenticate authenticates a session with a given identifier and token.
+	// AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+	// password.
+	AuthCreateHandoffFlow(context.Context, *AuthCreateHandoffFlowRequest) (*AuthCreateHandoffFlowResponse, error)
+	// AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+	// code.
+	AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error)
+	// AuthLogin hands off a session to a gateway with a given token and
+	// code.
 	AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error)
-	// AuthRefreshLogin authenticates a gateway with a given identifier and
+	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
 	// token.
 	AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error)
-	// AuthHandoff hands off a session to a gateway with a given token and
-	// code.
-	AuthHandoff(context.Context, *AuthHandoffRequest) (*AuthHandoffResponse, error)
+	// AuthWhoAmI returns the session associated with a given token.
+	AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error)
 	// AuthLogout logs out a session with a given code.
 	AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error)
 	// SessionGet gets a session with a given code.
@@ -357,14 +389,20 @@ type PresenceServer interface {
 type UnimplementedPresenceServer struct {
 }
 
+func (UnimplementedPresenceServer) AuthCreateHandoffFlow(context.Context, *AuthCreateHandoffFlowRequest) (*AuthCreateHandoffFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthCreateHandoffFlow not implemented")
+}
+func (UnimplementedPresenceServer) AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthCompleteHandoffFlow not implemented")
+}
 func (UnimplementedPresenceServer) AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthLogin not implemented")
 }
 func (UnimplementedPresenceServer) AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthRefreshLogin not implemented")
 }
-func (UnimplementedPresenceServer) AuthHandoff(context.Context, *AuthHandoffRequest) (*AuthHandoffResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthHandoff not implemented")
+func (UnimplementedPresenceServer) AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthWhoAmI not implemented")
 }
 func (UnimplementedPresenceServer) AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthLogout not implemented")
@@ -389,6 +427,42 @@ type UnsafePresenceServer interface {
 
 func RegisterPresenceServer(s grpc.ServiceRegistrar, srv PresenceServer) {
 	s.RegisterService(&Presence_ServiceDesc, srv)
+}
+
+func _Presence_AuthCreateHandoffFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthCreateHandoffFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthCreateHandoffFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Presence_AuthCreateHandoffFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthCreateHandoffFlow(ctx, req.(*AuthCreateHandoffFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Presence_AuthCompleteHandoffFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthCompleteHandoffFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PresenceServer).AuthCompleteHandoffFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Presence_AuthCompleteHandoffFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PresenceServer).AuthCompleteHandoffFlow(ctx, req.(*AuthCompleteHandoffFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Presence_AuthLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -427,20 +501,20 @@ func _Presence_AuthRefreshLogin_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Presence_AuthHandoff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthHandoffRequest)
+func _Presence_AuthWhoAmI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthWhoAmIRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PresenceServer).AuthHandoff(ctx, in)
+		return srv.(PresenceServer).AuthWhoAmI(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Presence_AuthHandoff_FullMethodName,
+		FullMethod: Presence_AuthWhoAmI_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthHandoff(ctx, req.(*AuthHandoffRequest))
+		return srv.(PresenceServer).AuthWhoAmI(ctx, req.(*AuthWhoAmIRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -525,6 +599,14 @@ var Presence_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PresenceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "AuthCreateHandoffFlow",
+			Handler:    _Presence_AuthCreateHandoffFlow_Handler,
+		},
+		{
+			MethodName: "AuthCompleteHandoffFlow",
+			Handler:    _Presence_AuthCompleteHandoffFlow_Handler,
+		},
+		{
 			MethodName: "AuthLogin",
 			Handler:    _Presence_AuthLogin_Handler,
 		},
@@ -533,8 +615,8 @@ var Presence_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Presence_AuthRefreshLogin_Handler,
 		},
 		{
-			MethodName: "AuthHandoff",
-			Handler:    _Presence_AuthHandoff_Handler,
+			MethodName: "AuthWhoAmI",
+			Handler:    _Presence_AuthWhoAmI_Handler,
 		},
 		{
 			MethodName: "AuthLogout",

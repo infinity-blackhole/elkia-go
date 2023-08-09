@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Bridge_CharacterAdd_FullMethodName    = "/io.elkia.world.v1alpha1.Bridge/CharacterAdd"
-	Bridge_CharacterRemove_FullMethodName = "/io.elkia.world.v1alpha1.Bridge/CharacterRemove"
-	Bridge_CharacterUpdate_FullMethodName = "/io.elkia.world.v1alpha1.Bridge/CharacterUpdate"
-	Bridge_CharacterList_FullMethodName   = "/io.elkia.world.v1alpha1.Bridge/CharacterList"
+	Lobby_CharacterAdd_FullMethodName    = "/io.elkia.world.v1alpha1.Lobby/CharacterAdd"
+	Lobby_CharacterRemove_FullMethodName = "/io.elkia.world.v1alpha1.Lobby/CharacterRemove"
+	Lobby_CharacterUpdate_FullMethodName = "/io.elkia.world.v1alpha1.Lobby/CharacterUpdate"
+	Lobby_CharacterList_FullMethodName   = "/io.elkia.world.v1alpha1.Lobby/CharacterList"
 )
 
-// BridgeClient is the client API for Bridge service.
+// LobbyClient is the client API for Lobby service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BridgeClient interface {
+type LobbyClient interface {
 	// CharacterAdd adds a new character to the world.
 	CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error)
 	// CharacterRemove removes an existing character from the world.
@@ -39,54 +39,54 @@ type BridgeClient interface {
 	CharacterList(ctx context.Context, in *CharacterListRequest, opts ...grpc.CallOption) (*CharacterListResponse, error)
 }
 
-type bridgeClient struct {
+type lobbyClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBridgeClient(cc grpc.ClientConnInterface) BridgeClient {
-	return &bridgeClient{cc}
+func NewLobbyClient(cc grpc.ClientConnInterface) LobbyClient {
+	return &lobbyClient{cc}
 }
 
-func (c *bridgeClient) CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error) {
+func (c *lobbyClient) CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error) {
 	out := new(CharacterAddResponse)
-	err := c.cc.Invoke(ctx, Bridge_CharacterAdd_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Lobby_CharacterAdd_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bridgeClient) CharacterRemove(ctx context.Context, in *CharacterRemoveRequest, opts ...grpc.CallOption) (*CharacterRemoveResponse, error) {
+func (c *lobbyClient) CharacterRemove(ctx context.Context, in *CharacterRemoveRequest, opts ...grpc.CallOption) (*CharacterRemoveResponse, error) {
 	out := new(CharacterRemoveResponse)
-	err := c.cc.Invoke(ctx, Bridge_CharacterRemove_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Lobby_CharacterRemove_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bridgeClient) CharacterUpdate(ctx context.Context, in *CharacterUpdateRequest, opts ...grpc.CallOption) (*CharacterUpdateResponse, error) {
+func (c *lobbyClient) CharacterUpdate(ctx context.Context, in *CharacterUpdateRequest, opts ...grpc.CallOption) (*CharacterUpdateResponse, error) {
 	out := new(CharacterUpdateResponse)
-	err := c.cc.Invoke(ctx, Bridge_CharacterUpdate_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Lobby_CharacterUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bridgeClient) CharacterList(ctx context.Context, in *CharacterListRequest, opts ...grpc.CallOption) (*CharacterListResponse, error) {
+func (c *lobbyClient) CharacterList(ctx context.Context, in *CharacterListRequest, opts ...grpc.CallOption) (*CharacterListResponse, error) {
 	out := new(CharacterListResponse)
-	err := c.cc.Invoke(ctx, Bridge_CharacterList_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Lobby_CharacterList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BridgeServer is the server API for Bridge service.
-// All implementations must embed UnimplementedBridgeServer
+// LobbyServer is the server API for Lobby service.
+// All implementations must embed UnimplementedLobbyServer
 // for forward compatibility
-type BridgeServer interface {
+type LobbyServer interface {
 	// CharacterAdd adds a new character to the world.
 	CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error)
 	// CharacterRemove removes an existing character from the world.
@@ -95,132 +95,132 @@ type BridgeServer interface {
 	CharacterUpdate(context.Context, *CharacterUpdateRequest) (*CharacterUpdateResponse, error)
 	// CharacterList lists all characters in the world.
 	CharacterList(context.Context, *CharacterListRequest) (*CharacterListResponse, error)
-	mustEmbedUnimplementedBridgeServer()
+	mustEmbedUnimplementedLobbyServer()
 }
 
-// UnimplementedBridgeServer must be embedded to have forward compatible implementations.
-type UnimplementedBridgeServer struct {
+// UnimplementedLobbyServer must be embedded to have forward compatible implementations.
+type UnimplementedLobbyServer struct {
 }
 
-func (UnimplementedBridgeServer) CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error) {
+func (UnimplementedLobbyServer) CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CharacterAdd not implemented")
 }
-func (UnimplementedBridgeServer) CharacterRemove(context.Context, *CharacterRemoveRequest) (*CharacterRemoveResponse, error) {
+func (UnimplementedLobbyServer) CharacterRemove(context.Context, *CharacterRemoveRequest) (*CharacterRemoveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CharacterRemove not implemented")
 }
-func (UnimplementedBridgeServer) CharacterUpdate(context.Context, *CharacterUpdateRequest) (*CharacterUpdateResponse, error) {
+func (UnimplementedLobbyServer) CharacterUpdate(context.Context, *CharacterUpdateRequest) (*CharacterUpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CharacterUpdate not implemented")
 }
-func (UnimplementedBridgeServer) CharacterList(context.Context, *CharacterListRequest) (*CharacterListResponse, error) {
+func (UnimplementedLobbyServer) CharacterList(context.Context, *CharacterListRequest) (*CharacterListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CharacterList not implemented")
 }
-func (UnimplementedBridgeServer) mustEmbedUnimplementedBridgeServer() {}
+func (UnimplementedLobbyServer) mustEmbedUnimplementedLobbyServer() {}
 
-// UnsafeBridgeServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BridgeServer will
+// UnsafeLobbyServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to LobbyServer will
 // result in compilation errors.
-type UnsafeBridgeServer interface {
-	mustEmbedUnimplementedBridgeServer()
+type UnsafeLobbyServer interface {
+	mustEmbedUnimplementedLobbyServer()
 }
 
-func RegisterBridgeServer(s grpc.ServiceRegistrar, srv BridgeServer) {
-	s.RegisterService(&Bridge_ServiceDesc, srv)
+func RegisterLobbyServer(s grpc.ServiceRegistrar, srv LobbyServer) {
+	s.RegisterService(&Lobby_ServiceDesc, srv)
 }
 
-func _Bridge_CharacterAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Lobby_CharacterAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CharacterAddRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BridgeServer).CharacterAdd(ctx, in)
+		return srv.(LobbyServer).CharacterAdd(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Bridge_CharacterAdd_FullMethodName,
+		FullMethod: Lobby_CharacterAdd_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BridgeServer).CharacterAdd(ctx, req.(*CharacterAddRequest))
+		return srv.(LobbyServer).CharacterAdd(ctx, req.(*CharacterAddRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Bridge_CharacterRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Lobby_CharacterRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CharacterRemoveRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BridgeServer).CharacterRemove(ctx, in)
+		return srv.(LobbyServer).CharacterRemove(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Bridge_CharacterRemove_FullMethodName,
+		FullMethod: Lobby_CharacterRemove_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BridgeServer).CharacterRemove(ctx, req.(*CharacterRemoveRequest))
+		return srv.(LobbyServer).CharacterRemove(ctx, req.(*CharacterRemoveRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Bridge_CharacterUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Lobby_CharacterUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CharacterUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BridgeServer).CharacterUpdate(ctx, in)
+		return srv.(LobbyServer).CharacterUpdate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Bridge_CharacterUpdate_FullMethodName,
+		FullMethod: Lobby_CharacterUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BridgeServer).CharacterUpdate(ctx, req.(*CharacterUpdateRequest))
+		return srv.(LobbyServer).CharacterUpdate(ctx, req.(*CharacterUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Bridge_CharacterList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Lobby_CharacterList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CharacterListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BridgeServer).CharacterList(ctx, in)
+		return srv.(LobbyServer).CharacterList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Bridge_CharacterList_FullMethodName,
+		FullMethod: Lobby_CharacterList_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BridgeServer).CharacterList(ctx, req.(*CharacterListRequest))
+		return srv.(LobbyServer).CharacterList(ctx, req.(*CharacterListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Bridge_ServiceDesc is the grpc.ServiceDesc for Bridge service.
+// Lobby_ServiceDesc is the grpc.ServiceDesc for Lobby service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Bridge_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "io.elkia.world.v1alpha1.Bridge",
-	HandlerType: (*BridgeServer)(nil),
+var Lobby_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "io.elkia.world.v1alpha1.Lobby",
+	HandlerType: (*LobbyServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CharacterAdd",
-			Handler:    _Bridge_CharacterAdd_Handler,
+			Handler:    _Lobby_CharacterAdd_Handler,
 		},
 		{
 			MethodName: "CharacterRemove",
-			Handler:    _Bridge_CharacterRemove_Handler,
+			Handler:    _Lobby_CharacterRemove_Handler,
 		},
 		{
 			MethodName: "CharacterUpdate",
-			Handler:    _Bridge_CharacterUpdate_Handler,
+			Handler:    _Lobby_CharacterUpdate_Handler,
 		},
 		{
 			MethodName: "CharacterList",
-			Handler:    _Bridge_CharacterList_Handler,
+			Handler:    _Lobby_CharacterList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

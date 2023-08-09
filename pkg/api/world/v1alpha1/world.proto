@@ -95,7 +95,7 @@ message CharacterListRequest { string identity_id = 1; }
 
 message CharacterListResponse { repeated Character characters = 1; }
 
-service Bridge {
+service Lobby {
   // CharacterAdd adds a new character to the world.
   rpc CharacterAdd(CharacterAddRequest) returns (CharacterAddResponse);
 
