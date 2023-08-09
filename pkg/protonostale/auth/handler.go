@@ -122,7 +122,7 @@ func (p *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
-		logrus.Debug("auth: sent login request")
+		logrus.Debug("auth: sent login response")
 	}
 }
 
