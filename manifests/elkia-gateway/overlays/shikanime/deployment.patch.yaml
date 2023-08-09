@@ -11,5 +11,3 @@ spec:
           env:
             - name: LOG_LEVEL
               value: debug
-            - name: REDIS_ENDPOINTS
-              value: redis-12998.c304.europe-west1-2.gce.cloud.redislabs.com:12998

@@ -15,7 +15,7 @@ secretGenerator:
     namespace: elkia
     literals:
       - username=default
-      - password=7c^8i$33V$2&dU
+      - password=Bkk77gSqpY2hbYi2
     type: kubernetes.io/basic-auth
     options:
       disableNameSuffixHash: true
