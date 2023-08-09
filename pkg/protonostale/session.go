@@ -18,7 +18,7 @@ type AuthInteractRequest struct {
 
 func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	f.AuthInteractRequest = &eventing.AuthInteractRequest{}
-	fields := bytes.SplitN(b, []byte(" "), 2)
+	fields := bytes.SplitN(b, FieldSeparator, 2)
 	opcode := string(fields[0])
 	switch opcode {
 	case AuthLoginOpCode:
@@ -87,7 +87,7 @@ type LoginFrame struct {
 
 func (f *LoginFrame) UnmarshalNosTale(b []byte) error {
 	f.LoginFrame = &eventing.LoginFrame{}
-	fields := bytes.Split(b, []byte(" "))
+	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
@@ -188,7 +188,7 @@ func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 
 func (f *EndpointListFrame) UnmarshalNosTale(b []byte) error {
 	f.EndpointListFrame = &eventing.EndpointListFrame{}
-	fields := bytes.Split(b, []byte(" "))
+	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) < 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
@@ -268,7 +268,7 @@ type SyncFrame struct {
 
 func (f *SyncFrame) UnmarshalNosTale(b []byte) error {
 	f.SyncFrame = &eventing.SyncFrame{}
-	fields := bytes.Split(b, []byte(" "))
+	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
@@ -302,7 +302,7 @@ func (f *IdentifierFrame) MarshalNosTale() ([]byte, error) {
 
 func (f *IdentifierFrame) UnmarshalNosTale(b []byte) error {
 	f.IdentifierFrame = &eventing.IdentifierFrame{}
-	fields := bytes.Split(b, []byte(" "))
+	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
@@ -332,7 +332,7 @@ func (f *PasswordFrame) MarshalNosTale() ([]byte, error) {
 
 func (f *PasswordFrame) UnmarshalNosTale(b []byte) error {
 	f.PasswordFrame = &eventing.PasswordFrame{}
-	fields := bytes.Split(b, []byte(" "))
+	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}

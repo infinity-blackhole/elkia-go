@@ -7,8 +7,8 @@ import (
 	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
 )
 
-const (
-	HeartbeatOpCode = "0"
+var (
+	HeartbeatOpCode = []byte("0")
 )
 
 type ChannelInteractRequest struct {
@@ -25,14 +25,14 @@ type CommandFrame struct {
 
 func (f *CommandFrame) UnmarshalNosTale(b []byte) error {
 	f.CommandFrame = &eventing.CommandFrame{}
-	fields := bytes.SplitN(b, []byte(" "), 3)
+	fields := bytes.SplitN(b, FieldSeparator, 3)
 	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
 	if err != nil {
 		return err
 	}
 	f.Sequence = uint32(sn)
-	switch string(fields[1]) {
-	case HeartbeatOpCode:
+	switch {
+	case bytes.Equal(HeartbeatOpCode, fields[1]):
 		f.Payload = &eventing.CommandFrame_HeartbeatFrame{
 			HeartbeatFrame: &eventing.HeartbeatFrame{},
 		}

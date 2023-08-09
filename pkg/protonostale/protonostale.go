@@ -1,5 +1,9 @@
 package protonostale
 
+var (
+	FieldSeparator = []byte(" ")
+)
+
 type Unmarshaler interface {
 	UnmarshalNosTale([]byte) error
 }
