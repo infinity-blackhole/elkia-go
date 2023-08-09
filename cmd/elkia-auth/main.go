@@ -11,17 +11,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
-)
 
-func init() {
-	if logLevelStr := os.Getenv("LOG_LEVEL"); logLevelStr != "" {
-		logLevel, err := logrus.ParseLevel(logLevelStr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.SetLevel(logLevel)
-	}
-}
+	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+)
 
 func main() {
 	fleetCs, err := clients.NewFleetClientSet()

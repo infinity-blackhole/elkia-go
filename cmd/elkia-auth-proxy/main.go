@@ -8,17 +8,9 @@ import (
 	"github.com/infinity-blackhole/elkia/pkg/nostale"
 	"github.com/infinity-blackhole/elkia/pkg/protonostale/auth"
 	"github.com/sirupsen/logrus"
-)
 
-func init() {
-	if logLevelStr := os.Getenv("LOG_LEVEL"); logLevelStr != "" {
-		logLevel, err := logrus.ParseLevel(logLevelStr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.SetLevel(logLevel)
-	}
-}
+	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
+)
 
 func main() {
 	authCs, err := clients.NewAuthClientSet()

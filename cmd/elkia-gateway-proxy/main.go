@@ -9,18 +9,9 @@ import (
 	"github.com/infinity-blackhole/elkia/pkg/protonostale/gateway"
 	"github.com/sirupsen/logrus"
 
+	_ "github.com/infinity-blackhole/elkia/internal/monitoring"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
-
-func init() {
-	if logLevelStr := os.Getenv("LOG_LEVEL"); logLevelStr != "" {
-		logLevel, err := logrus.ParseLevel(logLevelStr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.SetLevel(logLevel)
-	}
-}
 
 func main() {
 	gatewayClientSet, err := clients.NewGatewayClientSet()
