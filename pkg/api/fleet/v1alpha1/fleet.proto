@@ -75,9 +75,8 @@ message AuthRefreshLoginRequest {
 message AuthRefreshLoginResponse { string token = 1; }
 
 message AuthCompleteHandoffFlowRequest {
-  uint32 code = 1;
-  string identifier = 2;
-  string password = 3;
+  string identifier = 1;
+  string password = 2;
 }
 
 message AuthCompleteHandoffFlowResponse {
@@ -105,15 +104,14 @@ message AuthLogoutRequest { uint32 code = 1; }
 message AuthLogoutResponse {}
 
 message Session {
-  string id = 1;
-  string token = 2;
+  string token = 1;
 }
 
 message SessionGetRequest { uint32 code = 1; }
 
 message SessionGetResponse { Session session = 1; }
 
-message SessionPutRequest { Session session = 1; }
+message SessionPutRequest { uint32 code = 1; Session session = 2; }
 
 message SessionPutResponse { uint32 code = 1; }
 

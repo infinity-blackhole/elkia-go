@@ -2,9 +2,7 @@ package presence
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
-	"hash/fnv"
 
 	ory "github.com/ory/client-go"
 	"github.com/redis/go-redis/v9"
@@ -31,18 +29,23 @@ type PresenceServer struct {
 	redis redis.UniversalClient
 }
 
-func (i *PresenceServer) AuthCreateHandoffFlow(
+func (s *PresenceServer) AuthCreateHandoffFlow(
 	ctx context.Context,
 	in *fleet.AuthCreateHandoffFlowRequest,
 ) (*fleet.AuthCreateHandoffFlowResponse, error) {
-	login, err := i.AuthLogin(ctx, &fleet.AuthLoginRequest{
+	login, err := s.AuthLogin(ctx, &fleet.AuthLoginRequest{
 		Identifier: in.Identifier,
 		Password:   in.Password,
 	})
 	if err != nil {
 		return nil, err
 	}
-	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
+	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+		Code: code,
 		Session: &fleet.Session{
 			Token: login.Token,
 		},
@@ -128,8 +131,12 @@ func (s *PresenceServer) AuthCompleteHandoffFlow(
 	ctx context.Context,
 	in *fleet.AuthCompleteHandoffFlowRequest,
 ) (*fleet.AuthCompleteHandoffFlowResponse, error) {
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
@@ -147,7 +154,7 @@ func (s *PresenceServer) AuthCompleteHandoffFlow(
 		return nil, err
 	}
 	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
@@ -164,6 +171,7 @@ func (s *PresenceServer) AuthWhoAmI(
 ) (*fleet.AuthWhoAmIResponse, error) {
 	whoami, _, err := s.ory.FrontendApi.
 		ToSession(ctx).
+		XSessionToken(in.Token).
 		Execute()
 	if err != nil {
 		return nil, err
@@ -203,7 +211,7 @@ func (s *PresenceServer) SessionGet(
 	ctx context.Context,
 	in *fleet.SessionGetRequest,
 ) (*fleet.SessionGetResponse, error) {
-	cmd := s.redis.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
+	cmd := s.redis.Get(ctx, fmt.Sprintf("sessions:%d", in.Code))
 	if err := cmd.Err(); err != nil {
 		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
@@ -231,29 +239,13 @@ func (s *PresenceServer) SessionPut(
 	if err != nil {
 		return nil, err
 	}
-	code, err := s.generateCode(in.Session.Id)
-	if err != nil {
-		return nil, err
-	}
-	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", code), d, 0)
+	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", in.Code), d, 0)
 	if err := cmd.Err(); err != nil {
 		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
-	logrus.Debugf("fleet: set handoff session: %d", code)
-	return &fleet.SessionPutResponse{
-		Code: code,
-	}, nil
-}
-
-func (*PresenceServer) generateCode(id string) (uint32, error) {
-	h := fnv.New32a()
-	if err := gob.
-		NewEncoder(h).
-		Encode(id); err != nil {
-		return 0, err
-	}
-	return h.Sum32(), nil
+	logrus.Debugf("fleet: set handoff session: %d", in.Code)
+	return &fleet.SessionPutResponse{}, nil
 }
 
 func (s *PresenceServer) SessionDelete(

@@ -2,12 +2,9 @@ package presence
 
 import (
 	"context"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
-	"hash/fnv"
 	"math/rand"
-	"strconv"
 
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 )
@@ -56,9 +53,13 @@ func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
 	if err != nil {
 		return nil, err
 	}
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+		Code: code,
 		Session: &fleet.Session{
-			Id:    strconv.Itoa(s.rand.Int()),
 			Token: sessionToken,
 		},
 	})
@@ -107,8 +108,12 @@ func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 	ctx context.Context,
 	in *fleet.AuthCompleteHandoffFlowRequest,
 ) (*fleet.AuthCompleteHandoffFlowResponse, error) {
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
@@ -125,7 +130,7 @@ func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 		return nil, err
 	}
 	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
@@ -170,16 +175,9 @@ func (s *MemoryPresenceServer) SessionPut(
 	ctx context.Context,
 	in *fleet.SessionPutRequest,
 ) (*fleet.SessionPutResponse, error) {
-	h := fnv.New32a()
-	if err := gob.
-		NewEncoder(h).
-		Encode(in.Session.Id); err != nil {
-		return nil, err
-	}
-	code := h.Sum32()
-	s.sessions[code] = in.Session
+	s.sessions[in.Code] = in.Session
 	return &fleet.SessionPutResponse{
-		Code: code,
+		Code: in.Code,
 	}, nil
 }
 

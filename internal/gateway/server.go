@@ -66,7 +66,6 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	}
 	logrus.Debugf("gateway: channel interact: password: %v", password)
 	handoff, err := s.presence.AuthCompleteHandoffFlow(stream.Context(), &fleet.AuthCompleteHandoffFlowRequest{
-		Code:       sync.Code,
 		Identifier: identifier.Identifier,
 		Password:   password.Password,
 	})
@@ -75,14 +74,12 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return err
 	}
 	logrus.Debugf("gateway: channel interact: handoff: %v", handoff)
-	return NewControllerProxy(s.redis, handoff.Token).Serve(stream)
-}
-
-func NewControllerProxy(redis redis.UniversalClient, token string) *ControllerProxy {
-	return &ControllerProxy{
-		redis: redis,
-		token: token,
+	ctr := &ControllerProxy{
+		redis:    s.redis,
+		presence: s.presence,
+		token:    handoff.Token,
 	}
+	return ctr.Serve(stream)
 }
 
 type ControllerProxy struct {
@@ -98,6 +95,7 @@ func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) er
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("gateway: controller proxy: whoami: %v", whoami)
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
@@ -107,6 +105,7 @@ func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) er
 		if err != nil {
 			return err
 		}
+		logrus.Tracef("gateway: controller proxy: publish: %s", data)
 		cmdRes := s.redis.Publish(
 			stream.Context(),
 			fmt.Sprintf("elkia:controllers:commands:%s", whoami.IdentityId),
@@ -131,6 +130,7 @@ func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) er
 		if err := proto.Unmarshal([]byte(msg.Payload), &frame); err != nil {
 			return err
 		}
+		logrus.Tracef("gateway: controller proxy: publish: %v", frame)
 		if err := stream.Send(&frame); err != nil {
 			return err
 		}
