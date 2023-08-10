@@ -51,7 +51,7 @@ func (s *KubernetesClusterServer) MemberList(
 		return nil, err
 	}
 	logrus.Debugf("fleet: found %d members", len(svcs.Items))
-	members := []*fleet.Member{}
+	members := make([]*fleet.Member, len(svcs.Items))
 	for i, ns := range svcs.Items {
 		members[i], err = s.getMemberFromService(&ns)
 		if err != nil {
