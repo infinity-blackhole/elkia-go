@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
@@ -33,6 +34,7 @@ type Server struct {
 }
 
 func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
+	logrus.Debug("gateway: channel interact")
 	var sequence uint32
 	msg, err := stream.Recv()
 	if err != nil {
@@ -43,6 +45,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return errors.New("handoff: session protocol error")
 	}
 	sequence = sync.Sequence
+	logrus.Debugf("gateway: channel interact: sync: %v", sync)
 	msg, err = stream.Recv()
 	if err != nil {
 		return err
@@ -52,6 +55,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return errors.New("handoff: session protocol error")
 	}
 	sequence = identifier.Sequence
+	logrus.Debugf("gateway: channel interact: identifier: %v", identifier)
 	msg, err = stream.Recv()
 	if err != nil {
 		return err
@@ -60,6 +64,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if password.Sequence != sequence+1 {
 		return errors.New("handoff: session protocol error")
 	}
+	logrus.Debugf("gateway: channel interact: password: %v", password)
 	handoff, err := s.presence.AuthCompleteHandoffFlow(stream.Context(), &fleet.AuthCompleteHandoffFlowRequest{
 		Code:       sync.Code,
 		Identifier: identifier.Identifier,
