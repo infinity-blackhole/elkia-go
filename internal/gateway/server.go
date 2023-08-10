@@ -9,7 +9,7 @@ import (
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 type ServerConfig struct {
@@ -101,7 +101,7 @@ func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) er
 		if err != nil {
 			return err
 		}
-		data, err := proto.Marshal(msg)
+		data, err := prototext.Marshal(msg)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) er
 	pubsub := s.redis.Subscribe(stream.Context(), fmt.Sprintf("elkia:controllers:events:%s", whoami.IdentityId))
 	for msg := range pubsub.Channel() {
 		var frame eventing.ChannelInteractResponse
-		if err := proto.Unmarshal([]byte(msg.Payload), &frame); err != nil {
+		if err := prototext.Unmarshal([]byte(msg.Payload), &frame); err != nil {
 			return err
 		}
 		logrus.Tracef("gateway: controller proxy: publish: %v", frame)

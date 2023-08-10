@@ -8,7 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 type PresenceServerConfig struct {
@@ -222,7 +222,7 @@ func (s *PresenceServer) SessionGet(
 	}
 	logrus.Debugf("fleet: got %s handoff sessions", res)
 	var session fleet.Session
-	if err := proto.Unmarshal(res, &session); err != nil {
+	if err := prototext.Unmarshal(res, &session); err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got handoff session: %v", session.String())
@@ -235,7 +235,7 @@ func (s *PresenceServer) SessionPut(
 	ctx context.Context,
 	in *fleet.SessionPutRequest,
 ) (*fleet.SessionPutResponse, error) {
-	d, err := proto.Marshal(in.Session)
+	d, err := prototext.Marshal(in.Session)
 	if err != nil {
 		return nil, err
 	}
