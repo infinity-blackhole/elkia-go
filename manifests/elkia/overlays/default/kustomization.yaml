@@ -9,8 +9,7 @@ resources:
   - ../../../elkia-fleet/overlays/default
   - ../../../kratos/overlays/default
   - ../../../kratos-selfservice-ui-node/overlays/default
-  - ../../../etcd/overlays/default
-  - ../../../kafka/overlays/default
+  - ../../../redis/overlays/default
   - ../../../mysql/overlays/default
   - ingress.yaml
   - middleware.yaml

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package io.elkia.fleet.v1alpha1;
+package shikanime.elkia.fleet.v1alpha1;
 
 option go_package = "pkg/api/fleet/v1alpha1";
 
@@ -8,7 +8,7 @@ message Member {
   uint32 world_id = 2;
   uint32 channel_id = 3;
   string name = 4;
-  string address = 5;
+  repeated string addresses = 5;
   uint32 population = 6;
   uint32 capacity = 7;
 }
@@ -18,7 +18,7 @@ message MemberAddRequest {
   uint32 world_id = 2;
   uint32 channel_id = 3;
   string name = 4;
-  string address = 5;
+  repeated string addresses = 5;
   uint32 population = 6;
   uint32 capacity = 7;
 }
@@ -34,7 +34,7 @@ message MemberUpdateRequest {
   optional uint32 world_id = 2;
   optional uint32 channel_id = 3;
   optional string name = 4;
-  optional string address = 5;
+  repeated string addresses = 5;
   optional uint32 population = 6;
   optional uint32 capacity = 7;
 }
@@ -59,12 +59,12 @@ service Cluster {
   rpc MemberList(MemberListRequest) returns (MemberListResponse);
 }
 
-message AuthLoginRequest {
+message AuthCreateHandoffFlowRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthLoginResponse { uint32 code = 1; }
+message AuthCreateHandoffFlowResponse { uint32 code = 1; }
 
 message AuthRefreshLoginRequest {
   string identifier = 1;
@@ -72,30 +72,46 @@ message AuthRefreshLoginRequest {
   string token = 3;
 }
 
-message AuthRefreshLoginResponse { uint32 code = 1; }
+message AuthRefreshLoginResponse { string token = 1; }
 
-message AuthHandoffRequest {
-  uint32 code = 1;
-  string identifier = 2;
-  string password = 3;
+message AuthCompleteHandoffFlowRequest {
+  string identifier = 1;
+  string password = 2;
 }
 
-message AuthHandoffResponse {}
+message AuthCompleteHandoffFlowResponse {
+  string token = 1;
+}
+
+message AuthLoginRequest {
+  string identifier = 1;
+  string password = 2;
+}
+
+message AuthLoginResponse {
+  string token = 1;
+}
+
+message AuthWhoAmIRequest { string token = 1; }
+
+message AuthWhoAmIResponse {
+  string id = 1;
+  string identity_id = 2;
+}
 
 message AuthLogoutRequest { uint32 code = 1; }
 
 message AuthLogoutResponse {}
 
 message Session {
-  string id = 1;
-  string token = 2;
+  string token = 1;
 }
 
 message SessionGetRequest { uint32 code = 1; }
 
 message SessionGetResponse { Session session = 1; }
 
-message SessionPutRequest { Session session = 1; }
+message SessionPutRequest { uint32 code = 1; Session session = 2; }
 
 message SessionPutResponse { uint32 code = 1; }
 
@@ -104,17 +120,25 @@ message SessionDeleteRequest { uint32 code = 1; }
 message SessionDeleteResponse {}
 
 service Presence {
-  // Audthenticate authenticates a session with a given identifier and token.
+  // AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+  // password.
+  rpc AuthCreateHandoffFlow(AuthCreateHandoffFlowRequest) returns (AuthCreateHandoffFlowResponse);
+
+  // AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+  // code.
+  rpc AuthCompleteHandoffFlow(AuthCompleteHandoffFlowRequest) returns (AuthCompleteHandoffFlowResponse);
+
+  // AuthLogin hands off a session to a gateway with a given token and
+  // code.
   rpc AuthLogin(AuthLoginRequest) returns (AuthLoginResponse);
 
-  // AuthRefreshLogin authenticates a gateway with a given identifier and
+  // AuthRefreshLogin authenticates a gateway with a given identifier, password, and
   // token.
   rpc AuthRefreshLogin(AuthRefreshLoginRequest)
       returns (AuthRefreshLoginResponse);
 
-  // AuthHandoff hands off a session to a gateway with a given token and
-  // code.
-  rpc AuthHandoff(AuthHandoffRequest) returns (AuthHandoffResponse);
+  // AuthWhoAmI returns the session associated with a given token.
+  rpc AuthWhoAmI(AuthWhoAmIRequest) returns (AuthWhoAmIResponse);
 
   // AuthLogout logs out a session with a given code.
   rpc AuthLogout(AuthLogoutRequest) returns (AuthLogoutResponse);

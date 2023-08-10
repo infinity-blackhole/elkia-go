@@ -4,8 +4,8 @@ import (
 	"context"
 	"net"
 
-	"github.com/infinity-blackhole/elkia/internal/gateway"
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	"go.shikanime.studio/elkia/internal/gateway"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

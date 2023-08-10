@@ -33,5 +33,5 @@ spec:
               memory: 32Mi
             limits:
               cpu: 100m
-              memory: 256Mi
+              memory: 512Mi
       serviceAccountName: elkia-fleet

@@ -5,14 +5,14 @@ import (
 	"context"
 	"net"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/protonostale"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	"go.shikanime.studio/elkia/pkg/protonostale"
 	"golang.org/x/sync/errgroup"
 )
 
-const name = "github.com/infinity-blackhole/elkia/internal/auth"
+const name = "go.shikanime.studio/elkia/internal/auth"
 
 type HandlerConfig struct {
 	AuthClient eventing.AuthClient
@@ -122,7 +122,7 @@ func (p *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
 				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 			)
 		}
-		logrus.Debug("auth: sent login request")
+		logrus.Debug("auth: sent login response")
 	}
 }
 

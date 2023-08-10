@@ -1,22 +1,21 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 helmCharts:
-  - name: etcd
+  - name: redis
     namespace: elkia
     repo: https://charts.bitnami.com/bitnami
-    version: "8.7.3"
-    releaseName: etcd
+    version: "17.14.6"
+    releaseName: redis
     valuesInline:
       auth:
-        rbac:
-          existingSecret: etcd
-          existingSecretPasswordKey: password
+        existingSecret: redis
+        existingSecretPasswordKey: password
 secretGenerator:
-  - name: etcd
+  - name: redis
     namespace: elkia
     literals:
-      - username=root
-      - password=7c^8i$33V$2&dU
+      - username=default
+      - password=Bkk77gSqpY2hbYi2
     type: kubernetes.io/basic-auth
     options:
       disableNameSuffixHash: true

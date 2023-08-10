@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-fleet
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-fleet
+          env:
+            - name: REDIS_ENDPOINTS
+              value: redis-master:6379
+            - name: REDIS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: username
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: password

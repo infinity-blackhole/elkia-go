@@ -8,13 +8,13 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/infinity-blackhole/elkia/internal/auth"
-	"github.com/infinity-blackhole/elkia/internal/auth/authtest"
-	"github.com/infinity-blackhole/elkia/internal/cluster"
-	"github.com/infinity-blackhole/elkia/internal/cluster/clustertest"
-	"github.com/infinity-blackhole/elkia/internal/presence"
-	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"go.shikanime.studio/elkia/internal/auth"
+	"go.shikanime.studio/elkia/internal/auth/authtest"
+	"go.shikanime.studio/elkia/internal/cluster"
+	"go.shikanime.studio/elkia/internal/cluster/clustertest"
+	"go.shikanime.studio/elkia/internal/presence"
+	"go.shikanime.studio/elkia/internal/presence/presencetest"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -42,7 +42,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-alpha",
 				WorldId:    1,
 				ChannelId:  1,
-				Address:    "127.0.0.1:4124",
+				Addresses:  []string{"127.0.0.1:4124"},
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -51,7 +51,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-beta",
 				WorldId:    1,
 				ChannelId:  2,
-				Address:    "127.0.0.1:4125",
+				Addresses:  []string{"127.0.0.1:4125"},
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -60,7 +60,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-gamma",
 				WorldId:    1,
 				ChannelId:  3,
-				Address:    "127.0.0.1:4126",
+				Addresses:  []string{"127.0.0.1:4126"},
 				Name:       "world-alpha",
 				Population: 10,
 				Capacity:   100,
@@ -69,7 +69,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Id:         "gateway-delta",
 				WorldId:    2,
 				ChannelId:  1,
-				Address:    "127.0.0.1:4127",
+				Addresses:  []string{"127.0.0.1:4127"},
 				Name:       "world-beta",
 				Population: 10,
 				Capacity:   100,
@@ -124,17 +124,17 @@ func TestHandlerServeNosTale(t *testing.T) {
 		t.Fatalf("Failed to read line bytes: %v", err)
 	}
 	expected := []byte(
-		"\x5d\x82\x63\x74\x62\x63\x2f\x44\x42\x48\x47\x48\x45\x43\x3f\x40\x2f" +
-			"\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41\x43\x49\x42" +
-			"\x49\x40\x3d\x40\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b\x7f\x77\x70" +
-			"\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41\x44\x49" +
-			"\x42\x49\x40\x3d\x41\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b\x7f\x77" +
-			"\x70\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41\x45" +
-			"\x49\x42\x49\x40\x3d\x42\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b\x7f" +
+		"\x5d\x82\x63\x74\x62\x63\x2f\x40\x3f\x48\x47\x40\x43\x41\x44\x40\x3f" +
+			"\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41\x43\x49" +
+			"\x42\x49\x40\x3d\x40\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b\x7f\x77" +
+			"\x70\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41\x44" +
+			"\x49\x42\x49\x40\x3d\x41\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b\x7f" +
 			"\x77\x70\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40\x41" +
-			"\x46\x49\x42\x49\x41\x3d\x40\x3d\x86\x7e\x81\x7b\x73\x3c\x71\x74" +
-			"\x83\x70\x2f\x3c\x40\x49\x3c\x40\x49\x3c\x40\x49\x40\x3f\x3f\x3f" +
-			"\x3f\x3d\x40\x3f\x3f\x3f\x3f\x3d\x40\x19",
+			"\x45\x49\x42\x49\x40\x3d\x42\x3d\x86\x7e\x81\x7b\x73\x3c\x70\x7b" +
+			"\x7f\x77\x70\x2f\x40\x41\x46\x3d\x3f\x3d\x3f\x3d\x40\x49\x43\x40" +
+			"\x41\x46\x49\x42\x49\x41\x3d\x40\x3d\x86\x7e\x81\x7b\x73\x3c\x71" +
+			"\x74\x83\x70\x2f\x3c\x40\x49\x3c\x40\x49\x3c\x40\x49\x40\x3f\x3f" +
+			"\x3f\x3f\x3d\x40\x3f\x3f\x3f\x3f\x3d\x40\x19",
 	)
 	if !bytes.Equal(expected, result) {
 		t.Fatalf("Expected %v, got %v", expected, result)

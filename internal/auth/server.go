@@ -4,9 +4,9 @@ import (
 	"math"
 	"net"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -38,7 +38,7 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 		switch m.Payload.(type) {
 		case *eventing.AuthInteractRequest_LoginFrame:
 			logrus.Debugf("auth: handle handoff")
-			if err := s.AuthLoginFrameProduce(
+			if err := s.AuthCreateHandoffFlowFrameProduce(
 				m.GetLoginFrame(),
 				stream,
 			); err != nil {
@@ -50,13 +50,13 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	}
 }
 
-func (s *Server) AuthLoginFrameProduce(
+func (s *Server) AuthCreateHandoffFlowFrameProduce(
 	m *eventing.LoginFrame,
-	stream eventing.Auth_AuthLoginFrameProduceServer,
+	stream eventing.Auth_AuthCreateHandoffFlowFrameProduceServer,
 ) error {
-	handoff, err := s.presence.AuthLogin(
+	handoff, err := s.presence.AuthCreateHandoffFlow(
 		stream.Context(),
-		&fleet.AuthLoginRequest{
+		&fleet.AuthCreateHandoffFlowRequest{
 			Identifier: m.Identifier,
 			Password:   m.Password,
 		},
@@ -76,18 +76,20 @@ func (s *Server) AuthLoginFrameProduce(
 	logrus.Debugf("auth: list members: %v", memberList)
 	ms := []*eventing.Endpoint{}
 	for _, m := range memberList.Members {
-		host, port, err := net.SplitHostPort(m.Address)
-		if err != nil {
-			return err
+		for _, a := range m.Addresses {
+			host, port, err := net.SplitHostPort(a)
+			if err != nil {
+				return err
+			}
+			ms = append(ms, &eventing.Endpoint{
+				Host:      host,
+				Port:      port,
+				Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
+				WorldId:   m.WorldId,
+				ChannelId: m.ChannelId,
+				WorldName: m.Name,
+			})
 		}
-		ms = append(ms, &eventing.Endpoint{
-			Host:      host,
-			Port:      port,
-			Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
-			WorldId:   m.WorldId,
-			ChannelId: m.ChannelId,
-			WorldName: m.Name,
-		})
 	}
 	return stream.Send(&eventing.AuthInteractResponse{
 		Payload: &eventing.AuthInteractResponse_EndpointListFrame{

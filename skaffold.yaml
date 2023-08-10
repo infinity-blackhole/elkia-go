@@ -34,6 +34,12 @@ build:
       docker:
         target: build
         dockerfile: cmd/elkia-fleet/Dockerfile
+    - image: ghcr.io/infinity-blackhole/elkia-world
+      context: .
+      runtimeType: go
+      docker:
+        target: build
+        dockerfile: cmd/elkia-world/Dockerfile
   local:
     useBuildkit: true
 manifests:

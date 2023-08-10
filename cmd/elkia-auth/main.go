@@ -5,39 +5,18 @@ import (
 	"net"
 	"os"
 
-	"github.com/infinity-blackhole/elkia/internal/auth"
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/auth"
+	"go.shikanime.studio/elkia/internal/clients"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	_ "go.shikanime.studio/elkia/internal/monitoring"
 )
 
-func init() {
-	if logLevelStr := os.Getenv("LOG_LEVEL"); logLevelStr != "" {
-		logLevel, err := logrus.ParseLevel(logLevelStr)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		logrus.SetLevel(logLevel)
-	}
-}
-
 func main() {
-	fleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if fleetEndpoint == "" {
-		fleetEndpoint = "localhost:8080"
-	}
-	logrus.Debugf("auth: connecting to fleet at %s", fleetEndpoint)
-	fleetConn, err := grpc.Dial(
-		fleetEndpoint,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
-	)
+	fleetCs, err := clients.NewFleetClientSet()
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -60,8 +39,8 @@ func main() {
 	eventing.RegisterAuthServer(
 		srv,
 		auth.NewServer(auth.ServerConfig{
-			PresenceClient: fleet.NewPresenceClient(fleetConn),
-			ClusterClient:  fleet.NewClusterClient(fleetConn),
+			PresenceClient: fleetCs.PresenceClient,
+			ClusterClient:  fleetCs.ClusterClient,
 		}),
 	)
 	logrus.Debugf("auth server: listening on %s:%s", host, port)

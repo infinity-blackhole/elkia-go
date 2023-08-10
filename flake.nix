@@ -2,7 +2,7 @@
   description = "Elkia game server";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/release-22.11";
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.05";
     devenv = {
       url = "github:cachix/devenv";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,22 +38,30 @@
                 statix.enable = true;
                 deadnix.enable = true;
                 hadolint.enable = true;
+                prettier.enable = true;
               };
               packages = [
                 pkgs.nixpkgs-fmt
-                pkgs.docker
-                pkgs.gnumake
               ];
             }
             {
               pre-commit.hooks.gofmt.enable = true;
               packages = [
+                pkgs.nodejs
+                pkgs.docker
+                pkgs.gnumake
+                pkgs.minikube
+                pkgs.kubectl
+                pkgs.skaffold
+                pkgs.kustomize
+                pkgs.kubernetes-helm
                 pkgs.go
                 pkgs.gotools
                 pkgs.mockgen
                 pkgs.protobuf
                 pkgs.protoc-gen-go
                 pkgs.protoc-gen-go-grpc
+                pkgs.google-cloud-sdk
               ];
             }
           ];

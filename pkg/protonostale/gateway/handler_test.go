@@ -7,11 +7,11 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/infinity-blackhole/elkia/internal/gateway"
-	"github.com/infinity-blackhole/elkia/internal/gateway/gatewaytest"
-	"github.com/infinity-blackhole/elkia/internal/presence"
-	"github.com/infinity-blackhole/elkia/internal/presence/presencetest"
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	"go.shikanime.studio/elkia/internal/gateway"
+	"go.shikanime.studio/elkia/internal/gateway/gatewaytest"
+	"go.shikanime.studio/elkia/internal/presence"
+	"go.shikanime.studio/elkia/internal/presence/presencetest"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -28,7 +28,6 @@ func TestHandlerServeNosTale(t *testing.T) {
 		},
 		Sessions: map[uint32]*fleet.Session{
 			0: {
-				Id:    "5bda6ec1-a700-4581-a90d-b1fb51932145",
 				Token: "zIRkVceCdjQXzB1feO9Sukm2N8dPzS3TQ3mI9GyZ0Z1EVpmGFI3HKat114vreNOh",
 			},
 		},

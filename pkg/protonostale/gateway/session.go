@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/infinity-blackhole/elkia/pkg/protonostale"
+	"go.shikanime.studio/elkia/pkg/protonostale"
 )
 
 func ReadSession(r *bufio.Reader) ([]byte, error) {

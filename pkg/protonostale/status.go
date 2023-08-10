@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (
@@ -27,7 +27,7 @@ func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
 
 func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
 	f.ErrorFrame = &eventing.ErrorFrame{}
-	bs := bytes.Split(b, []byte(" "))
+	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
@@ -56,7 +56,7 @@ func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
 
 func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
 	f.InfoFrame = &eventing.InfoFrame{}
-	bs := bytes.Split(b, []byte(" "))
+	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}

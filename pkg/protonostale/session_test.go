@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/protobuf/proto"
 )
 

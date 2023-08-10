@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "github.com/infinity-blackhole/elkia/pkg/api/eventing/v1alpha1"
-	"github.com/infinity-blackhole/elkia/pkg/protonostale"
+	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	"go.shikanime.studio/elkia/pkg/protonostale"
 )
 
 func TestAuthEncodingDecodeFrame(t *testing.T) {

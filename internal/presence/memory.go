@@ -2,14 +2,11 @@ package presence
 
 import (
 	"context"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
-	"hash/fnv"
 	"math/rand"
-	"strconv"
 
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 )
 
 type Identity struct {
@@ -38,10 +35,10 @@ type MemoryPresenceServer struct {
 	rand       *rand.Rand
 }
 
-func (s *MemoryPresenceServer) AuthLogin(
+func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthLoginRequest,
-) (*fleet.AuthLoginResponse, error) {
+	in *fleet.AuthCreateHandoffFlowRequest,
+) (*fleet.AuthCreateHandoffFlowResponse, error) {
 	var identity *Identity
 	for _, i := range s.identities {
 		if i.Username == in.Identifier && i.Password == in.Password {
@@ -56,16 +53,20 @@ func (s *MemoryPresenceServer) AuthLogin(
 	if err != nil {
 		return nil, err
 	}
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
 	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+		Code: code,
 		Session: &fleet.Session{
-			Id:    strconv.Itoa(s.rand.Int()),
 			Token: sessionToken,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthLoginResponse{
+	return &fleet.AuthCreateHandoffFlowResponse{
 		Code: sessionPut.Code,
 	}, nil
 }
@@ -98,26 +99,21 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if err != nil {
 		return nil, err
 	}
-	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    strconv.Itoa(s.rand.Int()),
-			Token: sessionToken,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
 	return &fleet.AuthRefreshLoginResponse{
-		Code: sessionPut.Code,
+		Token: sessionToken,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) AuthHandoff(
+func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthHandoffRequest,
-) (*fleet.AuthHandoffResponse, error) {
+	in *fleet.AuthCompleteHandoffFlowRequest,
+) (*fleet.AuthCompleteHandoffFlowResponse, error) {
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
@@ -133,7 +129,13 @@ func (s *MemoryPresenceServer) AuthHandoff(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthHandoffResponse{}, nil
+	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+		Code: code,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &fleet.AuthCompleteHandoffFlowResponse{}, nil
 }
 
 func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
@@ -173,16 +175,9 @@ func (s *MemoryPresenceServer) SessionPut(
 	ctx context.Context,
 	in *fleet.SessionPutRequest,
 ) (*fleet.SessionPutResponse, error) {
-	h := fnv.New32a()
-	if err := gob.
-		NewEncoder(h).
-		Encode(in.Session.Id); err != nil {
-		return nil, err
-	}
-	code := h.Sum32()
-	s.sessions[code] = in.Session
+	s.sessions[in.Code] = in.Session
 	return &fleet.SessionPutResponse{
-		Code: code,
+		Code: in.Code,
 	}, nil
 }
 

@@ -2,34 +2,60 @@ package presence
 
 import (
 	"context"
-	"encoding/gob"
-	"errors"
 	"fmt"
-	"hash/fnv"
 
-	fleet "github.com/infinity-blackhole/elkia/pkg/api/fleet/v1alpha1"
 	ory "github.com/ory/client-go"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
-	etcd "go.etcd.io/etcd/client/v3"
-	"google.golang.org/protobuf/proto"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 type PresenceServerConfig struct {
-	OryClient  *ory.APIClient
-	EtcdClient *etcd.Client
+	OryClient   *ory.APIClient
+	RedisClient redis.UniversalClient
 }
 
 func NewPresenceServer(config PresenceServerConfig) *PresenceServer {
 	return &PresenceServer{
-		ory:  config.OryClient,
-		etcd: config.EtcdClient,
+		ory:   config.OryClient,
+		redis: config.RedisClient,
 	}
 }
 
 type PresenceServer struct {
 	fleet.UnimplementedPresenceServer
-	ory  *ory.APIClient
-	etcd *etcd.Client
+	ory   *ory.APIClient
+	redis redis.UniversalClient
+}
+
+func (s *PresenceServer) AuthCreateHandoffFlow(
+	ctx context.Context,
+	in *fleet.AuthCreateHandoffFlowRequest,
+) (*fleet.AuthCreateHandoffFlowResponse, error) {
+	login, err := s.AuthLogin(ctx, &fleet.AuthLoginRequest{
+		Identifier: in.Identifier,
+		Password:   in.Password,
+	})
+	if err != nil {
+		return nil, err
+	}
+	code, err := generateCode(in.Identifier)
+	if err != nil {
+		return nil, err
+	}
+	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+		Code: code,
+		Session: &fleet.Session{
+			Token: login.Token,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &fleet.AuthCreateHandoffFlowResponse{
+		Code: sessionPut.Code,
+	}, nil
 }
 
 func (i *PresenceServer) AuthLogin(
@@ -60,17 +86,8 @@ func (i *PresenceServer) AuthLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	sessionPut, err := i.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    successLogin.Session.Id,
-			Token: *successLogin.SessionToken,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
 	return &fleet.AuthLoginResponse{
-		Code: sessionPut.Code,
+		Token: *successLogin.SessionToken,
 	}, nil
 }
 
@@ -105,30 +122,27 @@ func (s *PresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	_, err = s.SessionPut(ctx, &fleet.SessionPutRequest{
-		Session: &fleet.Session{
-			Id:    successLogin.Session.Id,
-			Token: *successLogin.SessionToken,
-		},
-	})
+	return &fleet.AuthRefreshLoginResponse{
+		Token: *successLogin.SessionToken,
+	}, nil
+}
+
+func (s *PresenceServer) AuthCompleteHandoffFlow(
+	ctx context.Context,
+	in *fleet.AuthCompleteHandoffFlowRequest,
+) (*fleet.AuthCompleteHandoffFlowResponse, error) {
+	code, err := generateCode(in.Identifier)
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthRefreshLoginResponse{}, nil
-}
-
-func (s *PresenceServer) AuthHandoff(
-	ctx context.Context,
-	in *fleet.AuthHandoffRequest,
-) (*fleet.AuthHandoffResponse, error) {
 	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
-		Code: in.Code,
+		Code: code,
 	})
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got session: %v", sessionGet)
-	_, err = s.AuthRefreshLogin(
+	refreshLogin, err := s.AuthRefreshLogin(
 		ctx,
 		&fleet.AuthRefreshLoginRequest{
 			Identifier: in.Identifier,
@@ -139,8 +153,34 @@ func (s *PresenceServer) AuthHandoff(
 	if err != nil {
 		return nil, err
 	}
+	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+		Code: code,
+	})
+	if err != nil {
+		return nil, err
+	}
 	logrus.Debugf("fleet: refreshed login")
-	return &fleet.AuthHandoffResponse{}, nil
+	return &fleet.AuthCompleteHandoffFlowResponse{
+		Token: refreshLogin.Token,
+	}, nil
+}
+
+func (s *PresenceServer) AuthWhoAmI(
+	ctx context.Context,
+	in *fleet.AuthWhoAmIRequest,
+) (*fleet.AuthWhoAmIResponse, error) {
+	whoami, _, err := s.ory.FrontendApi.
+		ToSession(ctx).
+		XSessionToken(in.Token).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("fleet: whoami: %v", whoami)
+	return &fleet.AuthWhoAmIResponse{
+		Id:         whoami.Id,
+		IdentityId: whoami.Identity.Id,
+	}, nil
 }
 
 func (s *PresenceServer) AuthLogout(
@@ -171,16 +211,18 @@ func (s *PresenceServer) SessionGet(
 	ctx context.Context,
 	in *fleet.SessionGetRequest,
 ) (*fleet.SessionGetResponse, error) {
-	res, err := s.etcd.Get(ctx, fmt.Sprintf("handoff_sessions:%d", in.Code))
+	cmd := s.redis.Get(ctx, fmt.Sprintf("sessions:%d", in.Code))
+	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
+		return nil, err
+	}
+	res, err := cmd.Bytes()
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("fleet: got %d handoff sessions", len(res.Kvs))
-	if len(res.Kvs) == 1 {
-		return nil, errors.New("invalid code")
-	}
+	logrus.Debugf("fleet: got %s handoff sessions", res)
 	var session fleet.Session
-	if err := proto.Unmarshal(res.Kvs[0].Value, &session); err != nil {
+	if err := prototext.Unmarshal(res, &session); err != nil {
 		return nil, err
 	}
 	logrus.Debugf("fleet: got handoff session: %v", session.String())
@@ -193,42 +235,28 @@ func (s *PresenceServer) SessionPut(
 	ctx context.Context,
 	in *fleet.SessionPutRequest,
 ) (*fleet.SessionPutResponse, error) {
-	d, err := proto.Marshal(in.Session)
+	d, err := prototext.Marshal(in.Session)
 	if err != nil {
 		return nil, err
 	}
-	code, err := s.generateCode(in.Session.Id)
-	if err != nil {
+	cmd := s.redis.Set(ctx, fmt.Sprintf("sessions:%d", in.Code), d, 0)
+	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
-	res, err := s.etcd.Put(ctx, fmt.Sprintf("sessions:%d", code), string(d))
-	if err != nil {
-		return nil, err
-	}
-	logrus.Debugf("fleet: set handoff session: %v", res)
-	return &fleet.SessionPutResponse{
-		Code: code,
-	}, nil
-}
-
-func (*PresenceServer) generateCode(id string) (uint32, error) {
-	h := fnv.New32a()
-	if err := gob.
-		NewEncoder(h).
-		Encode(id); err != nil {
-		return 0, err
-	}
-	return h.Sum32(), nil
+	logrus.Debugf("fleet: set handoff session: %d", in.Code)
+	return &fleet.SessionPutResponse{}, nil
 }
 
 func (s *PresenceServer) SessionDelete(
 	ctx context.Context,
 	in *fleet.SessionDeleteRequest,
 ) (*fleet.SessionDeleteResponse, error) {
-	res, err := s.etcd.Delete(ctx, fmt.Sprintf("sessions:%d", in.Code))
-	if err != nil {
+	cmd := s.redis.Del(ctx, fmt.Sprintf("sessions:%d", in.Code))
+	if err := cmd.Err(); err != nil {
+		logrus.Tracef("fleet: got %s handoff sessions", err)
 		return nil, err
 	}
-	logrus.Debugf("fleet: deleted handoff session: %v", res)
+	logrus.Debugf("fleet: deleted handoff session: %d", in.Code)
 	return &fleet.SessionDeleteResponse{}, nil
 }
