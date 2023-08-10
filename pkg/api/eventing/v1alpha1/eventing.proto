@@ -196,28 +196,6 @@ enum Faction {
   Demon = 2;
 }
 
-message Character {
-  string id = 1;
-  CharacterClass class = 2;
-  Sex sex = 3;
-  CharacterHairColor hair_color = 4;
-  CharacterHairStyle hair_style = 5;
-  Faction faction = 6;
-  int32 reputation = 7;
-  int32 dignity = 8;
-  int32 compliment = 9;
-  int32 health = 10;
-  int32 mana = 11;
-  string name = 12;
-  int32 hero_experience = 13;
-  int32 hero_level = 14;
-  int32 job_experience = 15;
-  int32 job_level = 16;
-  int32 experience = 17;
-  int32 level = 18;
-}
-
-
 message CharacterFrame {
   string id = 1;
   CharacterClass class = 2;
@@ -241,7 +219,7 @@ message CharacterFrame {
 
 message CharacterListFrame {
   uint32 code = 1;
-  repeated CharacterFrame characters = 2;
+  repeated CharacterFrame character_frames = 2;
 }
 
 message ChannelInteractResponse {
@@ -288,7 +266,7 @@ message CharacterUpdateResponse {}
 
 message CharacterListRequest { string identity_id = 1; }
 
-message CharacterListResponse { repeated Character characters = 1; }
+message CharacterListResponse { repeated CharacterFrame character_frames = 1; }
 
 service Lobby {
   // CharacterAdd adds a new character to the world.
@@ -303,4 +281,3 @@ service Lobby {
   // CharacterList lists all characters in the world.
   rpc CharacterList(CharacterListRequest) returns (CharacterListResponse);
 }
-

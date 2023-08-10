@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/redis/go-redis/v9"
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
@@ -29,10 +30,10 @@ type Server struct {
 	presence fleet.PresenceClient
 	lobby    eventing.LobbyClient
 	redis    redis.UniversalClient
-	sequence uint32
 }
 
 func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
+	var sequence uint32
 	msg, err := stream.Recv()
 	if err != nil {
 		return err
@@ -41,25 +42,24 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if sync == nil {
 		return errors.New("handoff: session protocol error")
 	}
-	s.sequence = sync.Sequence
+	sequence = sync.Sequence
 	msg, err = stream.Recv()
 	if err != nil {
 		return err
 	}
 	identifier := msg.GetIdentifierFrame()
-	if identifier.Sequence != s.sequence+1 {
+	if identifier.Sequence != sequence+1 {
 		return errors.New("handoff: session protocol error")
 	}
-	s.sequence = identifier.Sequence
+	sequence = identifier.Sequence
 	msg, err = stream.Recv()
 	if err != nil {
 		return err
 	}
 	password := msg.GetPasswordFrame()
-	if password.Sequence != s.sequence+1 {
+	if password.Sequence != sequence+1 {
 		return errors.New("handoff: session protocol error")
 	}
-	s.sequence = password.Sequence
 	handoff, err := s.presence.AuthCompleteHandoffFlow(stream.Context(), &fleet.AuthCompleteHandoffFlowRequest{
 		Code:       sync.Code,
 		Identifier: identifier.Identifier,
@@ -68,96 +68,57 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
-		Token: handoff.Token,
-	})
-	if err != nil {
-		return err
-	}
-	lobbyCharacters, err := s.lobby.CharacterList(stream.Context(), &eventing.CharacterListRequest{
-		IdentityId: whoami.IdentityId,
-	})
-	if err != nil {
-		return err
-	}
-	var characters []*eventing.CharacterFrame
-	for _, character := range lobbyCharacters.Characters {
-		characters = append(characters, &eventing.CharacterFrame{
-			Id:             character.Id,
-			Class:          character.Class,
-			HairColor:      character.HairColor,
-			HairStyle:      character.HairStyle,
-			Faction:        character.Faction,
-			Reputation:     character.Reputation,
-			Dignity:        character.Dignity,
-			Compliment:     character.Compliment,
-			Health:         character.Health,
-			Mana:           character.Mana,
-			Name:           character.Name,
-			HeroExperience: character.HeroExperience,
-			HeroLevel:      character.HeroLevel,
-			JobExperience:  character.JobExperience,
-			JobLevel:       character.JobLevel,
-			Experience:     character.Experience,
-			Level:          character.Level,
-		})
-	}
-	if err := stream.Send(&eventing.ChannelInteractResponse{
-		Payload: &eventing.ChannelInteractResponse_CharacterListFrame{
-			CharacterListFrame: &eventing.CharacterListFrame{
-				Characters: characters,
-			},
-		},
-	}); err != nil {
-		return err
-	}
-	wg := errgroup.Group{}
-	wg.Go(func() error {
-		return s.Push(stream)
-	})
-	wg.Go(func() error {
-		return s.Poll(stream)
-	})
-	return wg.Wait()
+	return NewControllerProxy(s.redis, handoff.Token).Serve(stream)
 }
 
-func (s *Server) Push(stream eventing.Gateway_ChannelInteractServer) error {
+func NewControllerProxy(redis redis.UniversalClient, token string) *ControllerProxy {
+	return &ControllerProxy{
+		redis: redis,
+		token: token,
+	}
+}
+
+type ControllerProxy struct {
+	redis    redis.UniversalClient
+	presence fleet.PresenceClient
+	token    string
+}
+
+func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) error {
+	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
+		Token: s.token,
+	})
+	if err != nil {
+		return err
+	}
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		switch msg.Payload.(type) {
-		case *eventing.ChannelInteractRequest_CommandFrame:
-			command := msg.GetCommandFrame()
-			switch command.Payload.(type) {
-			case *eventing.CommandFrame_HeartbeatFrame:
-				if command.Sequence != s.sequence+1 {
-					return errors.New("handoff: channel protocol error")
-				}
-				s.sequence = command.Sequence
-			default:
-				msg, err := proto.Marshal(command)
-				if err != nil {
-					return err
-				}
-				cmdRes := s.redis.Publish(
-					stream.Context(),
-					"elkia:channel:command",
-					msg,
-				)
-				if err := cmdRes.Err(); err != nil {
-					return err
-				}
-			}
-		default:
-			return errors.New("channel: channel protocol error")
+		data, err := proto.Marshal(msg)
+		if err != nil {
+			return err
+		}
+		cmdRes := s.redis.Publish(
+			stream.Context(),
+			fmt.Sprintf("elkia:controllers:commands:%s", whoami.IdentityId),
+			data,
+		)
+		if err := cmdRes.Err(); err != nil {
+			return err
 		}
 	}
 }
 
-func (s *Server) Poll(stream eventing.Gateway_ChannelInteractServer) error {
-	pubsub := s.redis.Subscribe(stream.Context(), "elkia:channel:response")
+func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) error {
+	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
+		Token: s.token,
+	})
+	if err != nil {
+		return err
+	}
+	pubsub := s.redis.Subscribe(stream.Context(), fmt.Sprintf("elkia:controllers:events:%s", whoami.IdentityId))
 	for msg := range pubsub.Channel() {
 		var frame eventing.ChannelInteractResponse
 		if err := proto.Unmarshal([]byte(msg.Payload), &frame); err != nil {
@@ -168,4 +129,15 @@ func (s *Server) Poll(stream eventing.Gateway_ChannelInteractServer) error {
 		}
 	}
 	return nil
+}
+
+func (s *ControllerProxy) Serve(stream eventing.Gateway_ChannelInteractServer) error {
+	wg := errgroup.Group{}
+	wg.Go(func() error {
+		return s.Push(stream)
+	})
+	wg.Go(func() error {
+		return s.Poll(stream)
+	})
+	return wg.Wait()
 }
