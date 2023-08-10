@@ -28,7 +28,6 @@ func TestHandlerServeNosTale(t *testing.T) {
 		},
 		Sessions: map[uint32]*fleet.Session{
 			0: {
-				Id:    "5bda6ec1-a700-4581-a90d-b1fb51932145",
 				Token: "zIRkVceCdjQXzB1feO9Sukm2N8dPzS3TQ3mI9GyZ0Z1EVpmGFI3HKat114vreNOh",
 			},
 		},
