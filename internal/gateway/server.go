@@ -71,8 +71,10 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		Password:   password.Password,
 	})
 	if err != nil {
+		logrus.Tracef("gateway: channel interact: handoff: %v", err)
 		return err
 	}
+	logrus.Debugf("gateway: channel interact: handoff: %v", handoff)
 	return NewControllerProxy(s.redis, handoff.Token).Serve(stream)
 }
 
