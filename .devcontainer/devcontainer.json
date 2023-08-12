@@ -27,7 +27,11 @@
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "redhat.vscode-yaml",
         "ms-kubernetes-tools.kind-vscode"
-      ]
+      ],
+      "sonarlint.connectedMode.project": {
+        "connectionId": "shikanime",
+        "projectKey": "shikanime_elkia"
+      }
     }
   }
 }
