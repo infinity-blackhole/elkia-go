@@ -99,10 +99,10 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 }
 
 func TestSyncFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("4349270 0 ;;")
+	input := []byte("5 18836 1098142510;;")
 	expected := eventing.SyncRequest{
-		Sequence: 49270,
-		Code:     0,
+		Sequence: 18836,
+		Code:     1098142510,
 	}
 	var result SyncRequest
 	if err := result.UnmarshalNosTale(input); err != nil {

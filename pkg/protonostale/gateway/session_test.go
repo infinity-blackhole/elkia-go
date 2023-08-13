@@ -10,10 +10,10 @@ import (
 )
 
 func TestSessionDecodeSync(t *testing.T) {
-	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
+	input := []byte("\x9f\xac\x64\xa0\x63\xeb\x67\x78\x63\x0e")
 	expected := eventing.SyncRequest{
-		Sequence: 52579,
-		Code:     0,
+		Sequence: 59115,
+		Code:     1098142510,
 	}
 	dec := NewSessionDecoder(bytes.NewReader(input))
 	var result protonostale.SyncRequest
