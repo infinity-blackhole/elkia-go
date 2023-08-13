@@ -90,12 +90,16 @@ func (p *ProxyUpgrader) Upgrade(
 		return nil, err
 	}
 	logrus.Debugf("gateway: received sync frame: %v", msg.String())
-	if err := stream.Send(msg); err != nil {
+	if err := stream.Send(&eventing.ChannelInteractRequest{
+		Payload: &eventing.ChannelInteractRequest_SyncFrame{
+			SyncFrame: msg,
+		},
+	}); err != nil {
 		return nil, p.proxy.SendMsg(
 			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
 		)
 	}
-	return NewProxy(p.rwc, 0), nil
+	return NewProxy(p.rwc, msg.Code), nil
 }
 
 type SessionProxyClient struct {
@@ -112,7 +116,7 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	}
 }
 
-func (p *SessionProxyClient) RecvSync() (*eventing.ChannelInteractRequest, error) {
+func (p *SessionProxyClient) RecvSync() (*eventing.SyncFrame, error) {
 	var msg protonostale.SyncFrame
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
@@ -122,11 +126,7 @@ func (p *SessionProxyClient) RecvSync() (*eventing.ChannelInteractRequest, error
 		}
 		return nil, err
 	}
-	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_SyncFrame{
-			SyncFrame: msg.SyncFrame,
-		},
-	}, nil
+	return msg.SyncFrame, nil
 }
 
 func (p *SessionProxyClient) RecvMsg(msg any) error {
