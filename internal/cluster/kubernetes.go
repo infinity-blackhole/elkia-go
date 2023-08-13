@@ -120,7 +120,7 @@ func (s *KubernetesClusterServer) listGatewayAddrFromService(
 	if err != nil {
 		return nil, err
 	}
-	addresses := make([]string, len(endpoints))
+	var addresses []string
 	for i, endpoint := range endpoints {
 		host := endpoint.To4().String()
 		if host == "<nil>" {
@@ -132,7 +132,7 @@ func (s *KubernetesClusterServer) listGatewayAddrFromService(
 			)
 			continue
 		}
-		addresses[i] = net.JoinHostPort(host, port)
+		addresses = append(addresses, net.JoinHostPort(host, port))
 	}
 	return addresses, nil
 }
