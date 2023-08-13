@@ -64,12 +64,8 @@ func (s *PresenceServer) SubmitLoginFlow(
 	ctx context.Context,
 	in *fleet.SubmitLoginFlowRequest,
 ) (*fleet.SubmitLoginFlowResponse, error) {
-	code, err := generateCode(in.Identifier)
-	if err != nil {
-		return nil, err
-	}
 	sessionGet, err := s.session.GetSession(ctx, &fleet.GetSessionRequest{
-		Code: code,
+		Code: in.Code,
 	})
 	if err != nil {
 		return nil, err
@@ -78,6 +74,7 @@ func (s *PresenceServer) SubmitLoginFlow(
 	switch state := sessionGet.Session.State.(type) {
 	case *fleet.Session_Handoff:
 		claim, err := s.ClaimLoginFlow(ctx, &fleet.ClaimLoginFlowRequest{
+			Code:       in.Code,
 			Identifier: in.Identifier,
 			Password:   in.Password,
 			Token:      state.Handoff.Token,
@@ -96,10 +93,6 @@ func (s *PresenceServer) ClaimLoginFlow(
 	ctx context.Context,
 	in *fleet.ClaimLoginFlowRequest,
 ) (*fleet.ClaimLoginFlowResponse, error) {
-	code, err := generateCode(in.Identifier)
-	if err != nil {
-		return nil, err
-	}
 	refreshLogin, err := s.identity.RefreshLogin(
 		ctx,
 		&fleet.RefreshLoginRequest{
@@ -112,7 +105,7 @@ func (s *PresenceServer) ClaimLoginFlow(
 		return nil, err
 	}
 	_, err = s.session.PutSession(ctx, &fleet.PutSessionRequest{
-		Code: code,
+		Code: in.Code,
 		Session: &fleet.Session{
 			State: &fleet.Session_Online{
 				Online: &fleet.SessionOnline{},

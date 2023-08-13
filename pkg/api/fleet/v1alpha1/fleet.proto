@@ -75,8 +75,9 @@ message RefreshLoginRequest {
 message RefreshLoginResponse { string token = 1; }
 
 message SubmitLoginFlowRequest {
-  string identifier = 1;
-  string password = 2;
+  uint32 code = 1;
+  string identifier = 2;
+  string password = 3;
 }
 
 message SubmitLoginFlowResponse {
@@ -84,9 +85,10 @@ message SubmitLoginFlowResponse {
 }
 
 message ClaimLoginFlowRequest {
-  string identifier = 1;
-  string password = 2;
-  string token = 3;
+  uint32 code = 1;
+  string identifier = 2;
+  string password = 3;
+  string token = 4;
 }
 
 message ClaimLoginFlowResponse {

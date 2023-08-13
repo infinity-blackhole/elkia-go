@@ -68,6 +68,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	}
 	logrus.Debugf("gateway: channel interact: password: %v", password)
 	handoff, err := s.presence.SubmitLoginFlow(stream.Context(), &fleet.SubmitLoginFlowRequest{
+		Code:       sync.Code,
 		Identifier: identifier.Value,
 		Password:   password.Value,
 	})
