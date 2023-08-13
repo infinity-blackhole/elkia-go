@@ -139,7 +139,7 @@ func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) er
 }
 
 func (s *ControllerProxy) Serve(stream eventing.Gateway_ChannelInteractServer) error {
-	wg := errgroup.Group{}
+	var wg errgroup.Group
 	wg.Go(func() error {
 		return s.Push(stream)
 	})

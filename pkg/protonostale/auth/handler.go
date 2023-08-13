@@ -60,14 +60,14 @@ func NewProxy(rw *bufio.ReadWriter) *Proxy {
 }
 
 func (p *Proxy) Serve(stream eventing.Auth_AuthInteractClient) error {
-	ws := errgroup.Group{}
-	ws.Go(func() error {
+	var wg errgroup.Group
+	wg.Go(func() error {
 		return p.s.Serve(stream)
 	})
-	ws.Go(func() error {
+	wg.Go(func() error {
 		return p.r.Serve(stream)
 	})
-	return ws.Wait()
+	return wg.Wait()
 }
 
 type ProxySender struct {

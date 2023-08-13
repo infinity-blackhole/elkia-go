@@ -20,7 +20,7 @@ import (
 
 func TestHandlerServeNosTale(t *testing.T) {
 	ctx := context.Background()
-	wg := errgroup.Group{}
+	var wg errgroup.Group
 	fakePresence := presencetest.NewFakePresence(presence.MemoryPresenceServerConfig{
 		Identities: map[uint32]*presence.Identity{
 			1: {

@@ -121,7 +121,7 @@ func (s *KubernetesClusterServer) listGatewayAddrFromService(
 		return nil, err
 	}
 	var addresses []string
-	for i, endpoint := range endpoints {
+	for _, endpoint := range endpoints {
 		host := endpoint.To4().String()
 		if host == "<nil>" {
 			logrus.Warnf(
@@ -140,7 +140,7 @@ func (s *KubernetesClusterServer) listGatewayAddrFromService(
 func (s *KubernetesClusterServer) listGatewayIpFromService(
 	svc *corev1.Service,
 ) ([]net.IP, error) {
-	endpoints := make([]net.IP, 0)
+	var endpoints []net.IP
 	for _, ingress := range svc.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
 			endpoints = append(endpoints, net.ParseIP(ingress.IP))

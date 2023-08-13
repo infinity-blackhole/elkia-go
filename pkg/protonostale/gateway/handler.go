@@ -63,11 +63,11 @@ func NewProxy(rw *bufio.ReadWriter, code uint32) *Proxy {
 }
 
 func (p *Proxy) Serve(stream eventing.Gateway_ChannelInteractClient) error {
-	ws := errgroup.Group{}
-	ws.Go(func() error {
+	var wg errgroup.Group
+	wg.Go(func() error {
 		return p.sender.Serve(stream)
 	})
-	return ws.Wait()
+	return wg.Wait()
 }
 
 type ProxyUpgrader struct {

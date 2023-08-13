@@ -74,7 +74,7 @@ func (s *Server) AuthCreateHandoffFlowFrameProduce(
 		return err
 	}
 	logrus.Debugf("auth: list members: %v", memberList)
-	ms := []*eventing.Endpoint{}
+	var ms []*eventing.Endpoint
 	for _, m := range memberList.Members {
 		for _, a := range m.Addresses {
 			host, port, err := net.SplitHostPort(a)

@@ -163,7 +163,7 @@ func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 		return nil, err
 	}
 	for _, m := range f.Endpoints {
-		b, err := (&Endpoint{
+		endpoint := &Endpoint{
 			Endpoint: &eventing.Endpoint{
 				Host:      m.Host,
 				Port:      m.Port,
@@ -172,7 +172,8 @@ func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 				ChannelId: m.ChannelId,
 				WorldName: m.WorldName,
 			},
-		}).MarshalNosTale()
+		}
+		b, err := endpoint.MarshalNosTale()
 		if err != nil {
 			return nil, err
 		}
