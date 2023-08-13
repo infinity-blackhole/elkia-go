@@ -273,12 +273,16 @@ func (f *SyncRequest) UnmarshalNosTale(b []byte) error {
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
 	}
-	sn, err := strconv.ParseUint(string(fields[0][2:]), 10, 32)
+	sn, err := strconv.ParseUint(string(fields[1]), 10, 32)
 	if err != nil {
 		return err
 	}
 	f.Sequence = uint32(sn)
-	code, err := strconv.ParseUint(string(fields[1]), 10, 32)
+	code, err := strconv.ParseUint(
+		string(fields[2][:len(fields[2])-2]),
+		10,
+		32,
+	)
 	if err != nil {
 		return err
 	}
