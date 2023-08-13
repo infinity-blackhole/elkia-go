@@ -122,20 +122,34 @@ func (s *KubernetesClusterServer) listGatewayAddrFromService(
 	}
 	addresses := make([]string, len(endpoints))
 	for i, endpoint := range endpoints {
-		addresses[i] = net.JoinHostPort(endpoint, port)
+		host := endpoint.To4().String()
+		if host == "<nil>" {
+			logrus.Warnf(
+				"fleet: service %s/%s has an invalid endpoint %s",
+				svc.Namespace,
+				svc.Name,
+				endpoint.String(),
+			)
+			continue
+		}
+		addresses[i] = net.JoinHostPort(host, port)
 	}
 	return addresses, nil
 }
 
 func (s *KubernetesClusterServer) listGatewayIpFromService(
 	svc *corev1.Service,
-) ([]string, error) {
-	endpoints := make([]string, 0)
+) ([]net.IP, error) {
+	endpoints := make([]net.IP, 0)
 	for _, ingress := range svc.Status.LoadBalancer.Ingress {
 		if ingress.IP != "" {
-			endpoints = append(endpoints, ingress.IP)
+			endpoints = append(endpoints, net.ParseIP(ingress.IP))
 		} else if ingress.Hostname != "" {
-			endpoints = append(endpoints, ingress.Hostname)
+			ips, err := net.LookupIP(ingress.Hostname)
+			if err != nil {
+				return nil, err
+			}
+			endpoints = append(endpoints, ips...)
 		}
 	}
 	if len(endpoints) == 0 {
@@ -144,7 +158,7 @@ func (s *KubernetesClusterServer) listGatewayIpFromService(
 			svc.Namespace,
 			svc.Name,
 		)
-		return []string{"127.0.0.1"}, nil
+		return []net.IP{net.ParseIP("127.0.0.1")}, nil
 	}
 	return endpoints, nil
 }
