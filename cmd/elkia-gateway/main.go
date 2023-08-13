@@ -28,6 +28,10 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	worldCs, err := clients.NewWorldClientSet()
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	redisClient := clients.NewRedisClient()
 	logrus.Debugf("gateway: connected to redis")
 	srv := grpc.NewServer(
@@ -50,6 +54,7 @@ func main() {
 		srv,
 		gateway.NewServer(gateway.ServerConfig{
 			PresenceClient: fleetCs.PresenceClient,
+			LobbyClient:    worldCs.LobbyClient,
 			RedisClient:    redisClient,
 		}),
 	)

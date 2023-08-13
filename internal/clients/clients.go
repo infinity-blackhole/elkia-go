@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	world "go.shikanime.studio/elkia/pkg/api/world/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/mysql"
@@ -88,21 +89,43 @@ type FleetClientSet struct {
 }
 
 func NewFleetClientSet() (*FleetClientSet, error) {
-	fleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
-	if fleetEndpoint == "" {
-		fleetEndpoint = "localhost:8080"
+	endpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "localhost:8080"
 	}
-	logrus.Debugf("gateway: connecting to fleet at %s", fleetEndpoint)
-	fleetConn, err := grpc.Dial(
-		fleetEndpoint,
+	logrus.Debugf("gateway: connecting to fleet at %s", endpoint)
+	conn, err := grpc.Dial(
+		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
-	logrus.Debugf("gateway: connected to fleet at %s", fleetEndpoint)
+	logrus.Debugf("gateway: connected to fleet at %s", endpoint)
 	return &FleetClientSet{
-		PresenceClient: fleet.NewPresenceClient(fleetConn),
-		ClusterClient:  fleet.NewClusterClient(fleetConn),
+		PresenceClient: fleet.NewPresenceClient(conn),
+		ClusterClient:  fleet.NewClusterClient(conn),
+	}, err
+}
+
+type WorldClientSet struct {
+	LobbyClient world.LobbyClient
+}
+
+func NewWorldClientSet() (*WorldClientSet, error) {
+	endpoint := os.Getenv("ELKIA_WORLD_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "localhost:8080"
+	}
+	logrus.Debugf("gateway: connecting to fleet at %s", endpoint)
+	conn, err := grpc.Dial(
+		endpoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+	)
+	logrus.Debugf("gateway: connected to fleet at %s", endpoint)
+	return &WorldClientSet{
+		LobbyClient: world.NewLobbyClient(conn),
 	}, err
 }
 
@@ -111,20 +134,20 @@ type GatewayClientSet struct {
 }
 
 func NewGatewayClientSet() (*GatewayClientSet, error) {
-	gatewayEndpoint := os.Getenv("ELKIA_GATEWAY_ENDPOINT")
-	if gatewayEndpoint == "" {
-		gatewayEndpoint = "localhost:8081"
+	endpoint := os.Getenv("ELKIA_GATEWAY_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "localhost:8081"
 	}
-	logrus.Debugf("gateway: connecting to gateway at %s", gatewayEndpoint)
-	gatewayConn, err := grpc.Dial(
-		gatewayEndpoint,
+	logrus.Debugf("gateway: connecting to gateway at %s", endpoint)
+	conn, err := grpc.Dial(
+		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
-	logrus.Debugf("gateway: connected to gateway at %s", gatewayEndpoint)
+	logrus.Debugf("gateway: connected to gateway at %s", endpoint)
 	return &GatewayClientSet{
-		GatewayClient: eventing.NewGatewayClient(gatewayConn),
+		GatewayClient: eventing.NewGatewayClient(conn),
 	}, err
 }
 
@@ -133,19 +156,19 @@ type AuthClientSet struct {
 }
 
 func NewAuthClientSet() (*AuthClientSet, error) {
-	authEndpoint := os.Getenv("ELKIA_AUTH_ENDPOINT")
-	if authEndpoint == "" {
-		authEndpoint = "localhost:8082"
+	endpoint := os.Getenv("ELKIA_AUTH_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "localhost:8082"
 	}
-	logrus.Debugf("gateway: connecting to auth at %s", authEndpoint)
-	authConn, err := grpc.Dial(
-		authEndpoint,
+	logrus.Debugf("gateway: connecting to auth at %s", endpoint)
+	conn, err := grpc.Dial(
+		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
-	logrus.Debugf("gateway: connected to auth at %s", authEndpoint)
+	logrus.Debugf("gateway: connected to auth at %s", endpoint)
 	return &AuthClientSet{
-		AuthClient: eventing.NewAuthClient(authConn),
+		AuthClient: eventing.NewAuthClient(conn),
 	}, err
 }
