@@ -15,12 +15,14 @@ type PackedChannelScanner struct {
 }
 
 func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
+	mode := byte(key >> 6 & 0x03)
+	offset := byte(key&0xFF + 0x40&0xFF)
 	s := bufio.NewScanner(r)
-	s.Split(ScanCommandFrame)
+	s.Split(NewScanFrame(mode, offset))
 	return &PackedChannelScanner{
 		s:      s,
-		mode:   byte(key >> 6 & 0x03),
-		offset: byte(key&0xFF + 0x40&0xFF),
+		mode:   mode,
+		offset: offset,
 	}
 }
 
@@ -54,20 +56,33 @@ func (s *PackedChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
-func ScanCommandFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
+func NewScanFrame(mode, offset byte) bufio.SplitFunc {
+	var delimiter byte
+	switch mode {
+	case 0:
+		delimiter = 0xff + offset
+	case 1:
+		delimiter = 0xff - offset
+	case 2:
+		delimiter = (0xff + offset) ^ 0xC3
+	case 3:
+		delimiter = (0xff - offset) ^ 0xC3
+	}
+	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+		if i := bytes.IndexByte(data, delimiter); i >= 0 {
+			// We have a full frames.
+			return i + 1, data[0:i], nil
+		}
+		// If we're at EOF, we have a final, non-terminated frame. Return it.
+		if atEOF {
+			return len(data), data, nil
+		}
+		// CharacterRequestRequest more data.
 		return 0, nil, nil
 	}
-	if i := bytes.IndexByte(data, 0x3F); i >= 0 {
-		// We have a full frames.
-		return i + 1, data[0:i], nil
-	}
-	// If we're at EOF, we have a final, non-terminated frame. Return it.
-	if atEOF {
-		return len(data), data, nil
-	}
-	// Request more data.
-	return 0, nil, nil
 }
 
 type ChannelScanner struct {
