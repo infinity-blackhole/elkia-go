@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -12,11 +13,24 @@ import (
 	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
+
+func NewGormDialector() (gorm.Dialector, error) {
+	dsn := os.Getenv("DSN")
+	parts := strings.SplitN(dsn, "://", 2)
+	switch parts[0] {
+	case "mysql://":
+		return mysql.Open(parts[1]), nil
+	default:
+		return nil, errors.New("unsupported database dialect")
+	}
+}
 
 func NewOryClient() *ory.APIClient {
 	kratosUrlStr := os.Getenv("KRATOS_URIS")

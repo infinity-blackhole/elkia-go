@@ -3,15 +3,14 @@ package main
 import (
 	"fmt"
 	"net"
-	"net/url"
 	"os"
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.shikanime.studio/elkia/internal/clients"
 	"go.shikanime.studio/elkia/internal/lobby"
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
 	_ "go.shikanime.studio/elkia/internal/monitoring"
@@ -19,15 +18,11 @@ import (
 
 func main() {
 	logrus.Debugf("Starting world server")
-	dsnUrlStr := os.Getenv("DSN")
-	if dsnUrlStr == "" {
-		logrus.Fatal("worldserver: DSN is not set")
-	}
-	dsnUrl, err := url.Parse(dsnUrlStr)
+	dialector, err := clients.NewGormDialector()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	db, err := gorm.Open(mysql.Open(dsnUrl.String()), &gorm.Config{})
+	db, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		logrus.Fatal(err)
 	}
