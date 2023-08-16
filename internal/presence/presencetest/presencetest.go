@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
-func NewFakePresence(c presence.MemoryPresenceServerConfig) *FakePresence {
+func NewFakePresence(c presence.PresenceServerConfig) *FakePresence {
 	return &FakePresence{
 		c:   c,
 		lis: bufconn.Listen(1024 * 1024),
@@ -19,7 +19,7 @@ func NewFakePresence(c presence.MemoryPresenceServerConfig) *FakePresence {
 }
 
 type FakePresence struct {
-	c   presence.MemoryPresenceServerConfig
+	c   presence.PresenceServerConfig
 	lis *bufconn.Listener
 }
 
@@ -27,7 +27,7 @@ func (f *FakePresence) Serve() error {
 	server := grpc.NewServer()
 	fleet.RegisterPresenceServer(
 		server,
-		presence.NewMemoryPresenceServer(f.c),
+		presence.NewPresenceServer(f.c),
 	)
 	return server.Serve(f.lis)
 }

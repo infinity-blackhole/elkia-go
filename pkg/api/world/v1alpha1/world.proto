@@ -1,7 +1,7 @@
 syntax = "proto3";
 package shikanime.elkia.world.v1alpha1;
 
-option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
+option go_package = "go.shikanime.studio/elkia/pkg/api/world/v1alpha1";
 
 enum CharacterClass {
   ADVENTURER = 0;
@@ -64,6 +64,10 @@ message Character {
   int32 level = 18;
 }
 
+message CharacterSelectRequest {
+  string id = 1;
+}
+
 message CharacterAddRequest {
   string id = 1;
   string name = 2;
@@ -95,7 +99,30 @@ message CharacterListRequest { string identity_id = 1; }
 
 message CharacterListResponse { repeated Character characters = 1; }
 
+message LobbyInteractRequest {
+  uint32 sequence = 1;
+  oneof request {
+    CharacterSelectRequest character_select = 2;
+    CharacterAddRequest character_add =  3;
+    CharacterRemoveRequest character_remove = 4;
+    CharacterUpdateRequest character_update = 5;
+    CharacterListRequest character_list = 6;
+  }
+}
+
+message LobbyInteractResponse {
+  oneof response {
+    CharacterAddResponse character_add = 1;
+    CharacterRemoveResponse character_remove = 2;
+    CharacterUpdateResponse character_update = 3;
+    CharacterListResponse character_list = 4;
+  }
+}
+
 service Lobby {
+  // LobbyInteract is used to interact with the lobby.
+  rpc LobbyInteract(stream LobbyInteractRequest) returns (stream LobbyInteractResponse);
+
   // CharacterAdd adds a new character to the world.
   rpc CharacterAdd(CharacterAddRequest) returns (CharacterAddResponse);
 

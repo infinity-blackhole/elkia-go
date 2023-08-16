@@ -113,7 +113,7 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 }
 
 func (p *SessionProxyClient) RecvSync() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.SyncFrame
+	var msg protonostale.SyncRequest
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
@@ -123,8 +123,8 @@ func (p *SessionProxyClient) RecvSync() (*eventing.ChannelInteractRequest, error
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_SyncFrame{
-			SyncFrame: msg.SyncFrame,
+		Request: &eventing.ChannelInteractRequest_Sync{
+			Sync: msg.SyncRequest,
 		},
 	}, nil
 }
@@ -211,7 +211,7 @@ func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 }
 
 func (p *ChannelProxyClient) RecvIdentifier() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.IdentifierFrame
+	var msg protonostale.Identifier
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
@@ -221,14 +221,14 @@ func (p *ChannelProxyClient) RecvIdentifier() (*eventing.ChannelInteractRequest,
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_IdentifierFrame{
-			IdentifierFrame: msg.IdentifierFrame,
+		Request: &eventing.ChannelInteractRequest_Identifier{
+			Identifier: msg.Identifier,
 		},
 	}, nil
 }
 
 func (p *ChannelProxyClient) RecvPassword() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.PasswordFrame
+	var msg protonostale.Password
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
@@ -238,14 +238,14 @@ func (p *ChannelProxyClient) RecvPassword() (*eventing.ChannelInteractRequest, e
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_PasswordFrame{
-			PasswordFrame: msg.PasswordFrame,
+		Request: &eventing.ChannelInteractRequest_Password{
+			Password: msg.Password,
 		},
 	}, nil
 }
 
 func (p *ChannelProxyClient) RecvCommand() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.CommandFrame
+	var msg protonostale.ClientInteractRequest
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
 			protonostale.NewStatus(eventing.Code_BAD_CASE),
@@ -255,8 +255,8 @@ func (p *ChannelProxyClient) RecvCommand() (*eventing.ChannelInteractRequest, er
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_CommandFrame{
-			CommandFrame: msg.CommandFrame,
+		Request: &eventing.ChannelInteractRequest_ClientInteract{
+			ClientInteract: msg.ClientInteractRequest,
 		},
 	}, nil
 }

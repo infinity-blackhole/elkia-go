@@ -1,7 +1,7 @@
 syntax = "proto3";
 package shikanime.elkia.fleet.v1alpha1;
 
-option go_package = "pkg/api/fleet/v1alpha1";
+option go_package = "go.shikanime.studio/elkia/pkg/fleet/world/v1alpha1";
 
 message Member {
   string id = 1;
@@ -59,96 +59,125 @@ service Cluster {
   rpc MemberList(MemberListRequest) returns (MemberListResponse);
 }
 
-message AuthCreateHandoffFlowRequest {
+message CreateLoginFlowRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthCreateHandoffFlowResponse { uint32 code = 1; }
+message CreateLoginFlowResponse { uint32 code = 1; }
 
-message AuthRefreshLoginRequest {
+message RefreshLoginRequest {
   string identifier = 1;
   string password = 2;
   string token = 3;
 }
 
-message AuthRefreshLoginResponse { string token = 1; }
+message RefreshLoginResponse { string token = 1; }
 
-message AuthCompleteHandoffFlowRequest {
+message SubmitLoginFlowRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthCompleteHandoffFlowResponse {
+message SubmitLoginFlowResponse {
   string token = 1;
 }
 
-message AuthLoginRequest {
+message ClaimLoginFlowRequest {
+  string identifier = 1;
+  string password = 2;
+  string token = 3;
+}
+
+message ClaimLoginFlowResponse {
+  string token = 1;
+}
+
+message LoginRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthLoginResponse {
+message LoginResponse {
   string token = 1;
 }
 
-message AuthWhoAmIRequest { string token = 1; }
+message WhoAmIRequest { string token = 1; }
 
-message AuthWhoAmIResponse {
+message WhoAmIResponse {
   string id = 1;
   string identity_id = 2;
 }
 
-message AuthLogoutRequest { uint32 code = 1; }
+message LogoutRequest { string token = 1; }
 
-message AuthLogoutResponse {}
+message LogoutResponse {}
 
-message Session {
+message SessionHandoff {
   string token = 1;
 }
 
-message SessionGetRequest { uint32 code = 1; }
+message SessionOnline {
+  string token = 1;
+}
 
-message SessionGetResponse { Session session = 1; }
+message Session {
+  oneof state {
+    SessionHandoff handoff = 1;
+    SessionOnline online = 2;
+  }
+}
 
-message SessionPutRequest { uint32 code = 1; Session session = 2; }
+message GetSessionRequest { uint32 code = 1; }
 
-message SessionPutResponse { uint32 code = 1; }
+message GetSessionResponse { Session session = 1; }
 
-message SessionDeleteRequest { uint32 code = 1; }
+message PutSessionRequest { uint32 code = 1; Session session = 2; }
 
-message SessionDeleteResponse {}
+message PutSessionResponse { }
+
+message DeleteSessionRequest { uint32 code = 1; }
+
+message DeleteSessionResponse {}
 
 service Presence {
-  // AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+  // CreateLoginFlow creates a handoff flow with a given identifier and
   // password.
-  rpc AuthCreateHandoffFlow(AuthCreateHandoffFlowRequest) returns (AuthCreateHandoffFlowResponse);
+  rpc CreateLoginFlow(CreateLoginFlowRequest) returns (CreateLoginFlowResponse);
 
-  // AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+  // SubmitLoginFlow hands off a session to a gateway with a given token and
   // code.
-  rpc AuthCompleteHandoffFlow(AuthCompleteHandoffFlowRequest) returns (AuthCompleteHandoffFlowResponse);
+  rpc SubmitLoginFlow(SubmitLoginFlowRequest) returns (SubmitLoginFlowResponse);
 
-  // AuthLogin hands off a session to a gateway with a given token and
+  // ClaimLoginFlow authenticates a gateway with a given identifier, password,
+  // and token.
+  rpc ClaimLoginFlow(ClaimLoginFlowRequest) returns (ClaimLoginFlowResponse);
+}
+
+service IdentityManager {
+  // Login hands off a session to a gateway with a given token and
   // code.
-  rpc AuthLogin(AuthLoginRequest) returns (AuthLoginResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
 
-  // AuthRefreshLogin authenticates a gateway with a given identifier, password, and
+  // RefreshLogin authenticates a gateway with a given identifier, password, and
   // token.
-  rpc AuthRefreshLogin(AuthRefreshLoginRequest)
-      returns (AuthRefreshLoginResponse);
+  rpc RefreshLogin(RefreshLoginRequest)
+      returns (RefreshLoginResponse);
 
-  // AuthWhoAmI returns the session associated with a given token.
-  rpc AuthWhoAmI(AuthWhoAmIRequest) returns (AuthWhoAmIResponse);
+  // WhoAmI returns the session associated with a given token.
+  rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
 
-  // AuthLogout logs out a session with a given code.
-  rpc AuthLogout(AuthLogoutRequest) returns (AuthLogoutResponse);
+  // Logout logs out a session with a given code.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+}
 
-  // SessionGet gets a session with a given code.
-  rpc SessionGet(SessionGetRequest) returns (SessionGetResponse);
+service SessionManager {
+  // GetSession gets a session with a given code.
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
 
-  // SessionPut creates a session with a given identifier and token.
-  rpc SessionPut(SessionPutRequest) returns (SessionPutResponse);
+  // PutSession creates a session with a given identifier and token.
+  rpc PutSession(PutSessionRequest) returns (PutSessionResponse);
 
-  // SessionDelete Deletes a session with a given code.
-  rpc SessionDelete(SessionDeleteRequest) returns (SessionDeleteResponse);
+  // DeleteSession Deletes a session with a given code.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
 }

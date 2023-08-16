@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Auth_AuthInteract_FullMethodName                      = "/shikanime.elkia.eventing.v1alpha1.Auth/AuthInteract"
-	Auth_AuthCreateHandoffFlowFrameProduce_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Auth/AuthCreateHandoffFlowFrameProduce"
+	Auth_AuthInteract_FullMethodName    = "/shikanime.elkia.eventing.v1alpha1.Auth/AuthInteract"
+	Auth_CreateLoginFlow_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Auth/CreateLoginFlow"
 )
 
 // AuthClient is the client API for Auth service.
@@ -30,9 +30,8 @@ type AuthClient interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(ctx context.Context, opts ...grpc.CallOption) (Auth_AuthInteractClient, error)
-	// AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
-	// stream of events
-	AuthCreateHandoffFlowFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthCreateHandoffFlowFrameProduceClient, error)
+	// CreateLoginFlow send a login frame to the auth server
+	CreateLoginFlow(ctx context.Context, in *CreateLoginFlowRequest, opts ...grpc.CallOption) (*CreateLoginFlowResponse, error)
 }
 
 type authClient struct {
@@ -74,36 +73,13 @@ func (x *authAuthInteractClient) Recv() (*AuthInteractResponse, error) {
 	return m, nil
 }
 
-func (c *authClient) AuthCreateHandoffFlowFrameProduce(ctx context.Context, in *LoginFrame, opts ...grpc.CallOption) (Auth_AuthCreateHandoffFlowFrameProduceClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Auth_ServiceDesc.Streams[1], Auth_AuthCreateHandoffFlowFrameProduce_FullMethodName, opts...)
+func (c *authClient) CreateLoginFlow(ctx context.Context, in *CreateLoginFlowRequest, opts ...grpc.CallOption) (*CreateLoginFlowResponse, error) {
+	out := new(CreateLoginFlowResponse)
+	err := c.cc.Invoke(ctx, Auth_CreateLoginFlow_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &authAuthCreateHandoffFlowFrameProduceClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Auth_AuthCreateHandoffFlowFrameProduceClient interface {
-	Recv() (*AuthInteractResponse, error)
-	grpc.ClientStream
-}
-
-type authAuthCreateHandoffFlowFrameProduceClient struct {
-	grpc.ClientStream
-}
-
-func (x *authAuthCreateHandoffFlowFrameProduceClient) Recv() (*AuthInteractResponse, error) {
-	m := new(AuthInteractResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // AuthServer is the server API for Auth service.
@@ -113,9 +89,8 @@ type AuthServer interface {
 	// AuthInteract is a bi-directional stream that is used to interact with the
 	// auth server
 	AuthInteract(Auth_AuthInteractServer) error
-	// AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
-	// stream of events
-	AuthCreateHandoffFlowFrameProduce(*LoginFrame, Auth_AuthCreateHandoffFlowFrameProduceServer) error
+	// CreateLoginFlow send a login frame to the auth server
+	CreateLoginFlow(context.Context, *CreateLoginFlowRequest) (*CreateLoginFlowResponse, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -126,8 +101,8 @@ type UnimplementedAuthServer struct {
 func (UnimplementedAuthServer) AuthInteract(Auth_AuthInteractServer) error {
 	return status.Errorf(codes.Unimplemented, "method AuthInteract not implemented")
 }
-func (UnimplementedAuthServer) AuthCreateHandoffFlowFrameProduce(*LoginFrame, Auth_AuthCreateHandoffFlowFrameProduceServer) error {
-	return status.Errorf(codes.Unimplemented, "method AuthCreateHandoffFlowFrameProduce not implemented")
+func (UnimplementedAuthServer) CreateLoginFlow(context.Context, *CreateLoginFlowRequest) (*CreateLoginFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateLoginFlow not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -168,25 +143,22 @@ func (x *authAuthInteractServer) Recv() (*AuthInteractRequest, error) {
 	return m, nil
 }
 
-func _Auth_AuthCreateHandoffFlowFrameProduce_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(LoginFrame)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Auth_CreateLoginFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateLoginFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(AuthServer).AuthCreateHandoffFlowFrameProduce(m, &authAuthCreateHandoffFlowFrameProduceServer{stream})
-}
-
-type Auth_AuthCreateHandoffFlowFrameProduceServer interface {
-	Send(*AuthInteractResponse) error
-	grpc.ServerStream
-}
-
-type authAuthCreateHandoffFlowFrameProduceServer struct {
-	grpc.ServerStream
-}
-
-func (x *authAuthCreateHandoffFlowFrameProduceServer) Send(m *AuthInteractResponse) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(AuthServer).CreateLoginFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_CreateLoginFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).CreateLoginFlow(ctx, req.(*CreateLoginFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
@@ -195,18 +167,18 @@ func (x *authAuthCreateHandoffFlowFrameProduceServer) Send(m *AuthInteractRespon
 var Auth_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "shikanime.elkia.eventing.v1alpha1.Auth",
 	HandlerType: (*AuthServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateLoginFlow",
+			Handler:    _Auth_CreateLoginFlow_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "AuthInteract",
 			Handler:       _Auth_AuthInteract_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
-		},
-		{
-			StreamName:    "AuthCreateHandoffFlowFrameProduce",
-			Handler:       _Auth_AuthCreateHandoffFlowFrameProduce_Handler,
-			ServerStreams: true,
 		},
 	},
 	Metadata: "pkg/api/eventing/v1alpha1/eventing.proto",
@@ -335,214 +307,5 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "pkg/api/eventing/v1alpha1/eventing.proto",
-}
-
-const (
-	Lobby_CharacterAdd_FullMethodName    = "/shikanime.elkia.eventing.v1alpha1.Lobby/CharacterAdd"
-	Lobby_CharacterRemove_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Lobby/CharacterRemove"
-	Lobby_CharacterUpdate_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Lobby/CharacterUpdate"
-	Lobby_CharacterList_FullMethodName   = "/shikanime.elkia.eventing.v1alpha1.Lobby/CharacterList"
-)
-
-// LobbyClient is the client API for Lobby service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type LobbyClient interface {
-	// CharacterAdd adds a new character to the world.
-	CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error)
-	// CharacterRemove removes an existing character from the world.
-	CharacterRemove(ctx context.Context, in *CharacterRemoveRequest, opts ...grpc.CallOption) (*CharacterRemoveResponse, error)
-	// CharacterUpdate updates an existing character in the world.
-	CharacterUpdate(ctx context.Context, in *CharacterUpdateRequest, opts ...grpc.CallOption) (*CharacterUpdateResponse, error)
-	// CharacterList lists all characters in the world.
-	CharacterList(ctx context.Context, in *CharacterListRequest, opts ...grpc.CallOption) (*CharacterListResponse, error)
-}
-
-type lobbyClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewLobbyClient(cc grpc.ClientConnInterface) LobbyClient {
-	return &lobbyClient{cc}
-}
-
-func (c *lobbyClient) CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error) {
-	out := new(CharacterAddResponse)
-	err := c.cc.Invoke(ctx, Lobby_CharacterAdd_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *lobbyClient) CharacterRemove(ctx context.Context, in *CharacterRemoveRequest, opts ...grpc.CallOption) (*CharacterRemoveResponse, error) {
-	out := new(CharacterRemoveResponse)
-	err := c.cc.Invoke(ctx, Lobby_CharacterRemove_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *lobbyClient) CharacterUpdate(ctx context.Context, in *CharacterUpdateRequest, opts ...grpc.CallOption) (*CharacterUpdateResponse, error) {
-	out := new(CharacterUpdateResponse)
-	err := c.cc.Invoke(ctx, Lobby_CharacterUpdate_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *lobbyClient) CharacterList(ctx context.Context, in *CharacterListRequest, opts ...grpc.CallOption) (*CharacterListResponse, error) {
-	out := new(CharacterListResponse)
-	err := c.cc.Invoke(ctx, Lobby_CharacterList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// LobbyServer is the server API for Lobby service.
-// All implementations must embed UnimplementedLobbyServer
-// for forward compatibility
-type LobbyServer interface {
-	// CharacterAdd adds a new character to the world.
-	CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error)
-	// CharacterRemove removes an existing character from the world.
-	CharacterRemove(context.Context, *CharacterRemoveRequest) (*CharacterRemoveResponse, error)
-	// CharacterUpdate updates an existing character in the world.
-	CharacterUpdate(context.Context, *CharacterUpdateRequest) (*CharacterUpdateResponse, error)
-	// CharacterList lists all characters in the world.
-	CharacterList(context.Context, *CharacterListRequest) (*CharacterListResponse, error)
-	mustEmbedUnimplementedLobbyServer()
-}
-
-// UnimplementedLobbyServer must be embedded to have forward compatible implementations.
-type UnimplementedLobbyServer struct {
-}
-
-func (UnimplementedLobbyServer) CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CharacterAdd not implemented")
-}
-func (UnimplementedLobbyServer) CharacterRemove(context.Context, *CharacterRemoveRequest) (*CharacterRemoveResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CharacterRemove not implemented")
-}
-func (UnimplementedLobbyServer) CharacterUpdate(context.Context, *CharacterUpdateRequest) (*CharacterUpdateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CharacterUpdate not implemented")
-}
-func (UnimplementedLobbyServer) CharacterList(context.Context, *CharacterListRequest) (*CharacterListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CharacterList not implemented")
-}
-func (UnimplementedLobbyServer) mustEmbedUnimplementedLobbyServer() {}
-
-// UnsafeLobbyServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to LobbyServer will
-// result in compilation errors.
-type UnsafeLobbyServer interface {
-	mustEmbedUnimplementedLobbyServer()
-}
-
-func RegisterLobbyServer(s grpc.ServiceRegistrar, srv LobbyServer) {
-	s.RegisterService(&Lobby_ServiceDesc, srv)
-}
-
-func _Lobby_CharacterAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CharacterAddRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LobbyServer).CharacterAdd(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Lobby_CharacterAdd_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LobbyServer).CharacterAdd(ctx, req.(*CharacterAddRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Lobby_CharacterRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CharacterRemoveRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LobbyServer).CharacterRemove(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Lobby_CharacterRemove_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LobbyServer).CharacterRemove(ctx, req.(*CharacterRemoveRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Lobby_CharacterUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CharacterUpdateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LobbyServer).CharacterUpdate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Lobby_CharacterUpdate_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LobbyServer).CharacterUpdate(ctx, req.(*CharacterUpdateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Lobby_CharacterList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CharacterListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LobbyServer).CharacterList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Lobby_CharacterList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LobbyServer).CharacterList(ctx, req.(*CharacterListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// Lobby_ServiceDesc is the grpc.ServiceDesc for Lobby service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var Lobby_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "shikanime.elkia.eventing.v1alpha1.Lobby",
-	HandlerType: (*LobbyServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CharacterAdd",
-			Handler:    _Lobby_CharacterAdd_Handler,
-		},
-		{
-			MethodName: "CharacterRemove",
-			Handler:    _Lobby_CharacterRemove_Handler,
-		},
-		{
-			MethodName: "CharacterUpdate",
-			Handler:    _Lobby_CharacterUpdate_Handler,
-		},
-		{
-			MethodName: "CharacterList",
-			Handler:    _Lobby_CharacterList_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "pkg/api/eventing/v1alpha1/eventing.proto",
 }

@@ -13,11 +13,11 @@ var (
 	InfoOpCode  = "info"
 )
 
-type ErrorFrame struct {
-	*eventing.ErrorFrame
+type Error struct {
+	*eventing.Error
 }
 
-func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
+func (f *Error) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "failc %d", f.Code); err != nil {
 		return nil, err
@@ -25,8 +25,8 @@ func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
-	f.ErrorFrame = &eventing.ErrorFrame{}
+func (f *Error) UnmarshalNosTale(b []byte) error {
+	f.Error = &eventing.Error{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -42,11 +42,11 @@ func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type InfoFrame struct {
-	*eventing.InfoFrame
+type Info struct {
+	*eventing.Info
 }
 
-func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
+func (f *Info) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, f.Content); err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
-	f.InfoFrame = &eventing.InfoFrame{}
+func (f *Info) UnmarshalNosTale(b []byte) error {
+	f.Info = &eventing.Info{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -69,8 +69,8 @@ func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
 
 func NewStatus(code eventing.Code) *Status {
 	return &Status{
-		&ErrorFrame{
-			ErrorFrame: &eventing.ErrorFrame{
+		&Error{
+			Error: &eventing.Error{
 				Code: code,
 			},
 		},
@@ -78,17 +78,17 @@ func NewStatus(code eventing.Code) *Status {
 }
 
 type Status struct {
-	s *ErrorFrame
+	Status *Error
 }
 
 func (s *Status) Error() string {
-	return fmt.Sprintf("status: %v", s.s.Code)
+	return fmt.Sprintf("status: %v", s.Status.Code)
 }
 
 func (s *Status) MarshalNosTale() ([]byte, error) {
-	return s.s.MarshalNosTale()
+	return s.Status.MarshalNosTale()
 }
 
 func (s *Status) UnmarshalNosTale(data []byte) error {
-	return s.s.UnmarshalNosTale(data)
+	return s.Status.UnmarshalNosTale(data)
 }

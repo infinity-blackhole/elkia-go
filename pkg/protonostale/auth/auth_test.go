@@ -19,7 +19,7 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 			"\x00\xf2\x02\x02\x04\x94\x03\x06\x06\x04\xd7\x02\xfc\x09\xfc\xff" +
 			"\xfc\xff\x02\x0a\x04\xd8",
 	)
-	expected := eventing.LoginFrame{
+	expected := eventing.CreateLoginFlowRequest{
 		Identifier:    "ricofo8350@otanhome.com",
 		Password:      "9hibwiwiG2e6Nr",
 		ClientVersion: "0.9.3+3086",
@@ -28,22 +28,22 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 	if err := NewDecoder(bytes.NewReader(input)).Decode(&result); err != nil {
 		t.Fatal(err)
 	}
-	if payload, ok := result.Payload.(*eventing.AuthInteractRequest_LoginFrame); ok {
-		if expected.Identifier != payload.LoginFrame.Identifier {
-			t.Errorf("Expected %v, got %v", expected.Identifier, payload.LoginFrame.Identifier)
+	if req, ok := result.Request.(*eventing.AuthInteractRequest_CreateLoginFlow); ok {
+		if expected.Identifier != req.CreateLoginFlow.Identifier {
+			t.Errorf("Expected %v, got %v", expected.Identifier, req.CreateLoginFlow.Identifier)
 		}
-		if expected.Password != payload.LoginFrame.Password {
-			t.Errorf("Expected %v, got %v", expected.Password, payload.LoginFrame.Password)
+		if expected.Password != req.CreateLoginFlow.Password {
+			t.Errorf("Expected %v, got %v", expected.Password, req.CreateLoginFlow.Password)
 		}
-		if expected.ClientVersion != payload.LoginFrame.ClientVersion {
-			t.Errorf("Expected %v, got %v", expected.ClientVersion, payload.LoginFrame.ClientVersion)
+		if expected.ClientVersion != req.CreateLoginFlow.ClientVersion {
+			t.Errorf("Expected %v, got %v", expected.ClientVersion, req.CreateLoginFlow.ClientVersion)
 		}
 	}
 }
 
 func TestAuthEncodingEncodeFrame(t *testing.T) {
-	input := protonostale.InfoFrame{
-		InfoFrame: &eventing.InfoFrame{
+	input := protonostale.Info{
+		Info: &eventing.Info{
 			Content: "fail Hello. This is a basic test",
 		},
 	}

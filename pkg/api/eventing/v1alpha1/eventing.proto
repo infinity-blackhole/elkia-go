@@ -1,6 +1,8 @@
 syntax = "proto3";
 package shikanime.elkia.eventing.v1alpha1;
 
+import "pkg/api/world/v1alpha1/world.proto";
+
 option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
 
 enum Code {
@@ -15,11 +17,11 @@ enum Code {
   BAD_CASE = 8;
 }
 
-message ErrorFrame { Code code = 1; }
+message Error { Code code = 1; }
 
-message InfoFrame { string content = 1; }
+message Info { string content = 1; }
 
-message LoginFrame {
+message CreateLoginFlowRequest {
   string identifier = 2;
   string password = 3;
   string client_version = 5;
@@ -35,23 +37,22 @@ message Endpoint {
   string world_name = 6;
 }
 
-message EndpointListFrame {
+message AuthInteractRequest {
+  oneof request {
+    CreateLoginFlowRequest create_login_flow = 1;
+  }
+}
+
+message CreateLoginFlowResponse {
   uint32 code = 1;
   repeated Endpoint endpoints = 2;
 }
 
-message AuthInteractRequest {
-  oneof payload {
-    bytes raw_frame = 1;
-    LoginFrame login_frame = 2;
-  }
-}
-
 message AuthInteractResponse {
-  oneof payload {
-    ErrorFrame error_frame = 1;
-    InfoFrame info_frame = 2;
-    EndpointListFrame endpoint_list_frame = 3;
+  oneof response {
+    Error error = 1;
+    Info info = 2;
+    CreateLoginFlowResponse create_login_flow = 3;
   }
 }
 
@@ -61,45 +62,44 @@ service Auth {
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
-  // stream of events
-  rpc AuthCreateHandoffFlowFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
+  // CreateLoginFlow send a login frame to the auth server
+  rpc CreateLoginFlow(CreateLoginFlowRequest) returns (CreateLoginFlowResponse);
 }
 
-message SyncFrame {
+message SyncRequest {
   uint32 sequence = 1;
   uint32 code = 2;
 }
 
-message IdentifierFrame {
+message Identifier {
   uint32 sequence = 1;
-  string identifier = 2;
+  string value = 2;
 }
 
-message PasswordFrame {
+message Password {
   uint32 sequence = 1;
-  string password = 2;
+  string value = 2;
 }
 
-message HeartbeatFrame {}
+message HeartbeatRequest {}
 
 // TODO: unidentified f_stash_end frame
-message FStashEndFrame {}
+message FStashEndRequest {}
 
 // TODO: unidentified c_close frame
-message CCloseFrame {}
+message CCloseRequest {}
 
 // TODO: unidentified lbs frame
-message LBSFrame { int32 type = 1; }
+message LBSRequest { int32 type = 1; }
 
-message MultiTargetFrame {
+message MultiTarget {
   string skill_id = 1;
   uint32 target_id = 2;
 }
 
-message MultiTargetListFrame {
+message MultiTargetListRequest {
   uint32 target_amount = 1;
-  repeated MultiTargetFrame targets = 2;
+  repeated MultiTarget targets = 2;
 }
 
 enum RequestType {
@@ -110,7 +110,7 @@ enum RequestType {
   DECLINED = 4;
 }
 
-message RequestFrame {
+message CharacterRequestRequest {
   uint32 character_id = 1;
   RequestType type = 2;
 }
@@ -131,102 +131,44 @@ enum CharacterOptions {
   MINILAND_INVITE_BLOCKED = 12;
 }
 
-message GlobalOptionsFrame { CharacterOptions option = 1; }
+message GlobalOptions { CharacterOptions option = 1; }
 
-message CommandFrame {
+message CoreInteractRequest {
   uint32 sequence = 1;
-  oneof payload {
-    bytes raw_frame = 2;
-    HeartbeatFrame heartbeat_frame = 3;
-    FStashEndFrame f_stash_end_frame = 4;
-    CCloseFrame c_close_frame = 5;
-    LBSFrame lbs_frame = 6;
-    MultiTargetListFrame multi_target_list_frame = 7;
-    RequestFrame request_frame = 8;
-    GlobalOptionsFrame global_options_frame = 9;
+  oneof request {
+    bytes raw = 2;
+    HeartbeatRequest heartbeat = 3;
+  }
+}
+
+message ClientInteractRequest {
+  uint32 sequence = 1;
+  oneof request {
+    FStashEndRequest f_stash_end = 2;
+    CCloseRequest c_close = 3;
+    LBSRequest lbs = 4;
+    MultiTargetListRequest multi_target_list = 5;
+    CharacterRequestRequest character_request = 6;
+    GlobalOptions global_options = 7;
   }
 }
 
 message ChannelInteractRequest {
-  oneof payload {
-    SyncFrame sync_frame = 1;
-    IdentifierFrame identifier_frame = 2;
-    PasswordFrame password_frame = 3;
-    CommandFrame command_frame = 5;
+  oneof request {
+    SyncRequest sync = 1;
+    Identifier identifier = 2;
+    Password password = 3;
+    CoreInteractRequest core_interact = 4;
+    ClientInteractRequest client_interact = 5;
+    shikanime.elkia.world.v1alpha1.LobbyInteractRequest lobby_interact = 6;
   }
 }
 
-enum CharacterClass {
-  ADVENTURER = 0;
-  SORCERER = 1;
-  ARCHER = 2;
-  SWORDMAN = 3;
-  MARTIAL_ARTIST = 4;
-}
-
-enum Sex {
-  Male = 0;
-  Female = 1;
-}
-
-enum CharacterHairColor {
-  MauveTaupe = 0;
-  Cerise = 1;
-  SanMarino = 2;
-  Affair = 3;
-  Dixie = 4;
-  Raven = 5;
-  Killarney = 6;
-  Nutmeg = 7;
-  Saddle = 8;
-  Red = 9;
-}
-
-enum CharacterHairStyle {
-  StyleA = 0;
-  StyleB = 1;
-  StyleC = 2;
-  StyleD = 3;
-  Shaved = 4;
-}
-
-enum Faction {
-  Neutral = 0;
-  Angel = 1;
-  Demon = 2;
-}
-
-message CharacterFrame {
-  string id = 1;
-  CharacterClass class = 2;
-  Sex sex = 3;
-  CharacterHairColor hair_color = 4;
-  CharacterHairStyle hair_style = 5;
-  Faction faction = 6;
-  int32 reputation = 7;
-  int32 dignity = 8;
-  int32 compliment = 9;
-  int32 health = 10;
-  int32 mana = 11;
-  string name = 12;
-  int32 hero_experience = 13;
-  int32 hero_level = 14;
-  int32 job_experience = 15;
-  int32 job_level = 16;
-  int32 experience = 17;
-  int32 level = 18;
-}
-
-message CharacterListFrame {
-  uint32 code = 1;
-  repeated CharacterFrame character_frames = 2;
-}
-
 message ChannelInteractResponse {
-  oneof payload {
-    ErrorFrame error_frame = 1;
-    InfoFrame info_frame = 2;
-    CharacterListFrame character_list_frame = 3;
+  oneof response {
+    Error error = 1;
+    Info info = 2;
+    shikanime.elkia.world.v1alpha1.LobbyInteractResponse lobby_interact = 3;
   }
 }
 
@@ -235,49 +177,4 @@ service Gateway {
   // the channel server
   rpc ChannelInteract(stream ChannelInteractRequest)
       returns (stream ChannelInteractResponse);
-}
-
-message CharacterAddRequest {
-  string id = 1;
-  string name = 2;
-  CharacterClass class = 3;
-  Sex sex = 4;
-  CharacterHairColor hair_color = 5;
-  CharacterHairStyle hair_style = 6;
-}
-
-message CharacterAddResponse {}
-
-message CharacterRemoveRequest { string id = 1; }
-
-message CharacterRemoveResponse {}
-
-message CharacterUpdateRequest {
-  string id = 1;
-  optional uint32 world_id = 2;
-  optional uint32 channel_id = 3;
-  optional string name = 4;
-  optional string address = 5;
-  optional uint32 population = 6;
-  optional uint32 capacity = 7;
-}
-
-message CharacterUpdateResponse {}
-
-message CharacterListRequest { string identity_id = 1; }
-
-message CharacterListResponse { repeated CharacterFrame character_frames = 1; }
-
-service Lobby {
-  // CharacterAdd adds a new character to the world.
-  rpc CharacterAdd(CharacterAddRequest) returns (CharacterAddResponse);
-
-  // CharacterRemove removes an existing character from the world.
-  rpc CharacterRemove(CharacterRemoveRequest) returns (CharacterRemoveResponse);
-
-  // CharacterUpdate updates an existing character in the world.
-  rpc CharacterUpdate(CharacterUpdateRequest) returns (CharacterUpdateResponse);
-
-  // CharacterList lists all characters in the world.
-  rpc CharacterList(CharacterListRequest) returns (CharacterListResponse);
 }

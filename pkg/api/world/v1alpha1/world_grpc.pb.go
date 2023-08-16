@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Lobby_LobbyInteract_FullMethodName   = "/shikanime.elkia.world.v1alpha1.Lobby/LobbyInteract"
 	Lobby_CharacterAdd_FullMethodName    = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterAdd"
 	Lobby_CharacterRemove_FullMethodName = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterRemove"
 	Lobby_CharacterUpdate_FullMethodName = "/shikanime.elkia.world.v1alpha1.Lobby/CharacterUpdate"
@@ -29,6 +30,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LobbyClient interface {
+	// LobbyInteract is used to interact with the lobby.
+	LobbyInteract(ctx context.Context, opts ...grpc.CallOption) (Lobby_LobbyInteractClient, error)
 	// CharacterAdd adds a new character to the world.
 	CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error)
 	// CharacterRemove removes an existing character from the world.
@@ -45,6 +48,37 @@ type lobbyClient struct {
 
 func NewLobbyClient(cc grpc.ClientConnInterface) LobbyClient {
 	return &lobbyClient{cc}
+}
+
+func (c *lobbyClient) LobbyInteract(ctx context.Context, opts ...grpc.CallOption) (Lobby_LobbyInteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Lobby_ServiceDesc.Streams[0], Lobby_LobbyInteract_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &lobbyLobbyInteractClient{stream}
+	return x, nil
+}
+
+type Lobby_LobbyInteractClient interface {
+	Send(*LobbyInteractRequest) error
+	Recv() (*LobbyInteractResponse, error)
+	grpc.ClientStream
+}
+
+type lobbyLobbyInteractClient struct {
+	grpc.ClientStream
+}
+
+func (x *lobbyLobbyInteractClient) Send(m *LobbyInteractRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *lobbyLobbyInteractClient) Recv() (*LobbyInteractResponse, error) {
+	m := new(LobbyInteractResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *lobbyClient) CharacterAdd(ctx context.Context, in *CharacterAddRequest, opts ...grpc.CallOption) (*CharacterAddResponse, error) {
@@ -87,6 +121,8 @@ func (c *lobbyClient) CharacterList(ctx context.Context, in *CharacterListReques
 // All implementations must embed UnimplementedLobbyServer
 // for forward compatibility
 type LobbyServer interface {
+	// LobbyInteract is used to interact with the lobby.
+	LobbyInteract(Lobby_LobbyInteractServer) error
 	// CharacterAdd adds a new character to the world.
 	CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error)
 	// CharacterRemove removes an existing character from the world.
@@ -102,6 +138,9 @@ type LobbyServer interface {
 type UnimplementedLobbyServer struct {
 }
 
+func (UnimplementedLobbyServer) LobbyInteract(Lobby_LobbyInteractServer) error {
+	return status.Errorf(codes.Unimplemented, "method LobbyInteract not implemented")
+}
 func (UnimplementedLobbyServer) CharacterAdd(context.Context, *CharacterAddRequest) (*CharacterAddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CharacterAdd not implemented")
 }
@@ -125,6 +164,32 @@ type UnsafeLobbyServer interface {
 
 func RegisterLobbyServer(s grpc.ServiceRegistrar, srv LobbyServer) {
 	s.RegisterService(&Lobby_ServiceDesc, srv)
+}
+
+func _Lobby_LobbyInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(LobbyServer).LobbyInteract(&lobbyLobbyInteractServer{stream})
+}
+
+type Lobby_LobbyInteractServer interface {
+	Send(*LobbyInteractResponse) error
+	Recv() (*LobbyInteractRequest, error)
+	grpc.ServerStream
+}
+
+type lobbyLobbyInteractServer struct {
+	grpc.ServerStream
+}
+
+func (x *lobbyLobbyInteractServer) Send(m *LobbyInteractResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *lobbyLobbyInteractServer) Recv() (*LobbyInteractRequest, error) {
+	m := new(LobbyInteractRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func _Lobby_CharacterAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -223,6 +288,13 @@ var Lobby_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Lobby_CharacterList_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "LobbyInteract",
+			Handler:       _Lobby_LobbyInteract_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "pkg/api/world/v1alpha1/world.proto",
 }

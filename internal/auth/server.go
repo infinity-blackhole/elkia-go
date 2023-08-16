@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"math"
 	"net"
 
@@ -31,47 +32,58 @@ type Server struct {
 
 func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	for {
-		m, err := stream.Recv()
+		msg, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		switch m.Payload.(type) {
-		case *eventing.AuthInteractRequest_LoginFrame:
+		switch request := msg.Request.(type) {
+		case *eventing.AuthInteractRequest_CreateLoginFlow:
 			logrus.Debugf("auth: handle handoff")
-			if err := s.AuthCreateHandoffFlowFrameProduce(
-				m.GetLoginFrame(),
-				stream,
-			); err != nil {
+			login, err := s.CreateLoginFlow(
+				stream.Context(),
+				request.CreateLoginFlow,
+			)
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&eventing.AuthInteractResponse{
+				Response: &eventing.AuthInteractResponse_CreateLoginFlow{
+					CreateLoginFlow: login,
+				},
+			}); err != nil {
 				return err
 			}
 		default:
-			return status.Newf(codes.Unimplemented, "unimplemented frame type: %T", m.Payload).Err()
+			return status.Newf(
+				codes.Unimplemented,
+				"unimplemented frame type: %T",
+				msg.Request,
+			).Err()
 		}
 	}
 }
 
-func (s *Server) AuthCreateHandoffFlowFrameProduce(
-	m *eventing.LoginFrame,
-	stream eventing.Auth_AuthCreateHandoffFlowFrameProduceServer,
-) error {
-	handoff, err := s.presence.AuthCreateHandoffFlow(
-		stream.Context(),
-		&fleet.AuthCreateHandoffFlowRequest{
-			Identifier: m.Identifier,
-			Password:   m.Password,
+func (s *Server) CreateLoginFlow(
+	ctx context.Context,
+	in *eventing.CreateLoginFlowRequest,
+) (*eventing.CreateLoginFlowResponse, error) {
+	handoff, err := s.presence.CreateLoginFlow(
+		ctx,
+		&fleet.CreateLoginFlowRequest{
+			Identifier: in.Identifier,
+			Password:   in.Password,
 		},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	logrus.Debugf("auth: create handoff: %v", handoff)
-
 	memberList, err := s.cluster.MemberList(
-		stream.Context(),
+		ctx,
 		&fleet.MemberListRequest{},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	logrus.Debugf("auth: list members: %v", memberList)
 	var ms []*eventing.Endpoint
@@ -79,7 +91,7 @@ func (s *Server) AuthCreateHandoffFlowFrameProduce(
 		for _, a := range m.Addresses {
 			host, port, err := net.SplitHostPort(a)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			ms = append(ms, &eventing.Endpoint{
 				Host:      host,
@@ -91,12 +103,8 @@ func (s *Server) AuthCreateHandoffFlowFrameProduce(
 			})
 		}
 	}
-	return stream.Send(&eventing.AuthInteractResponse{
-		Payload: &eventing.AuthInteractResponse_EndpointListFrame{
-			EndpointListFrame: &eventing.EndpointListFrame{
-				Code:      handoff.Code,
-				Endpoints: ms,
-			},
-		},
-	})
+	return &eventing.CreateLoginFlowResponse{
+		Code:      handoff.Code,
+		Endpoints: ms,
+	}, nil
 }

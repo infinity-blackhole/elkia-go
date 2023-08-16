@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.shikanime.studio/elkia/internal/clients"
 	"go.shikanime.studio/elkia/internal/lobby"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	world "go.shikanime.studio/elkia/pkg/api/world/v1alpha1"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 
@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	eventing.RegisterLobbyServer(
+	world.RegisterLobbyServer(
 		srv,
 		lobby.NewLobbyServer(lobby.LobbyServerConfig{
 			DB: db,

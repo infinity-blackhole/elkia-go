@@ -47,8 +47,12 @@ func main() {
 	fleet.RegisterPresenceServer(
 		srv,
 		presence.NewPresenceServer(presence.PresenceServerConfig{
-			OryClient:   oryClient,
-			RedisClient: redisClient,
+			IdentityManager: presence.NewOryIdentityServer(presence.OryIdentityServerConfig{
+				OryClient: oryClient,
+			}),
+			SessionManager: presence.NewRedisSessionServer(presence.RedisSessionServerConfig{
+				RedisClient: redisClient,
+			}),
 		}),
 	)
 	myNs := os.Getenv("MY_NAMESPACE")
