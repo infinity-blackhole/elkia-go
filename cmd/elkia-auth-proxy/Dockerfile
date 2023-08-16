@@ -33,7 +33,7 @@ CMD ["/usr/local/bin/elkia-auth-proxy"]
 FROM gcr.io/distroless/base-debian11:nonroot
 
 # Connect container image to source code
-LABEL org.opencontainers.image.source https://go.shikanime.studio/elkia
+LABEL org.opencontainers.image.source https://github.com/infinity-blackhole/elkia-go
 
 # Copy binary
 COPY --from=build /usr/local/bin/elkia-auth-proxy /usr/local/bin/elkia-auth-proxy
