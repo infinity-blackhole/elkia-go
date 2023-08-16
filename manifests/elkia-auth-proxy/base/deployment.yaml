@@ -25,7 +25,7 @@ spec:
             - name: HOST
               value: "0.0.0.0"
           ports:
-            - containerPort: 4123
+            - containerPort: 4000
               name: nslp
           resources:
             requests:

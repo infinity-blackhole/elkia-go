@@ -11,7 +11,7 @@ metadata:
 spec:
   ports:
     - name: nslp
-      port: 4123
+      port: 4000
       targetPort: nslp
   selector:
     app.kubernetes.io/name: elkia-auth-proxy

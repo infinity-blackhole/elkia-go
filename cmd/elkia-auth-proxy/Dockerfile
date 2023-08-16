@@ -39,6 +39,6 @@ LABEL org.opencontainers.image.source https://go.shikanime.studio/elkia
 COPY --from=build /usr/local/bin/elkia-auth-proxy /usr/local/bin/elkia-auth-proxy
 
 # NosTale Auth
-EXPOSE 4123
+EXPOSE 4000
 
 ENTRYPOINT ["elkia-auth-proxy"]
