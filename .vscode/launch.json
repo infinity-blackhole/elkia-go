@@ -10,35 +10,35 @@
       "portForward": true,
       "debug": [
         {
-          "image": "ghcr.io/infinity-blackhole/elkia-auth",
+          "image": "elkia-auth",
           "containerName": "elkia-auth",
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
           }
         },
         {
-          "image": "ghcr.io/infinity-blackhole/elkia-auth-proxy",
+          "image": "elkia-auth-proxy",
           "containerName": "elkia-auth-proxy",
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
           }
         },
         {
-          "image": "ghcr.io/infinity-blackhole/elkia-gateway",
+          "image": "elkia-gateway",
           "containerName": "elkia-gateway",
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
           }
         },
         {
-          "image": "ghcr.io/infinity-blackhole/elkia-gateway-proxy",
+          "image": "elkia-gateway-proxy",
           "containerName": "elkia-gateway-proxy",
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
           }
         },
         {
-          "image": "ghcr.io/infinity-blackhole/elkia-fleet",
+          "image": "elkia-fleet",
           "containerName": "elkia-fleet",
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"

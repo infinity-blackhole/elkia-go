@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: elkia-gateway
-          image: ghcr.io/infinity-blackhole/elkia-gateway
+          image: elkia-gateway
           env:
             - name: HOST
               value: "0.0.0.0"
