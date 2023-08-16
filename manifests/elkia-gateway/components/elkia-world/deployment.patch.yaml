@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elkia-gateway
+  namespace: elkia
+spec:
+  template:
+    spec:
+      containers:
+        - name: elkia-gateway
+          env:
+            - name: ELKIA_WORLD_ENDPOINT
+              value: elkia-world:80

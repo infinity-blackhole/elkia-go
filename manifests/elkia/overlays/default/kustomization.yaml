@@ -7,6 +7,7 @@ resources:
   - ../../../elkia-gateway/overlays/default
   - ../../../elkia-gateway-proxy/overlays/default
   - ../../../elkia-fleet/overlays/default
+  - ../../../elkia-world/overlays/default
   - ../../../kratos/overlays/default
   - ../../../kratos-selfservice-ui-node/overlays/default
   - ../../../redis/overlays/default

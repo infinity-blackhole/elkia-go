@@ -43,6 +43,13 @@
           "sourceFileMap": {
             "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia"
           }
+        },
+        {
+          "image": "elkia-world",
+          "containerName": "elkia-world",
+          "sourceFileMap": {
+            "${workspaceFolder}": "/go/src/github.com/infinity-blackhole/elkia-world"
+          }
         }
       ]
     }
