@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 
 	"go.shikanime.studio/elkia/pkg/protonostale"
@@ -48,8 +47,5 @@ func (d *SessionDecoder) Decode(v any) error {
 	if err != nil {
 		return err
 	}
-	if v, ok := v.(protonostale.Unmarshaler); ok {
-		return v.UnmarshalNosTale(buff)
-	}
-	return fmt.Errorf("invalid payload: %v", v)
+	return protonostale.UnmarshalNosTale(buff, v)
 }

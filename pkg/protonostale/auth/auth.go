@@ -3,7 +3,6 @@ package auth
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 
 	"go.shikanime.studio/elkia/pkg/protonostale"
@@ -74,10 +73,7 @@ func (d *Decoder) Decode(v any) error {
 		}
 		return io.EOF
 	}
-	if v, ok := v.(protonostale.Unmarshaler); ok {
-		return v.UnmarshalNosTale(d.s.Bytes())
-	}
-	return fmt.Errorf("invalid payload: %v", v)
+	return protonostale.UnmarshalNosTale(d.s.Bytes(), v)
 }
 
 type Writer struct {
@@ -116,13 +112,9 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 func (e *Encoder) Encode(v any) (err error) {
-	var bs []byte
-	switch v := v.(type) {
-	case protonostale.Marshaler:
-		bs, err = v.MarshalNosTale()
-		if err != nil {
-			return err
-		}
+	bs, err := protonostale.MarshalNosTale(v)
+	if err != nil {
+		return err
 	}
 	return e.w.WriteFrame(bs)
 }

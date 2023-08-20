@@ -57,13 +57,9 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 func (e *Encoder) Encode(v any) (err error) {
-	var bs []byte
-	switch v := v.(type) {
-	case protonostale.Marshaler:
-		bs, err = v.MarshalNosTale()
-		if err != nil {
-			return err
-		}
+	bs, err := protonostale.MarshalNosTale(v)
+	if err != nil {
+		return err
 	}
 	return e.w.WriteFrame(bs)
 }
