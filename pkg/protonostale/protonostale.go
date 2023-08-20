@@ -17,15 +17,29 @@ type Marshaler interface {
 }
 
 func UnmarshalNosTale(data []byte, v any) error {
-	if v, ok := v.(Unmarshaler); ok {
+	switch v := v.(type) {
+	case Unmarshaler:
 		return v.UnmarshalNosTale(data)
+	case *string:
+		*v = string(data)
+		return nil
+	case *[]byte:
+		*v = data
+		return nil
+	default:
+		return fmt.Errorf("invalid payload: %v", v)
 	}
-	return fmt.Errorf("invalid payload: %v", v)
 }
 
 func MarshalNosTale(v any) ([]byte, error) {
-	if v, ok := v.(Marshaler); ok {
+	switch v := v.(type) {
+	case []byte:
+		return v, nil
+	case string:
+		return []byte(v), nil
+	case Marshaler:
 		return v.MarshalNosTale()
+	default:
+		return nil, fmt.Errorf("invalid payload: %v", v)
 	}
-	return nil, fmt.Errorf("invalid payload: %v", v)
 }
