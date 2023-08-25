@@ -3,7 +3,6 @@ package gateway
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 
 	"go.shikanime.studio/elkia/pkg/protonostale"
@@ -177,8 +176,5 @@ func (d *ChannelDecoder) Decode(v any) error {
 		}
 		return io.EOF
 	}
-	if v, ok := v.(protonostale.Unmarshaler); ok {
-		return v.UnmarshalNosTale(d.s.Bytes())
-	}
-	return fmt.Errorf("invalid payload: %v", v)
+	return protonostale.UnmarshalNosTale(d.s.Bytes(), v)
 }
