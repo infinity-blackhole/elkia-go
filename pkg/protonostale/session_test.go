@@ -12,8 +12,8 @@ func TestLoginFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := AuthInteractRequest{
 		&eventing.AuthInteractRequest{
-			Payload: &eventing.AuthInteractRequest_LoginFrame{
-				LoginFrame: &eventing.LoginFrame{
+			Request: &eventing.AuthInteractRequest_CreateLoginFlow{
+				CreateLoginFlow: &eventing.CreateLoginFlowRequest{
 					Identifier:    "admin",
 					Password:      "s3cr3t",
 					ClientVersion: "0.9.3+3086",
@@ -65,8 +65,8 @@ func TestDecodeClientVersion(t *testing.T) {
 }
 
 func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
-	input := &EndpointListFrame{
-		EndpointListFrame: &eventing.EndpointListFrame{
+	input := &CreateLoginFlowResponse{
+		CreateLoginFlowResponse: &eventing.CreateLoginFlowResponse{
 			Code: 1,
 			Endpoints: []*eventing.Endpoint{
 				{
@@ -99,12 +99,12 @@ func TestEndpointListFrameUnmarshalNosTale(t *testing.T) {
 }
 
 func TestSyncFrameUnmarshalNosTale(t *testing.T) {
-	input := []byte("4349270 0 ;;")
-	expected := eventing.SyncFrame{
-		Sequence: 49270,
-		Code:     0,
+	input := []byte("5 18836 1098142510;;")
+	expected := eventing.SyncRequest{
+		Sequence: 18836,
+		Code:     1098142510,
 	}
-	var result SyncFrame
+	var result SyncRequest
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -115,11 +115,11 @@ func TestSyncFrameUnmarshalNosTale(t *testing.T) {
 
 func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("60471 ricofo8350@otanhome.com")
-	expected := eventing.IdentifierFrame{
-		Sequence:   60471,
-		Identifier: "ricofo8350@otanhome.com",
+	expected := eventing.Identifier{
+		Sequence: 60471,
+		Value:    "ricofo8350@otanhome.com",
 	}
-	var result IdentifierFrame
+	var result Identifier
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -130,11 +130,11 @@ func TestIdentifierFrameUnmarshalNosTale(t *testing.T) {
 
 func TestPasswordFrameUnmarshalNosTale(t *testing.T) {
 	input := []byte("60472 9hibwiwiG2e6Nr")
-	expected := eventing.PasswordFrame{
+	expected := eventing.Password{
 		Sequence: 60472,
-		Password: "9hibwiwiG2e6Nr",
+		Value:    "9hibwiwiG2e6Nr",
 	}
-	var result PasswordFrame
+	var result Password
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

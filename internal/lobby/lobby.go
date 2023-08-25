@@ -3,17 +3,17 @@ package lobby
 import (
 	"context"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	world "go.shikanime.studio/elkia/pkg/api/world/v1alpha1"
 	"gorm.io/gorm"
 )
 
 type Character struct {
 	gorm.Model
 	Id             string
-	Class          eventing.CharacterClass
-	HairColor      eventing.CharacterHairColor
-	HairStyle      eventing.CharacterHairStyle
-	Faction        eventing.Faction
+	Class          world.CharacterClass
+	HairColor      world.CharacterHairColor
+	HairStyle      world.CharacterHairStyle
+	Faction        world.Faction
 	Reputation     int32
 	Dignity        int32
 	Compliment     int32
@@ -32,30 +32,30 @@ type LobbyServerConfig struct {
 	DB *gorm.DB
 }
 
-func NewLobbyServer(config LobbyServerConfig) *LobbyServer {
+func NewLobbyServer(cfg LobbyServerConfig) *LobbyServer {
 	return &LobbyServer{
-		db: config.DB,
+		db: cfg.DB,
 	}
 }
 
 type LobbyServer struct {
-	eventing.UnimplementedLobbyServer
+	world.UnimplementedLobbyServer
 	db *gorm.DB
 }
 
 func (s *LobbyServer) CharacterList(
 	ctx context.Context,
-	in *eventing.CharacterListRequest,
-) (*eventing.CharacterListResponse, error) {
+	in *world.CharacterListRequest,
+) (*world.CharacterListResponse, error) {
 	var dbChar []Character
 	if err := s.db.
 		Where("id = ?", in.IdentityId).
 		Find(&dbChar).Error; err != nil {
 		return nil, err
 	}
-	var characters []*eventing.CharacterFrame
+	var characters []*world.Character
 	for _, character := range characters {
-		characters = append(characters, &eventing.CharacterFrame{
+		characters = append(characters, &world.Character{
 			Id:             character.Id,
 			Class:          character.Class,
 			HairColor:      character.HairColor,
@@ -75,7 +75,7 @@ func (s *LobbyServer) CharacterList(
 			Level:          character.Level,
 		})
 	}
-	return &eventing.CharacterListResponse{
-		CharacterFrames: characters,
+	return &world.CharacterListResponse{
+		Characters: characters,
 	}, nil
 }

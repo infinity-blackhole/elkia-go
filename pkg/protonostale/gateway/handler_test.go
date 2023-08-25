@@ -3,6 +3,7 @@ package gateway
 import (
 	"bufio"
 	"context"
+	"math/rand"
 	"net"
 	"testing"
 	"testing/iotest"
@@ -19,19 +20,27 @@ import (
 func TestHandlerServeNosTale(t *testing.T) {
 	ctx := context.Background()
 	var wg errgroup.Group
-	fakePresence := presencetest.NewFakePresence(presence.MemoryPresenceServerConfig{
-		Identities: map[uint32]*presence.Identity{
-			1: {
-				Username: "ricofo8350@otanhome.com",
-				Password: "9hibwiwiG2e6Nr",
+	fakePresence := presencetest.NewFakePresence(presence.PresenceServerConfig{
+		IdentityManager: presence.NewInMemoryIdentityServer(presence.InMemoryIdentityServerConfig{
+			Identities: map[uint32]*presence.InMemoryIdentity{
+				1: {
+					Username: "ricofo8350@otanhome.com",
+					Password: "9hibwiwiG2e6Nr",
+				},
 			},
-		},
-		Sessions: map[uint32]*fleet.Session{
-			0: {
-				Token: "zIRkVceCdjQXzB1feO9Sukm2N8dPzS3TQ3mI9GyZ0Z1EVpmGFI3HKat114vreNOh",
+			RandSource: rand.NewSource(1),
+		}),
+		SessionManager: presence.NewInMemorySessionServer(presence.InMemorySessionServerConfig{
+			Sessions: map[uint32]*fleet.Session{
+				0: {
+					State: &fleet.Session_Handoff{
+						Handoff: &fleet.SessionHandoff{
+							Token: "zIRkVceCdjQXzB1feO9Sukm2N8dPzS3TQ3mI9GyZ0Z1EVpmGFI3HKat114vreNOh",
+						},
+					},
+				},
 			},
-		},
-		Seed: 1,
+		}),
 	})
 	wg.Go(fakePresence.Serve)
 	fakePresenceClient, err := fakePresence.Dial(ctx)

@@ -108,12 +108,12 @@ func (s *ChannelScanner) Bytes() []byte {
 		payload := bs[1:]
 		if flag <= 0x7A {
 			first := make([]byte, len(payload))
-			n := s.decodePackedLinearFrame(first, payload, flag)
+			n := s.decodePackedLinear(first, payload, flag)
 			result = append(result, first[:n]...)
 			bs = payload[n:]
 		} else {
 			first := make([]byte, len(payload)*2)
-			ndst, nsrc := s.decodePackedCompactFrame(first, payload, flag&0x7F)
+			ndst, nsrc := s.decodePackedCompact(first, payload, flag&0x7F)
 			bs = payload[nsrc:]
 			result = append(result, first[:ndst]...)
 		}
@@ -121,7 +121,7 @@ func (s *ChannelScanner) Bytes() []byte {
 	return result
 }
 
-func (s *ChannelScanner) decodePackedLinearFrame(dst, src []byte, flag byte) (n int) {
+func (s *ChannelScanner) decodePackedLinear(dst, src []byte, flag byte) (n int) {
 	var l int
 	if int(flag) < len(src) {
 		l = int(flag)
@@ -138,7 +138,7 @@ var permutations = []byte{
 	' ', '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'n',
 }
 
-func (s *ChannelScanner) decodePackedCompactFrame(dst, src []byte, flag byte) (ndst, nsrc int) {
+func (s *ChannelScanner) decodePackedCompact(dst, src []byte, flag byte) (ndst, nsrc int) {
 	buff := src
 	for ndst, nsrc = 0, 0; ndst < int(flag) && len(buff) > 0; ndst, nsrc = ndst+1, nsrc+1 {
 		h := int(buff[0] >> 4)

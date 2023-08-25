@@ -54,7 +54,7 @@ func ScanFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF {
 		return len(data), data, nil
 	}
-	// Request more data.
+	// CharacterRequestRequest more data.
 	return 0, nil, nil
 }
 

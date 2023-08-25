@@ -10,9 +10,9 @@ type MemoryClusterServerConfig struct {
 	Members []*fleet.Member
 }
 
-func NewMemoryClusterServer(config MemoryClusterServerConfig) *MemoryClusterServer {
+func NewMemoryClusterServer(cfg MemoryClusterServerConfig) *MemoryClusterServer {
 	return &MemoryClusterServer{
-		members: config.Members,
+		members: cfg.Members,
 	}
 }
 

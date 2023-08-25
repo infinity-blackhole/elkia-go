@@ -228,43 +228,24 @@ var Cluster_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	Presence_AuthCreateHandoffFlow_FullMethodName   = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthCreateHandoffFlow"
-	Presence_AuthCompleteHandoffFlow_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthCompleteHandoffFlow"
-	Presence_AuthLogin_FullMethodName               = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthLogin"
-	Presence_AuthRefreshLogin_FullMethodName        = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthRefreshLogin"
-	Presence_AuthWhoAmI_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthWhoAmI"
-	Presence_AuthLogout_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/AuthLogout"
-	Presence_SessionGet_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionGet"
-	Presence_SessionPut_FullMethodName              = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionPut"
-	Presence_SessionDelete_FullMethodName           = "/shikanime.elkia.fleet.v1alpha1.Presence/SessionDelete"
+	Presence_CreateLoginFlow_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Presence/CreateLoginFlow"
+	Presence_SubmitLoginFlow_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Presence/SubmitLoginFlow"
+	Presence_ClaimLoginFlow_FullMethodName  = "/shikanime.elkia.fleet.v1alpha1.Presence/ClaimLoginFlow"
 )
 
 // PresenceClient is the client API for Presence service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PresenceClient interface {
-	// AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+	// CreateLoginFlow creates a handoff flow with a given identifier and
 	// password.
-	AuthCreateHandoffFlow(ctx context.Context, in *AuthCreateHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCreateHandoffFlowResponse, error)
-	// AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+	CreateLoginFlow(ctx context.Context, in *CreateLoginFlowRequest, opts ...grpc.CallOption) (*CreateLoginFlowResponse, error)
+	// SubmitLoginFlow hands off a session to a gateway with a given token and
 	// code.
-	AuthCompleteHandoffFlow(ctx context.Context, in *AuthCompleteHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCompleteHandoffFlowResponse, error)
-	// AuthLogin hands off a session to a gateway with a given token and
-	// code.
-	AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error)
-	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
-	// token.
-	AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error)
-	// AuthWhoAmI returns the session associated with a given token.
-	AuthWhoAmI(ctx context.Context, in *AuthWhoAmIRequest, opts ...grpc.CallOption) (*AuthWhoAmIResponse, error)
-	// AuthLogout logs out a session with a given code.
-	AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error)
-	// SessionGet gets a session with a given code.
-	SessionGet(ctx context.Context, in *SessionGetRequest, opts ...grpc.CallOption) (*SessionGetResponse, error)
-	// SessionPut creates a session with a given identifier and token.
-	SessionPut(ctx context.Context, in *SessionPutRequest, opts ...grpc.CallOption) (*SessionPutResponse, error)
-	// SessionDelete Deletes a session with a given code.
-	SessionDelete(ctx context.Context, in *SessionDeleteRequest, opts ...grpc.CallOption) (*SessionDeleteResponse, error)
+	SubmitLoginFlow(ctx context.Context, in *SubmitLoginFlowRequest, opts ...grpc.CallOption) (*SubmitLoginFlowResponse, error)
+	// ClaimLoginFlow authenticates a gateway with a given identifier, password,
+	// and token.
+	ClaimLoginFlow(ctx context.Context, in *ClaimLoginFlowRequest, opts ...grpc.CallOption) (*ClaimLoginFlowResponse, error)
 }
 
 type presenceClient struct {
@@ -275,81 +256,27 @@ func NewPresenceClient(cc grpc.ClientConnInterface) PresenceClient {
 	return &presenceClient{cc}
 }
 
-func (c *presenceClient) AuthCreateHandoffFlow(ctx context.Context, in *AuthCreateHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCreateHandoffFlowResponse, error) {
-	out := new(AuthCreateHandoffFlowResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthCreateHandoffFlow_FullMethodName, in, out, opts...)
+func (c *presenceClient) CreateLoginFlow(ctx context.Context, in *CreateLoginFlowRequest, opts ...grpc.CallOption) (*CreateLoginFlowResponse, error) {
+	out := new(CreateLoginFlowResponse)
+	err := c.cc.Invoke(ctx, Presence_CreateLoginFlow_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *presenceClient) AuthCompleteHandoffFlow(ctx context.Context, in *AuthCompleteHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCompleteHandoffFlowResponse, error) {
-	out := new(AuthCompleteHandoffFlowResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthCompleteHandoffFlow_FullMethodName, in, out, opts...)
+func (c *presenceClient) SubmitLoginFlow(ctx context.Context, in *SubmitLoginFlowRequest, opts ...grpc.CallOption) (*SubmitLoginFlowResponse, error) {
+	out := new(SubmitLoginFlowResponse)
+	err := c.cc.Invoke(ctx, Presence_SubmitLoginFlow_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error) {
-	out := new(AuthLoginResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthLogin_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error) {
-	out := new(AuthRefreshLoginResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthRefreshLogin_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) AuthWhoAmI(ctx context.Context, in *AuthWhoAmIRequest, opts ...grpc.CallOption) (*AuthWhoAmIResponse, error) {
-	out := new(AuthWhoAmIResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthWhoAmI_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) AuthLogout(ctx context.Context, in *AuthLogoutRequest, opts ...grpc.CallOption) (*AuthLogoutResponse, error) {
-	out := new(AuthLogoutResponse)
-	err := c.cc.Invoke(ctx, Presence_AuthLogout_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) SessionGet(ctx context.Context, in *SessionGetRequest, opts ...grpc.CallOption) (*SessionGetResponse, error) {
-	out := new(SessionGetResponse)
-	err := c.cc.Invoke(ctx, Presence_SessionGet_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) SessionPut(ctx context.Context, in *SessionPutRequest, opts ...grpc.CallOption) (*SessionPutResponse, error) {
-	out := new(SessionPutResponse)
-	err := c.cc.Invoke(ctx, Presence_SessionPut_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *presenceClient) SessionDelete(ctx context.Context, in *SessionDeleteRequest, opts ...grpc.CallOption) (*SessionDeleteResponse, error) {
-	out := new(SessionDeleteResponse)
-	err := c.cc.Invoke(ctx, Presence_SessionDelete_FullMethodName, in, out, opts...)
+func (c *presenceClient) ClaimLoginFlow(ctx context.Context, in *ClaimLoginFlowRequest, opts ...grpc.CallOption) (*ClaimLoginFlowResponse, error) {
+	out := new(ClaimLoginFlowResponse)
+	err := c.cc.Invoke(ctx, Presence_ClaimLoginFlow_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -360,28 +287,15 @@ func (c *presenceClient) SessionDelete(ctx context.Context, in *SessionDeleteReq
 // All implementations must embed UnimplementedPresenceServer
 // for forward compatibility
 type PresenceServer interface {
-	// AuthCreateHandoffFlow creates a handoff flow with a given identifier and
+	// CreateLoginFlow creates a handoff flow with a given identifier and
 	// password.
-	AuthCreateHandoffFlow(context.Context, *AuthCreateHandoffFlowRequest) (*AuthCreateHandoffFlowResponse, error)
-	// AuthCompleteHandoffFlow hands off a session to a gateway with a given token and
+	CreateLoginFlow(context.Context, *CreateLoginFlowRequest) (*CreateLoginFlowResponse, error)
+	// SubmitLoginFlow hands off a session to a gateway with a given token and
 	// code.
-	AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error)
-	// AuthLogin hands off a session to a gateway with a given token and
-	// code.
-	AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error)
-	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
-	// token.
-	AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error)
-	// AuthWhoAmI returns the session associated with a given token.
-	AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error)
-	// AuthLogout logs out a session with a given code.
-	AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error)
-	// SessionGet gets a session with a given code.
-	SessionGet(context.Context, *SessionGetRequest) (*SessionGetResponse, error)
-	// SessionPut creates a session with a given identifier and token.
-	SessionPut(context.Context, *SessionPutRequest) (*SessionPutResponse, error)
-	// SessionDelete Deletes a session with a given code.
-	SessionDelete(context.Context, *SessionDeleteRequest) (*SessionDeleteResponse, error)
+	SubmitLoginFlow(context.Context, *SubmitLoginFlowRequest) (*SubmitLoginFlowResponse, error)
+	// ClaimLoginFlow authenticates a gateway with a given identifier, password,
+	// and token.
+	ClaimLoginFlow(context.Context, *ClaimLoginFlowRequest) (*ClaimLoginFlowResponse, error)
 	mustEmbedUnimplementedPresenceServer()
 }
 
@@ -389,32 +303,14 @@ type PresenceServer interface {
 type UnimplementedPresenceServer struct {
 }
 
-func (UnimplementedPresenceServer) AuthCreateHandoffFlow(context.Context, *AuthCreateHandoffFlowRequest) (*AuthCreateHandoffFlowResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthCreateHandoffFlow not implemented")
+func (UnimplementedPresenceServer) CreateLoginFlow(context.Context, *CreateLoginFlowRequest) (*CreateLoginFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateLoginFlow not implemented")
 }
-func (UnimplementedPresenceServer) AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthCompleteHandoffFlow not implemented")
+func (UnimplementedPresenceServer) SubmitLoginFlow(context.Context, *SubmitLoginFlowRequest) (*SubmitLoginFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitLoginFlow not implemented")
 }
-func (UnimplementedPresenceServer) AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthLogin not implemented")
-}
-func (UnimplementedPresenceServer) AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthRefreshLogin not implemented")
-}
-func (UnimplementedPresenceServer) AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthWhoAmI not implemented")
-}
-func (UnimplementedPresenceServer) AuthLogout(context.Context, *AuthLogoutRequest) (*AuthLogoutResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AuthLogout not implemented")
-}
-func (UnimplementedPresenceServer) SessionGet(context.Context, *SessionGetRequest) (*SessionGetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SessionGet not implemented")
-}
-func (UnimplementedPresenceServer) SessionPut(context.Context, *SessionPutRequest) (*SessionPutResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SessionPut not implemented")
-}
-func (UnimplementedPresenceServer) SessionDelete(context.Context, *SessionDeleteRequest) (*SessionDeleteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SessionDelete not implemented")
+func (UnimplementedPresenceServer) ClaimLoginFlow(context.Context, *ClaimLoginFlowRequest) (*ClaimLoginFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimLoginFlow not implemented")
 }
 func (UnimplementedPresenceServer) mustEmbedUnimplementedPresenceServer() {}
 
@@ -429,164 +325,56 @@ func RegisterPresenceServer(s grpc.ServiceRegistrar, srv PresenceServer) {
 	s.RegisterService(&Presence_ServiceDesc, srv)
 }
 
-func _Presence_AuthCreateHandoffFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthCreateHandoffFlowRequest)
+func _Presence_CreateLoginFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateLoginFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PresenceServer).AuthCreateHandoffFlow(ctx, in)
+		return srv.(PresenceServer).CreateLoginFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Presence_AuthCreateHandoffFlow_FullMethodName,
+		FullMethod: Presence_CreateLoginFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthCreateHandoffFlow(ctx, req.(*AuthCreateHandoffFlowRequest))
+		return srv.(PresenceServer).CreateLoginFlow(ctx, req.(*CreateLoginFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Presence_AuthCompleteHandoffFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthCompleteHandoffFlowRequest)
+func _Presence_SubmitLoginFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitLoginFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PresenceServer).AuthCompleteHandoffFlow(ctx, in)
+		return srv.(PresenceServer).SubmitLoginFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Presence_AuthCompleteHandoffFlow_FullMethodName,
+		FullMethod: Presence_SubmitLoginFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthCompleteHandoffFlow(ctx, req.(*AuthCompleteHandoffFlowRequest))
+		return srv.(PresenceServer).SubmitLoginFlow(ctx, req.(*SubmitLoginFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Presence_AuthLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthLoginRequest)
+func _Presence_ClaimLoginFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaimLoginFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PresenceServer).AuthLogin(ctx, in)
+		return srv.(PresenceServer).ClaimLoginFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Presence_AuthLogin_FullMethodName,
+		FullMethod: Presence_ClaimLoginFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthLogin(ctx, req.(*AuthLoginRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_AuthRefreshLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthRefreshLoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).AuthRefreshLogin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_AuthRefreshLogin_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthRefreshLogin(ctx, req.(*AuthRefreshLoginRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_AuthWhoAmI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthWhoAmIRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).AuthWhoAmI(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_AuthWhoAmI_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthWhoAmI(ctx, req.(*AuthWhoAmIRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_AuthLogout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthLogoutRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).AuthLogout(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_AuthLogout_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthLogout(ctx, req.(*AuthLogoutRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_SessionGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SessionGetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).SessionGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_SessionGet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).SessionGet(ctx, req.(*SessionGetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_SessionPut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SessionPutRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).SessionPut(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_SessionPut_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).SessionPut(ctx, req.(*SessionPutRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Presence_SessionDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SessionDeleteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PresenceServer).SessionDelete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Presence_SessionDelete_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).SessionDelete(ctx, req.(*SessionDeleteRequest))
+		return srv.(PresenceServer).ClaimLoginFlow(ctx, req.(*ClaimLoginFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -599,40 +387,399 @@ var Presence_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PresenceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AuthCreateHandoffFlow",
-			Handler:    _Presence_AuthCreateHandoffFlow_Handler,
+			MethodName: "CreateLoginFlow",
+			Handler:    _Presence_CreateLoginFlow_Handler,
 		},
 		{
-			MethodName: "AuthCompleteHandoffFlow",
-			Handler:    _Presence_AuthCompleteHandoffFlow_Handler,
+			MethodName: "SubmitLoginFlow",
+			Handler:    _Presence_SubmitLoginFlow_Handler,
 		},
 		{
-			MethodName: "AuthLogin",
-			Handler:    _Presence_AuthLogin_Handler,
+			MethodName: "ClaimLoginFlow",
+			Handler:    _Presence_ClaimLoginFlow_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "pkg/api/fleet/v1alpha1/fleet.proto",
+}
+
+const (
+	IdentityManager_Login_FullMethodName        = "/shikanime.elkia.fleet.v1alpha1.IdentityManager/Login"
+	IdentityManager_RefreshLogin_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.IdentityManager/RefreshLogin"
+	IdentityManager_WhoAmI_FullMethodName       = "/shikanime.elkia.fleet.v1alpha1.IdentityManager/WhoAmI"
+	IdentityManager_Logout_FullMethodName       = "/shikanime.elkia.fleet.v1alpha1.IdentityManager/Logout"
+)
+
+// IdentityManagerClient is the client API for IdentityManager service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type IdentityManagerClient interface {
+	// Login hands off a session to a gateway with a given token and
+	// code.
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	// RefreshLogin authenticates a gateway with a given identifier, password, and
+	// token.
+	RefreshLogin(ctx context.Context, in *RefreshLoginRequest, opts ...grpc.CallOption) (*RefreshLoginResponse, error)
+	// WhoAmI returns the session associated with a given token.
+	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error)
+	// Logout logs out a session with a given code.
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
+}
+
+type identityManagerClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewIdentityManagerClient(cc grpc.ClientConnInterface) IdentityManagerClient {
+	return &identityManagerClient{cc}
+}
+
+func (c *identityManagerClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, IdentityManager_Login_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityManagerClient) RefreshLogin(ctx context.Context, in *RefreshLoginRequest, opts ...grpc.CallOption) (*RefreshLoginResponse, error) {
+	out := new(RefreshLoginResponse)
+	err := c.cc.Invoke(ctx, IdentityManager_RefreshLogin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityManagerClient) WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error) {
+	out := new(WhoAmIResponse)
+	err := c.cc.Invoke(ctx, IdentityManager_WhoAmI_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityManagerClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
+	out := new(LogoutResponse)
+	err := c.cc.Invoke(ctx, IdentityManager_Logout_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// IdentityManagerServer is the server API for IdentityManager service.
+// All implementations must embed UnimplementedIdentityManagerServer
+// for forward compatibility
+type IdentityManagerServer interface {
+	// Login hands off a session to a gateway with a given token and
+	// code.
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	// RefreshLogin authenticates a gateway with a given identifier, password, and
+	// token.
+	RefreshLogin(context.Context, *RefreshLoginRequest) (*RefreshLoginResponse, error)
+	// WhoAmI returns the session associated with a given token.
+	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error)
+	// Logout logs out a session with a given code.
+	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
+	mustEmbedUnimplementedIdentityManagerServer()
+}
+
+// UnimplementedIdentityManagerServer must be embedded to have forward compatible implementations.
+type UnimplementedIdentityManagerServer struct {
+}
+
+func (UnimplementedIdentityManagerServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedIdentityManagerServer) RefreshLogin(context.Context, *RefreshLoginRequest) (*RefreshLoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshLogin not implemented")
+}
+func (UnimplementedIdentityManagerServer) WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WhoAmI not implemented")
+}
+func (UnimplementedIdentityManagerServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
+}
+func (UnimplementedIdentityManagerServer) mustEmbedUnimplementedIdentityManagerServer() {}
+
+// UnsafeIdentityManagerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to IdentityManagerServer will
+// result in compilation errors.
+type UnsafeIdentityManagerServer interface {
+	mustEmbedUnimplementedIdentityManagerServer()
+}
+
+func RegisterIdentityManagerServer(s grpc.ServiceRegistrar, srv IdentityManagerServer) {
+	s.RegisterService(&IdentityManager_ServiceDesc, srv)
+}
+
+func _IdentityManager_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityManagerServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityManager_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityManagerServer).Login(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityManager_RefreshLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityManagerServer).RefreshLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityManager_RefreshLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityManagerServer).RefreshLogin(ctx, req.(*RefreshLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityManager_WhoAmI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WhoAmIRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityManagerServer).WhoAmI(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityManager_WhoAmI_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityManagerServer).WhoAmI(ctx, req.(*WhoAmIRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityManager_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityManagerServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityManager_Logout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityManagerServer).Logout(ctx, req.(*LogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// IdentityManager_ServiceDesc is the grpc.ServiceDesc for IdentityManager service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var IdentityManager_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "shikanime.elkia.fleet.v1alpha1.IdentityManager",
+	HandlerType: (*IdentityManagerServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Login",
+			Handler:    _IdentityManager_Login_Handler,
 		},
 		{
-			MethodName: "AuthRefreshLogin",
-			Handler:    _Presence_AuthRefreshLogin_Handler,
+			MethodName: "RefreshLogin",
+			Handler:    _IdentityManager_RefreshLogin_Handler,
 		},
 		{
-			MethodName: "AuthWhoAmI",
-			Handler:    _Presence_AuthWhoAmI_Handler,
+			MethodName: "WhoAmI",
+			Handler:    _IdentityManager_WhoAmI_Handler,
 		},
 		{
-			MethodName: "AuthLogout",
-			Handler:    _Presence_AuthLogout_Handler,
+			MethodName: "Logout",
+			Handler:    _IdentityManager_Logout_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "pkg/api/fleet/v1alpha1/fleet.proto",
+}
+
+const (
+	SessionManager_GetSession_FullMethodName    = "/shikanime.elkia.fleet.v1alpha1.SessionManager/GetSession"
+	SessionManager_PutSession_FullMethodName    = "/shikanime.elkia.fleet.v1alpha1.SessionManager/PutSession"
+	SessionManager_DeleteSession_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.SessionManager/DeleteSession"
+)
+
+// SessionManagerClient is the client API for SessionManager service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SessionManagerClient interface {
+	// GetSession gets a session with a given code.
+	GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*GetSessionResponse, error)
+	// PutSession creates a session with a given identifier and token.
+	PutSession(ctx context.Context, in *PutSessionRequest, opts ...grpc.CallOption) (*PutSessionResponse, error)
+	// DeleteSession Deletes a session with a given code.
+	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error)
+}
+
+type sessionManagerClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSessionManagerClient(cc grpc.ClientConnInterface) SessionManagerClient {
+	return &sessionManagerClient{cc}
+}
+
+func (c *sessionManagerClient) GetSession(ctx context.Context, in *GetSessionRequest, opts ...grpc.CallOption) (*GetSessionResponse, error) {
+	out := new(GetSessionResponse)
+	err := c.cc.Invoke(ctx, SessionManager_GetSession_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionManagerClient) PutSession(ctx context.Context, in *PutSessionRequest, opts ...grpc.CallOption) (*PutSessionResponse, error) {
+	out := new(PutSessionResponse)
+	err := c.cc.Invoke(ctx, SessionManager_PutSession_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionManagerClient) DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error) {
+	out := new(DeleteSessionResponse)
+	err := c.cc.Invoke(ctx, SessionManager_DeleteSession_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SessionManagerServer is the server API for SessionManager service.
+// All implementations must embed UnimplementedSessionManagerServer
+// for forward compatibility
+type SessionManagerServer interface {
+	// GetSession gets a session with a given code.
+	GetSession(context.Context, *GetSessionRequest) (*GetSessionResponse, error)
+	// PutSession creates a session with a given identifier and token.
+	PutSession(context.Context, *PutSessionRequest) (*PutSessionResponse, error)
+	// DeleteSession Deletes a session with a given code.
+	DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error)
+	mustEmbedUnimplementedSessionManagerServer()
+}
+
+// UnimplementedSessionManagerServer must be embedded to have forward compatible implementations.
+type UnimplementedSessionManagerServer struct {
+}
+
+func (UnimplementedSessionManagerServer) GetSession(context.Context, *GetSessionRequest) (*GetSessionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSession not implemented")
+}
+func (UnimplementedSessionManagerServer) PutSession(context.Context, *PutSessionRequest) (*PutSessionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutSession not implemented")
+}
+func (UnimplementedSessionManagerServer) DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSession not implemented")
+}
+func (UnimplementedSessionManagerServer) mustEmbedUnimplementedSessionManagerServer() {}
+
+// UnsafeSessionManagerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SessionManagerServer will
+// result in compilation errors.
+type UnsafeSessionManagerServer interface {
+	mustEmbedUnimplementedSessionManagerServer()
+}
+
+func RegisterSessionManagerServer(s grpc.ServiceRegistrar, srv SessionManagerServer) {
+	s.RegisterService(&SessionManager_ServiceDesc, srv)
+}
+
+func _SessionManager_GetSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionManagerServer).GetSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionManager_GetSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionManagerServer).GetSession(ctx, req.(*GetSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SessionManager_PutSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionManagerServer).PutSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionManager_PutSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionManagerServer).PutSession(ctx, req.(*PutSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SessionManager_DeleteSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionManagerServer).DeleteSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionManager_DeleteSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionManagerServer).DeleteSession(ctx, req.(*DeleteSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SessionManager_ServiceDesc is the grpc.ServiceDesc for SessionManager service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SessionManager_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "shikanime.elkia.fleet.v1alpha1.SessionManager",
+	HandlerType: (*SessionManagerServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetSession",
+			Handler:    _SessionManager_GetSession_Handler,
 		},
 		{
-			MethodName: "SessionGet",
-			Handler:    _Presence_SessionGet_Handler,
+			MethodName: "PutSession",
+			Handler:    _SessionManager_PutSession_Handler,
 		},
 		{
-			MethodName: "SessionPut",
-			Handler:    _Presence_SessionPut_Handler,
-		},
-		{
-			MethodName: "SessionDelete",
-			Handler:    _Presence_SessionDelete_Handler,
+			MethodName: "DeleteSession",
+			Handler:    _SessionManager_DeleteSession_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
