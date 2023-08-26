@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	AuthCreateHandoffFlowOpCode = "NoS0575"
+	CreateHandoffFlowOpCode = "NoS0575"
 )
 
 type AuthInteractRequest struct {
@@ -21,13 +21,15 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	fields := bytes.SplitN(b, FieldSeparator, 2)
 	opcode := string(fields[0])
 	switch opcode {
-	case AuthCreateHandoffFlowOpCode:
-		var LoginCommand LoginCommand
-		if err := LoginCommand.UnmarshalNosTale(fields[1]); err != nil {
+	case CreateHandoffFlowOpCode:
+		var CreateHandoffFlowCommand CreateHandoffFlowCommand
+		if err := CreateHandoffFlowCommand.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		f.Payload = &eventing.AuthInteractRequest_LoginCommand{
-			LoginCommand: LoginCommand.LoginCommand,
+		f.Command = &eventing.AuthCommand{
+			Command: &eventing.AuthCommand_CreateHandoffFlow{
+				CreateHandoffFlow: CreateHandoffFlowCommand.CreateHandoffFlowCommand,
+			},
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -35,58 +37,74 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthInteractResponse struct {
-	*eventing.AuthInteractResponse
+type ClientEvent struct {
+	*eventing.ClientEvent
 }
 
-func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
-	var buff bytes.Buffer
-	switch p := f.Payload.(type) {
-	case *eventing.AuthInteractResponse_ErrorEvent:
-		vv := &ErrorEvent{
-			ErrorEvent: p.ErrorEvent,
-		}
-		fields, err := vv.MarshalNosTale()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buff.Write(fields); err != nil {
-			return nil, err
-		}
-	case *eventing.AuthInteractResponse_InfoEvent:
-		vv := &InfoEvent{
-			InfoEvent: p.InfoEvent,
-		}
-		fields, err := vv.MarshalNosTale()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buff.Write(fields); err != nil {
-			return nil, err
-		}
-	case *eventing.AuthInteractResponse_EndpointListEvent:
-		vv := &EndpointListEvent{
-			EndpointListEvent: p.EndpointListEvent,
-		}
-		fields, err := vv.MarshalNosTale()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buff.Write(fields); err != nil {
-			return nil, err
-		}
+func (f *ClientEvent) MarshalNosTale() ([]byte, error) {
+	var (
+		fields []byte
+		err    error
+	)
+	switch p := f.Event.(type) {
+	case *eventing.ClientEvent_Error:
+		fields, err = MarshalNosTale(&ErrorEvent{
+			ErrorEvent: p.Error,
+		})
+	case *eventing.ClientEvent_Info:
+		fields, err = MarshalNosTale(&InfoEvent{
+			InfoEvent: p.Info,
+		})
 	default:
 		return nil, fmt.Errorf("invalid payload: %v", p)
+	}
+	if err != nil {
+		return nil, err
+	}
+	var buff bytes.Buffer
+	if _, err := buff.Write(fields); err != nil {
+		return nil, err
 	}
 	return buff.Bytes(), nil
 }
 
-type LoginCommand struct {
-	*eventing.LoginCommand
+type AuthEvent struct {
+	*eventing.AuthEvent
 }
 
-func (f *LoginCommand) UnmarshalNosTale(b []byte) error {
-	f.LoginCommand = &eventing.LoginCommand{}
+func (f *AuthEvent) MarshalNosTale() ([]byte, error) {
+	var (
+		fields []byte
+		err    error
+	)
+	switch p := f.Event.(type) {
+	case *eventing.AuthEvent_Client:
+		fields, err = MarshalNosTale(&ClientEvent{
+			ClientEvent: p.Client,
+		})
+	case *eventing.AuthEvent_Presence:
+		fields, err = MarshalNosTale(&PresenceEvent{
+			PresenceEvent: p.Presence,
+		})
+	default:
+		return nil, fmt.Errorf("invalid payload: %v", p)
+	}
+	if err != nil {
+		return nil, err
+	}
+	var buff bytes.Buffer
+	if _, err := buff.Write(fields); err != nil {
+		return nil, err
+	}
+	return buff.Bytes(), nil
+}
+
+type CreateHandoffFlowCommand struct {
+	*eventing.CreateHandoffFlowCommand
+}
+
+func (f *CreateHandoffFlowCommand) UnmarshalNosTale(b []byte) error {
+	f.CreateHandoffFlowCommand = &eventing.CreateHandoffFlowCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -151,197 +169,4 @@ func DecodeClientVersion(b []byte) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
-}
-
-type EndpointListEvent struct {
-	*eventing.EndpointListEvent
-}
-
-func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
-	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
-		return nil, err
-	}
-	for _, m := range f.Endpoints {
-		endpoint := &Endpoint{
-			Endpoint: &eventing.Endpoint{
-				Host:      m.Host,
-				Port:      m.Port,
-				Weight:    m.Weight,
-				WorldId:   m.WorldId,
-				ChannelId: m.ChannelId,
-				WorldName: m.WorldName,
-			},
-		}
-		b, err := endpoint.MarshalNosTale()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buff.Write(b); err != nil {
-			return nil, err
-		}
-	}
-	if _, err := buff.WriteString("-1:-1:-1:10000.10000.1\n"); err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
-func (f *EndpointListEvent) UnmarshalNosTale(b []byte) error {
-	f.EndpointListEvent = &eventing.EndpointListEvent{}
-	fields := bytes.Split(b, FieldSeparator)
-	if len(fields) < 2 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	if string(fields[0]) != "NsTeST" {
-		return fmt.Errorf("invalid prefix: %s", string(fields[0]))
-	}
-	code, err := strconv.ParseUint(string(fields[1]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Code = uint32(code)
-	for _, m := range fields[2:] {
-		var ep Endpoint
-		if err := ep.UnmarshalNosTale(m); err != nil {
-			return err
-		}
-		f.Endpoints = append(f.Endpoints, ep.Endpoint)
-	}
-	return nil
-}
-
-type Endpoint struct {
-	*eventing.Endpoint
-}
-
-func (f *Endpoint) MarshalNosTale() ([]byte, error) {
-	var buff bytes.Buffer
-	if _, err := fmt.Fprintf(
-		&buff,
-		"%s:%s:%d:%d.%d.%s ",
-		f.Host,
-		f.Port,
-		f.Weight,
-		f.WorldId,
-		f.ChannelId,
-		f.WorldName,
-	); err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
-func (f *Endpoint) UnmarshalNosTale(b []byte) error {
-	f.Endpoint = &eventing.Endpoint{}
-	fields := bytes.Split(b, []byte(":"))
-	if len(fields) != 5 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	f.Host = string(fields[0])
-	f.Port = string(fields[1])
-	weight, err := strconv.ParseUint(string(fields[2]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Weight = uint32(weight)
-	fields = bytes.Split(fields[3], []byte("."))
-	if len(fields) != 3 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	worldId, err := strconv.ParseUint(string(fields[0]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.WorldId = uint32(worldId)
-	channelId, err := strconv.ParseUint(string(fields[1]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.ChannelId = uint32(channelId)
-	f.WorldName = string(fields[2])
-	return nil
-}
-
-type SyncCommand struct {
-	*eventing.SyncCommand
-}
-
-func (f *SyncCommand) UnmarshalNosTale(b []byte) error {
-	f.SyncCommand = &eventing.SyncCommand{}
-	fields := bytes.Split(b, FieldSeparator)
-	if len(fields) != 3 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	sn, err := strconv.ParseUint(string(fields[0][2:]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Sequence = uint32(sn)
-	code, err := strconv.ParseUint(string(fields[1]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Code = uint32(code)
-	return nil
-}
-
-type IdentifierCommand struct {
-	*eventing.IdentifierCommand
-}
-
-func (f *IdentifierCommand) MarshalNosTale() ([]byte, error) {
-	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
-		return nil, err
-	}
-	if _, err := b.WriteString(f.Identifier); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-func (f *IdentifierCommand) UnmarshalNosTale(b []byte) error {
-	f.IdentifierCommand = &eventing.IdentifierCommand{}
-	fields := bytes.Split(b, FieldSeparator)
-	if len(fields) != 2 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Sequence = uint32(sn)
-	f.Identifier = string(fields[1])
-	return nil
-}
-
-type PasswordCommand struct {
-	*eventing.PasswordCommand
-}
-
-func (f *PasswordCommand) MarshalNosTale() ([]byte, error) {
-	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
-		return nil, err
-	}
-	if _, err := b.WriteString(f.Password); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-func (f *PasswordCommand) UnmarshalNosTale(b []byte) error {
-	f.PasswordCommand = &eventing.PasswordCommand{}
-	fields := bytes.Split(b, FieldSeparator)
-	if len(fields) != 2 {
-		return fmt.Errorf("invalid length: %d", len(fields))
-	}
-	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
-	if err != nil {
-		return err
-	}
-	f.Sequence = uint32(sn)
-	f.Password = string(fields[1])
-	return nil
 }

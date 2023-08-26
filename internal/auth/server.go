@@ -38,7 +38,7 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 		switch m.Payload.(type) {
 		case *eventing.AuthInteractRequest_LoginCommand:
 			logrus.Debugf("auth: handle handoff")
-			if err := s.AuthCreateHandoffFlowCommandProduce(
+			if err := s.ProduceCreateHandoffFlowCommand(
 				m.GetLoginCommand(),
 				stream,
 			); err != nil {
@@ -50,8 +50,8 @@ func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
 	}
 }
 
-func (s *Server) AuthCreateHandoffFlowCommandProduce(
-	m *eventing.LoginCommand,
+func (s *Server) ProduceCreateHandoffFlowCommand(
+	m *eventing.CreateHandoffFlowCommand,
 	stream eventing.Auth_AuthCreateHandoffFlowCommandProduceServer,
 ) error {
 	handoff, err := s.presence.AuthCreateHandoffFlow(

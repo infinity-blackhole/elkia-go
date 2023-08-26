@@ -1,0 +1,119 @@
+syntax = "proto3";
+package shikanime.elkia.fleet.v1alpha1;
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1";
+
+message SyncCommand {
+    uint32 sequence = 1;
+    uint32 code = 2;
+}
+
+message IdentifierCommand {
+    uint32 sequence = 1;
+    string identifier = 2;
+}
+
+message PasswordCommand {
+    uint32 sequence = 1;
+    string password = 2;
+}
+
+message Endpoint {
+    string host = 1;
+    string port = 2;
+    uint32 weight = 3;
+    uint32 world_id = 4;
+    uint32 channel_id = 5;
+    string world_name = 6;
+}
+
+message EndpointListEvent {
+    uint32 code = 1;
+    repeated Endpoint endpoints = 2;
+}
+
+message PresenceCommand {
+    oneof command {
+        SyncCommand sync = 1;
+        IdentifierCommand identifier = 2;
+        PasswordCommand password = 3;
+        EndpointListEvent endpoint_list_event = 4;
+    }
+}
+
+message PresenceInteractRequest {
+    uint32 sequence = 1;
+    PresenceCommand command = 2;
+}
+
+message PresenceEvent {
+}
+
+message CreateHandoffFlowRequest {
+    string identifier = 1;
+    string password = 2;
+}
+
+message CreateHandoffFlowResponse { uint32 code = 1; }
+
+message RefreshLoginRequest {
+    string identifier = 1;
+    string password = 2;
+    string token = 3;
+}
+
+message RefreshLoginResponse { string token = 1; }
+
+message CompleteHandoffFlowRequest {
+    string identifier = 1;
+    string password = 2;
+}
+
+message CompleteHandoffFlowResponse {
+    string token = 1;
+}
+
+message LoginRequest {
+    string identifier = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+message WhoAmIRequest { string token = 1; }
+
+message WhoAmIResponse {
+    string id = 1;
+    string identity_id = 2;
+}
+
+message LogoutRequest { uint32 code = 1; }
+
+message LogoutResponse {}
+
+service Presence {
+    // CreateHandoffFlow creates a handoff flow with a given identifier and
+    // password.
+    rpc CreateHandoffFlow(CreateHandoffFlowRequest) returns (CreateHandoffFlowResponse);
+
+    // CompleteHandoffFlow hands off a session to a gateway with a given token and
+    // code.
+    rpc CompleteHandoffFlow(CompleteHandoffFlowRequest) returns (CompleteHandoffFlowResponse);
+
+    // Login hands off a session to a gateway with a given token and
+    // code.
+    rpc Login(LoginRequest) returns (LoginResponse);
+
+    // RefreshLogin authenticates a gateway with a given identifier, password, and
+    // token.
+    rpc RefreshLogin(RefreshLoginRequest)
+        returns (RefreshLoginResponse);
+
+    // WhoAmI returns the session associated with a given token.
+    rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
+
+    // Logout logs out a session with a given code.
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+}

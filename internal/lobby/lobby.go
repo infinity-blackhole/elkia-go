@@ -46,7 +46,7 @@ type LobbyServer struct {
 func (s *LobbyServer) CharacterList(
 	ctx context.Context,
 	in *eventing.CharacterListRequest,
-) (*eventing.CharacterListResponse, error) {
+) (*eventing.CharacterListEvent, error) {
 	var dbChar []Character
 	if err := s.db.
 		Where("id = ?", in.IdentityId).
@@ -75,7 +75,7 @@ func (s *LobbyServer) CharacterList(
 			Level:          character.Level,
 		})
 	}
-	return &eventing.CharacterListResponse{
+	return &eventing.CharacterListEvent{
 		CharacterEvents: characters,
 	}, nil
 }

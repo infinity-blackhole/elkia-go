@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 	"golang.org/x/sync/errgroup"
 )
@@ -91,8 +92,14 @@ func (p *ProxyUpgrader) Upgrade(
 	}
 	logrus.Debugf("gateway: received sync frame: %v", msg.String())
 	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_SyncCommand{
-			SyncCommand: msg,
+		Command: &eventing.ChannelCommand{
+			Command: &eventing.ChannelCommand_Presence{
+				Presence: &fleet.PresenceCommand{
+					Command: &fleet.PresenceCommand_Sync{
+						Sync: msg,
+					},
+				},
+			},
 		},
 	}); err != nil {
 		return nil, p.proxy.SendMsg(
@@ -116,7 +123,7 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	}
 }
 
-func (p *SessionProxyClient) RecvSync() (*eventing.SyncCommand, error) {
+func (p *SessionProxyClient) RecvSync() (*fleet.SyncCommand, error) {
 	var msg protonostale.SyncCommand
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
@@ -133,9 +140,9 @@ func (p *SessionProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (u *SessionProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
-	return u.enc.Encode(&protonostale.ChannelInteractResponse{
-		ChannelInteractResponse: msg,
+func (u *SessionProxyClient) Send(msg *eventing.ChannelEvent) error {
+	return u.enc.Encode(&protonostale.ChannelEvent{
+		ChannelEvent: msg,
 	})
 }
 
@@ -206,7 +213,16 @@ func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 		p.state = stateCommand
 		return p.RecvPassword()
 	default:
-		return p.RecvCommand()
+		var msg protonostale.ClientInteractRequest
+		if err := p.RecvMsg(&msg); err != nil {
+			if err := p.SendMsg(
+				protonostale.NewStatus(eventing.Code_BAD_CASE),
+			); err != nil {
+				return nil, err
+			}
+			return nil, err
+		}
+		return msg.ClientInteractRequest, nil
 	}
 }
 
@@ -221,8 +237,14 @@ func (p *ChannelProxyClient) RecvIdentifier() (*eventing.ChannelInteractRequest,
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_IdentifierCommand{
-			IdentifierCommand: msg.IdentifierCommand,
+		Command: &eventing.ChannelCommand{
+			Command: &eventing.ChannelCommand_Presence{
+				Presence: &fleet.PresenceCommand{
+					Command: &fleet.PresenceCommand_Identifier{
+						Identifier: msg.IdentifierCommand,
+					},
+				},
+			},
 		},
 	}, nil
 }
@@ -238,25 +260,14 @@ func (p *ChannelProxyClient) RecvPassword() (*eventing.ChannelInteractRequest, e
 		return nil, err
 	}
 	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_PasswordCommand{
-			PasswordCommand: msg.PasswordCommand,
-		},
-	}, nil
-}
-
-func (p *ChannelProxyClient) RecvCommand() (*eventing.ChannelInteractRequest, error) {
-	var msg protonostale.CommandCommand
-	if err := p.RecvMsg(&msg); err != nil {
-		if err := p.SendMsg(
-			protonostale.NewStatus(eventing.Code_BAD_CASE),
-		); err != nil {
-			return nil, err
-		}
-		return nil, err
-	}
-	return &eventing.ChannelInteractRequest{
-		Payload: &eventing.ChannelInteractRequest_CommandCommand{
-			CommandCommand: msg.CommandCommand,
+		Command: &eventing.ChannelCommand{
+			Command: &eventing.ChannelCommand_Presence{
+				Presence: &fleet.PresenceCommand{
+					Command: &fleet.PresenceCommand_Password{
+						Password: msg.PasswordCommand,
+					},
+				},
+			},
 		},
 	}, nil
 }
@@ -265,9 +276,9 @@ func (p *ChannelProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (u *ChannelProxyClient) Send(msg *eventing.ChannelInteractResponse) error {
-	return u.enc.Encode(&protonostale.ChannelInteractResponse{
-		ChannelInteractResponse: msg,
+func (u *ChannelProxyClient) Send(msg *eventing.ChannelEvent) error {
+	return u.enc.Encode(&protonostale.ChannelEvent{
+		ChannelEvent: msg,
 	})
 }
 

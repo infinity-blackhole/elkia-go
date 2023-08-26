@@ -1,0 +1,45 @@
+syntax = "proto3";
+package shikanime.elkia.eventing.v1alpha1;
+
+import "google/protobuf/empty.proto";
+import "pkg/api/eventing/v1alpha1/client.proto";
+import "pkg/api/fleet/v1alpha1/presence.proto";
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
+
+message CreateHandoffFlowCommand {
+    string identifier = 2;
+    string password = 3;
+    string client_version = 5;
+    string client_checksum = 7;
+}
+
+message AuthCommand {
+    oneof command {
+        CreateHandoffFlowCommand create_handoff_flow = 1;
+    }
+}
+
+message AuthEvent {
+    oneof event {
+        shikanime.elkia.eventing.v1alpha1.ClientEvent client = 1;
+        shikanime.elkia.fleet.v1alpha1.PresenceEvent presence = 2;
+    }
+}
+
+message AuthInteractRequest {
+    uint32 sequence = 1;
+    AuthCommand command = 2;
+}
+
+service Auth {
+    // AuthInteract is a bi-directional stream that is used to interact with the
+    // auth server
+    rpc AuthInteract(stream AuthInteractRequest)
+        returns (stream AuthEvent);
+
+    // ProduceCreateHandoffFlowCommand send a login frame to the auth server and returns a
+    // stream of events
+    rpc ProduceCreateHandoffFlowCommand(CreateHandoffFlowCommand)
+        returns (google.protobuf.Empty);
+}

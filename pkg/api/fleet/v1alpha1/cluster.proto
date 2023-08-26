@@ -1,0 +1,60 @@
+syntax = "proto3";
+package shikanime.elkia.fleet.v1alpha1;
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1";
+
+message Member {
+    string id = 1;
+    uint32 world_id = 2;
+    uint32 channel_id = 3;
+    string name = 4;
+    repeated string addresses = 5;
+    uint32 population = 6;
+    uint32 capacity = 7;
+}
+
+message MemberAddRequest {
+    string id = 1;
+    uint32 world_id = 2;
+    uint32 channel_id = 3;
+    string name = 4;
+    repeated string addresses = 5;
+    uint32 population = 6;
+    uint32 capacity = 7;
+}
+
+message MemberAddResponse {}
+
+message MemberRemoveRequest { string id = 1; }
+
+message MemberRemoveResponse {}
+
+message MemberUpdateRequest {
+    string id = 1;
+    optional uint32 world_id = 2;
+    optional uint32 channel_id = 3;
+    optional string name = 4;
+    repeated string addresses = 5;
+    optional uint32 population = 6;
+    optional uint32 capacity = 7;
+}
+
+message MemberUpdateResponse {}
+
+message MemberListRequest {}
+
+message MemberListResponse { repeated Member members = 1; }
+
+service Cluster {
+    // MemberAdd adds a member into the cluster.
+    rpc MemberAdd(MemberAddRequest) returns (MemberAddResponse);
+
+    // MemberRemove removes an existing member from the cluster.
+    rpc MemberRemove(MemberRemoveRequest) returns (MemberRemoveResponse);
+
+    // MemberUpdate updates the member configuration.
+    rpc MemberUpdate(MemberUpdateRequest) returns (MemberUpdateResponse);
+
+    // MemberList lists all the members in the cluster.
+    rpc MemberList(MemberListRequest) returns (MemberListResponse);
+}

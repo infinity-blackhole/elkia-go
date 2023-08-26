@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestSessionDecodeSyncCommand(t *testing.T) {
 	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
-	expected := eventing.SyncCommand{
+	expected := fleet.SyncCommand{
 		Sequence: 52579,
 		Code:     0,
 	}

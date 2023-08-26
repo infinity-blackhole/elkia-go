@@ -13,7 +13,7 @@ func TestLoginCommandUnmarshalNosTale(t *testing.T) {
 	expected := AuthInteractRequest{
 		&eventing.AuthInteractRequest{
 			Payload: &eventing.AuthInteractRequest_LoginCommand{
-				LoginCommand: &eventing.LoginCommand{
+				CreateHandoffFlowCommand: &eventing.CreateHandoffFlowCommand{
 					Identifier:    "admin",
 					Password:      "s3cr3t",
 					ClientVersion: "0.9.3+3086",

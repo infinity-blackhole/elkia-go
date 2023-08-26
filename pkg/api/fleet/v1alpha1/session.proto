@@ -1,0 +1,31 @@
+syntax = "proto3";
+package shikanime.elkia.fleet.v1alpha1;
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1";
+
+message Session {
+  string token = 1;
+}
+
+message GetSessionRequest { uint32 code = 1; }
+
+message GetSessionResponse { Session session = 1; }
+
+message PutSessionRequest { uint32 code = 1; Session session = 2; }
+
+message PutSessionResponse { uint32 code = 1; }
+
+message DeleteSessionRequest { uint32 code = 1; }
+
+message DeleteSessionResponse {}
+
+service SessionAdmin {
+  // GetSession gets a session with a given code.
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+
+  // PutSession creates a session with a given identifier and token.
+  rpc PutSession(PutSessionRequest) returns (PutSessionResponse);
+
+  // DeleteSession Deletes a session with a given code.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
+}
