@@ -53,9 +53,9 @@ func (s *LobbyServer) CharacterList(
 		Find(&dbChar).Error; err != nil {
 		return nil, err
 	}
-	var characters []*eventing.CharacterFrame
+	var characters []*eventing.Character
 	for _, character := range characters {
-		characters = append(characters, &eventing.CharacterFrame{
+		characters = append(characters, &eventing.Character{
 			Id:             character.Id,
 			Class:          character.Class,
 			HairColor:      character.HairColor,
@@ -76,6 +76,6 @@ func (s *LobbyServer) CharacterList(
 		})
 	}
 	return &eventing.CharacterListResponse{
-		CharacterFrames: characters,
+		CharacterEvents: characters,
 	}, nil
 }

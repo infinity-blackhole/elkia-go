@@ -9,30 +9,30 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestChannelDecodeIdentifierFrame(t *testing.T) {
+func TestChannelDecodeIdentifierCommand(t *testing.T) {
 	input := []byte(
 		"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff\xd0" +
 			"\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f\xc7\xe4" +
 			"\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41\xda" +
 			"\xc1\xe0\x42\xf1\xcd",
 	)
-	expectedIdentifier := eventing.IdentifierFrame{
+	expectedIdentifier := eventing.IdentifierCommand{
 		Sequence:   60471,
 		Identifier: "ricofo8350@otanhome.com",
 	}
-	expectedPassword := eventing.PasswordFrame{
+	expectedPassword := eventing.PasswordCommand{
 		Sequence: 60472,
 		Password: "9hibwiwiG2e6Nr",
 	}
 	dec := NewChannelDecoder(bytes.NewReader(input), 0)
-	var resultIdentifier protonostale.IdentifierFrame
+	var resultIdentifier protonostale.IdentifierCommand
 	if err := dec.Decode(&resultIdentifier); err != nil {
 		t.Fatal(err)
 	}
 	if !proto.Equal(&expectedIdentifier, &resultIdentifier) {
 		t.Errorf("Expected %v, got %v", expectedIdentifier.String(), resultIdentifier.String())
 	}
-	var resultPassword protonostale.PasswordFrame
+	var resultPassword protonostale.PasswordCommand
 	if err := dec.Decode(&resultPassword); err != nil {
 		t.Fatal(err)
 	}
@@ -41,18 +41,18 @@ func TestChannelDecodeIdentifierFrame(t *testing.T) {
 	}
 }
 
-func TestChannelDecodePasswordFrame(t *testing.T) {
+func TestChannelDecodePasswordCommand(t *testing.T) {
 	input := []byte(
 		"\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41" +
 			"\xda\xc1\xe0\x42\xf1\xcd",
 	)
-	expected := protonostale.PasswordFrame{
-		PasswordFrame: &eventing.PasswordFrame{
+	expected := protonostale.PasswordCommand{
+		PasswordCommand: &eventing.PasswordCommand{
 			Sequence: 60472,
 			Password: "9hibwiwiG2e6Nr",
 		},
 	}
-	var result protonostale.PasswordFrame
+	var result protonostale.PasswordCommand
 	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)
@@ -79,17 +79,17 @@ func TestChannelDecodeModeAndOffset(t *testing.T) {
 	}
 }
 
-func TestChannelDecodeHeartbeatFrame(t *testing.T) {
+func TestChannelDecodeHeartbeatCommand(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
-	expected := protonostale.CommandFrame{
-		CommandFrame: &eventing.CommandFrame{
+	expected := protonostale.CommandCommand{
+		CommandCommand: &eventing.CommandCommand{
 			Sequence: 49277,
-			Payload: &eventing.CommandFrame_HeartbeatFrame{
-				HeartbeatFrame: &eventing.HeartbeatFrame{},
+			Payload: &eventing.CommandCommand_HeartbeatCommand{
+				HeartbeatCommand: &eventing.HeartbeatCommand{},
 			},
 		},
 	}
-	var result protonostale.CommandFrame
+	var result protonostale.CommandCommand
 	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)
@@ -104,7 +104,7 @@ func TestChannelWrite(t *testing.T) {
 	expected := []byte("\x03\x99\x90\x90\x19")
 	var buff bytes.Buffer
 	enc := NewWriter(&buff)
-	if err := enc.WriteFrame(input); err != nil {
+	if err := enc.WriteCommand(input); err != nil {
 		t.Fatal(err)
 	}
 	result := buff.Bytes()

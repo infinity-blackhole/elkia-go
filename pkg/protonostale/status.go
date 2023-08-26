@@ -13,11 +13,11 @@ var (
 	InfoOpCode  = "info"
 )
 
-type ErrorFrame struct {
-	*eventing.ErrorFrame
+type ErrorEvent struct {
+	*eventing.ErrorEvent
 }
 
-func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
+func (f *ErrorEvent) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "failc %d", f.Code); err != nil {
 		return nil, err
@@ -25,8 +25,8 @@ func (f *ErrorFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
-	f.ErrorFrame = &eventing.ErrorFrame{}
+func (f *ErrorEvent) UnmarshalNosTale(b []byte) error {
+	f.ErrorEvent = &eventing.ErrorEvent{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -42,11 +42,11 @@ func (f *ErrorFrame) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type InfoFrame struct {
-	*eventing.InfoFrame
+type InfoEvent struct {
+	*eventing.InfoEvent
 }
 
-func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
+func (f *InfoEvent) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, f.Content); err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (f *InfoFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
-	f.InfoFrame = &eventing.InfoFrame{}
+func (f *InfoEvent) UnmarshalNosTale(b []byte) error {
+	f.InfoEvent = &eventing.InfoEvent{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -69,8 +69,8 @@ func (f *InfoFrame) UnmarshalNosTale(b []byte) error {
 
 func NewStatus(code eventing.Code) *Status {
 	return &Status{
-		&ErrorFrame{
-			ErrorFrame: &eventing.ErrorFrame{
+		&ErrorEvent{
+			ErrorEvent: &eventing.ErrorEvent{
 				Code: code,
 			},
 		},
@@ -78,7 +78,7 @@ func NewStatus(code eventing.Code) *Status {
 }
 
 type Status struct {
-	s *ErrorFrame
+	s *ErrorEvent
 }
 
 func (s *Status) Error() string {

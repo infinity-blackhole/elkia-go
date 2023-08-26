@@ -8,7 +8,7 @@ import (
 	"go.shikanime.studio/elkia/pkg/protonostale"
 )
 
-func TestAuthEncodingDecodeFrame(t *testing.T) {
+func TestAuthEncodingDecodeCommand(t *testing.T) {
 	input := []byte(
 		"\x9c\xbb\x9f\x02\x05\x03\x05\xf2\xff\xff\x04\x05\xff\x06\x0a\xf2\xc0" +
 			"\xb9\xaf\xbb\xb4\xbb\x0a\xff\x05\x02\x92\xbb\xc6\xb1\xbc\xba\xbb" +
@@ -19,7 +19,7 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 			"\x00\xf2\x02\x02\x04\x94\x03\x06\x06\x04\xd7\x02\xfc\x09\xfc\xff" +
 			"\xfc\xff\x02\x0a\x04\xd8",
 	)
-	expected := eventing.LoginFrame{
+	expected := eventing.LoginCommand{
 		Identifier:    "ricofo8350@otanhome.com",
 		Password:      "9hibwiwiG2e6Nr",
 		ClientVersion: "0.9.3+3086",
@@ -28,22 +28,22 @@ func TestAuthEncodingDecodeFrame(t *testing.T) {
 	if err := NewDecoder(bytes.NewReader(input)).Decode(&result); err != nil {
 		t.Fatal(err)
 	}
-	if payload, ok := result.Payload.(*eventing.AuthInteractRequest_LoginFrame); ok {
-		if expected.Identifier != payload.LoginFrame.Identifier {
-			t.Errorf("Expected %v, got %v", expected.Identifier, payload.LoginFrame.Identifier)
+	if payload, ok := result.Payload.(*eventing.AuthInteractRequest_LoginCommand); ok {
+		if expected.Identifier != payload.LoginCommand.Identifier {
+			t.Errorf("Expected %v, got %v", expected.Identifier, payload.LoginCommand.Identifier)
 		}
-		if expected.Password != payload.LoginFrame.Password {
-			t.Errorf("Expected %v, got %v", expected.Password, payload.LoginFrame.Password)
+		if expected.Password != payload.LoginCommand.Password {
+			t.Errorf("Expected %v, got %v", expected.Password, payload.LoginCommand.Password)
 		}
-		if expected.ClientVersion != payload.LoginFrame.ClientVersion {
-			t.Errorf("Expected %v, got %v", expected.ClientVersion, payload.LoginFrame.ClientVersion)
+		if expected.ClientVersion != payload.LoginCommand.ClientVersion {
+			t.Errorf("Expected %v, got %v", expected.ClientVersion, payload.LoginCommand.ClientVersion)
 		}
 	}
 }
 
-func TestAuthEncodingEncodeFrame(t *testing.T) {
-	input := protonostale.InfoFrame{
-		InfoFrame: &eventing.InfoFrame{
+func TestAuthEncodingEncodeCommand(t *testing.T) {
+	input := protonostale.InfoEvent{
+		InfoEvent: &eventing.InfoEvent{
 			Content: "fail Hello. This is a basic test",
 		},
 	}

@@ -9,14 +9,14 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestSessionDecodeSyncFrame(t *testing.T) {
+func TestSessionDecodeSyncCommand(t *testing.T) {
 	input := []byte("\x96\xa5\xaa\xe0\x4f\x0e")
-	expected := eventing.SyncFrame{
+	expected := eventing.SyncCommand{
 		Sequence: 52579,
 		Code:     0,
 	}
 	dec := NewSessionDecoder(bytes.NewReader(input))
-	var result protonostale.SyncFrame
+	var result protonostale.SyncCommand
 	if err := dec.Decode(&result); err != nil {
 		t.Error(err)
 	}

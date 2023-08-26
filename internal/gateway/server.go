@@ -40,7 +40,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	sync := msg.GetSyncFrame()
+	sync := msg.GetSyncCommand()
 	if sync == nil {
 		return errors.New("handoff: session protocol error")
 	}
@@ -50,7 +50,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	identifier := msg.GetIdentifierFrame()
+	identifier := msg.GetIdentifierCommand()
 	if identifier.Sequence != sequence+1 {
 		return errors.New("handoff: session protocol error")
 	}
@@ -60,7 +60,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 	if err != nil {
 		return err
 	}
-	password := msg.GetPasswordFrame()
+	password := msg.GetPasswordCommand()
 	if password.Sequence != sequence+1 {
 		return errors.New("handoff: session protocol error")
 	}

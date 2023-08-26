@@ -14,7 +14,7 @@ type Scanner struct {
 
 func NewScanner(r io.Reader) *Scanner {
 	s := bufio.NewScanner(r)
-	s.Split(ScanFrame)
+	s.Split(ScanCommand)
 	return &Scanner{s}
 }
 
@@ -42,7 +42,7 @@ func (s *Scanner) Text() string {
 	return string(s.Bytes())
 }
 
-func ScanFrame(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func ScanCommand(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}
@@ -84,7 +84,7 @@ func NewWriter(r io.Writer) *Writer {
 	return &Writer{bufio.NewWriter(r)}
 }
 
-func (w *Writer) WriteFrame(b []byte) error {
+func (w *Writer) WriteCommand(b []byte) error {
 	if err := w.Write(b); err != nil {
 		return err
 	}
@@ -116,5 +116,5 @@ func (e *Encoder) Encode(v any) (err error) {
 	if err != nil {
 		return err
 	}
-	return e.w.WriteFrame(bs)
+	return e.w.WriteCommand(bs)
 }

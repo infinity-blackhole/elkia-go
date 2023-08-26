@@ -22,12 +22,12 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	opcode := string(fields[0])
 	switch opcode {
 	case AuthCreateHandoffFlowOpCode:
-		var LoginFrame LoginFrame
-		if err := LoginFrame.UnmarshalNosTale(fields[1]); err != nil {
+		var LoginCommand LoginCommand
+		if err := LoginCommand.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		f.Payload = &eventing.AuthInteractRequest_LoginFrame{
-			LoginFrame: LoginFrame.LoginFrame,
+		f.Payload = &eventing.AuthInteractRequest_LoginCommand{
+			LoginCommand: LoginCommand.LoginCommand,
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -42,9 +42,9 @@ type AuthInteractResponse struct {
 func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	switch p := f.Payload.(type) {
-	case *eventing.AuthInteractResponse_ErrorFrame:
-		vv := &ErrorFrame{
-			ErrorFrame: p.ErrorFrame,
+	case *eventing.AuthInteractResponse_ErrorEvent:
+		vv := &ErrorEvent{
+			ErrorEvent: p.ErrorEvent,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -53,9 +53,9 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		if _, err := buff.Write(fields); err != nil {
 			return nil, err
 		}
-	case *eventing.AuthInteractResponse_InfoFrame:
-		vv := &InfoFrame{
-			InfoFrame: p.InfoFrame,
+	case *eventing.AuthInteractResponse_InfoEvent:
+		vv := &InfoEvent{
+			InfoEvent: p.InfoEvent,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -64,9 +64,9 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		if _, err := buff.Write(fields); err != nil {
 			return nil, err
 		}
-	case *eventing.AuthInteractResponse_EndpointListFrame:
-		vv := &EndpointListFrame{
-			EndpointListFrame: p.EndpointListFrame,
+	case *eventing.AuthInteractResponse_EndpointListEvent:
+		vv := &EndpointListEvent{
+			EndpointListEvent: p.EndpointListEvent,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -81,12 +81,12 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-type LoginFrame struct {
-	*eventing.LoginFrame
+type LoginCommand struct {
+	*eventing.LoginCommand
 }
 
-func (f *LoginFrame) UnmarshalNosTale(b []byte) error {
-	f.LoginFrame = &eventing.LoginFrame{}
+func (f *LoginCommand) UnmarshalNosTale(b []byte) error {
+	f.LoginCommand = &eventing.LoginCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -153,11 +153,11 @@ func DecodeClientVersion(b []byte) (string, error) {
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
 }
 
-type EndpointListFrame struct {
-	*eventing.EndpointListFrame
+type EndpointListEvent struct {
+	*eventing.EndpointListEvent
 }
 
-func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
+func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
 		return nil, err
@@ -187,8 +187,8 @@ func (f *EndpointListFrame) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (f *EndpointListFrame) UnmarshalNosTale(b []byte) error {
-	f.EndpointListFrame = &eventing.EndpointListFrame{}
+func (f *EndpointListEvent) UnmarshalNosTale(b []byte) error {
+	f.EndpointListEvent = &eventing.EndpointListEvent{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) < 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -263,12 +263,12 @@ func (f *Endpoint) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type SyncFrame struct {
-	*eventing.SyncFrame
+type SyncCommand struct {
+	*eventing.SyncCommand
 }
 
-func (f *SyncFrame) UnmarshalNosTale(b []byte) error {
-	f.SyncFrame = &eventing.SyncFrame{}
+func (f *SyncCommand) UnmarshalNosTale(b []byte) error {
+	f.SyncCommand = &eventing.SyncCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -286,11 +286,11 @@ func (f *SyncFrame) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type IdentifierFrame struct {
-	*eventing.IdentifierFrame
+type IdentifierCommand struct {
+	*eventing.IdentifierCommand
 }
 
-func (f *IdentifierFrame) MarshalNosTale() ([]byte, error) {
+func (f *IdentifierCommand) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
 		return nil, err
@@ -301,8 +301,8 @@ func (f *IdentifierFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *IdentifierFrame) UnmarshalNosTale(b []byte) error {
-	f.IdentifierFrame = &eventing.IdentifierFrame{}
+func (f *IdentifierCommand) UnmarshalNosTale(b []byte) error {
+	f.IdentifierCommand = &eventing.IdentifierCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -316,11 +316,11 @@ func (f *IdentifierFrame) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type PasswordFrame struct {
-	*eventing.PasswordFrame
+type PasswordCommand struct {
+	*eventing.PasswordCommand
 }
 
-func (f *PasswordFrame) MarshalNosTale() ([]byte, error) {
+func (f *PasswordCommand) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, "%d ", f.Sequence); err != nil {
 		return nil, err
@@ -331,8 +331,8 @@ func (f *PasswordFrame) MarshalNosTale() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *PasswordFrame) UnmarshalNosTale(b []byte) error {
-	f.PasswordFrame = &eventing.PasswordFrame{}
+func (f *PasswordCommand) UnmarshalNosTale(b []byte) error {
+	f.PasswordCommand = &eventing.PasswordCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))

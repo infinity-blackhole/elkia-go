@@ -15,11 +15,11 @@ enum Code {
   BAD_CASE = 8;
 }
 
-message ErrorFrame { Code code = 1; }
+message ErrorEvent { Code code = 1; }
 
-message InfoFrame { string content = 1; }
+message InfoEvent { string content = 1; }
 
-message LoginFrame {
+message LoginCommand {
   string identifier = 2;
   string password = 3;
   string client_version = 5;
@@ -35,23 +35,23 @@ message Endpoint {
   string world_name = 6;
 }
 
-message EndpointListFrame {
+message EndpointListEvent {
   uint32 code = 1;
   repeated Endpoint endpoints = 2;
 }
 
 message AuthInteractRequest {
   oneof payload {
-    bytes raw_frame = 1;
-    LoginFrame login_frame = 2;
+    bytes raw_command = 1;
+    LoginCommand login_command = 2;
   }
 }
 
 message AuthInteractResponse {
   oneof payload {
-    ErrorFrame error_frame = 1;
-    InfoFrame info_frame = 2;
-    EndpointListFrame endpoint_list_frame = 3;
+    ErrorEvent error_event = 1;
+    InfoEvent info_event = 2;
+    EndpointListEvent endpoint_list_event = 3;
   }
 }
 
@@ -61,45 +61,45 @@ service Auth {
   rpc AuthInteract(stream AuthInteractRequest)
       returns (stream AuthInteractResponse);
 
-  // AuthCreateHandoffFlowFrameProduce send a login frame to the auth server and returns a
+  // AuthCreateHandoffFlowCommandProduce send a login frame to the auth server and returns a
   // stream of events
-  rpc AuthCreateHandoffFlowFrameProduce(LoginFrame) returns (stream AuthInteractResponse);
+  rpc AuthCreateHandoffFlowCommandProduce(LoginCommand) returns (stream AuthInteractResponse);
 }
 
-message SyncFrame {
+message SyncCommand {
   uint32 sequence = 1;
   uint32 code = 2;
 }
 
-message IdentifierFrame {
+message IdentifierCommand {
   uint32 sequence = 1;
   string identifier = 2;
 }
 
-message PasswordFrame {
+message PasswordCommand {
   uint32 sequence = 1;
   string password = 2;
 }
 
-message HeartbeatFrame {}
+message HeartbeatCommand {}
 
 // TODO: unidentified f_stash_end frame
-message FStashEndFrame {}
+message FStashEndCommand {}
 
 // TODO: unidentified c_close frame
-message CCloseFrame {}
+message CCloseCommand {}
 
 // TODO: unidentified lbs frame
-message LBSFrame { int32 type = 1; }
+message LBSCommand { int32 type = 1; }
 
-message MultiTargetFrame {
+message MultiTargetCommand {
   string skill_id = 1;
   uint32 target_id = 2;
 }
 
-message MultiTargetListFrame {
+message MultiTargetListCommand {
   uint32 target_amount = 1;
-  repeated MultiTargetFrame targets = 2;
+  repeated MultiTargetCommand targets = 2;
 }
 
 enum RequestType {
@@ -110,7 +110,7 @@ enum RequestType {
   DECLINED = 4;
 }
 
-message RequestFrame {
+message RequestCommand {
   uint32 character_id = 1;
   RequestType type = 2;
 }
@@ -131,28 +131,28 @@ enum CharacterOptions {
   MINILAND_INVITE_BLOCKED = 12;
 }
 
-message GlobalOptionsFrame { CharacterOptions option = 1; }
+message GlobalOptionsCommand { CharacterOptions option = 1; }
 
-message CommandFrame {
+message CommandCommand {
   uint32 sequence = 1;
   oneof payload {
-    bytes raw_frame = 2;
-    HeartbeatFrame heartbeat_frame = 3;
-    FStashEndFrame f_stash_end_frame = 4;
-    CCloseFrame c_close_frame = 5;
-    LBSFrame lbs_frame = 6;
-    MultiTargetListFrame multi_target_list_frame = 7;
-    RequestFrame request_frame = 8;
-    GlobalOptionsFrame global_options_frame = 9;
+    bytes raw_command = 2;
+    HeartbeatCommand heartbeat_command = 3;
+    FStashEndCommand f_stash_end_command = 4;
+    CCloseCommand c_close_command = 5;
+    LBSCommand lbs_command = 6;
+    MultiTargetListCommand multi_target_list_command = 7;
+    RequestCommand request_command = 8;
+    GlobalOptionsCommand global_options_command = 9;
   }
 }
 
 message ChannelInteractRequest {
   oneof payload {
-    SyncFrame sync_frame = 1;
-    IdentifierFrame identifier_frame = 2;
-    PasswordFrame password_frame = 3;
-    CommandFrame command_frame = 5;
+    SyncCommand sync_command = 1;
+    IdentifierCommand identifier_command = 2;
+    PasswordCommand password_command = 3;
+    CommandCommand command_command = 5;
   }
 }
 
@@ -196,7 +196,7 @@ enum Faction {
   Demon = 2;
 }
 
-message CharacterFrame {
+message Character {
   string id = 1;
   CharacterClass class = 2;
   Sex sex = 3;
@@ -217,16 +217,16 @@ message CharacterFrame {
   int32 level = 18;
 }
 
-message CharacterListFrame {
+message CharacterListEvent {
   uint32 code = 1;
-  repeated CharacterFrame character_frames = 2;
+  repeated Character character_events = 2;
 }
 
 message ChannelInteractResponse {
   oneof payload {
-    ErrorFrame error_frame = 1;
-    InfoFrame info_frame = 2;
-    CharacterListFrame character_list_frame = 3;
+    ErrorEvent error_event = 1;
+    InfoEvent info_event = 2;
+    CharacterListEvent character_list_event = 3;
   }
 }
 
@@ -266,7 +266,7 @@ message CharacterUpdateResponse {}
 
 message CharacterListRequest { string identity_id = 1; }
 
-message CharacterListResponse { repeated CharacterFrame character_frames = 1; }
+message CharacterListResponse { repeated Character character_events = 1; }
 
 service Lobby {
   // CharacterAdd adds a new character to the world.

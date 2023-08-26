@@ -38,7 +38,7 @@ func (w *Writer) Write(b []byte) (n int, err error) {
 	return n, err
 }
 
-func (w *Writer) WriteFrame(b []byte) error {
+func (w *Writer) WriteCommand(b []byte) error {
 	if _, err := w.Write(b); err != nil {
 		return err
 	}
@@ -61,5 +61,5 @@ func (e *Encoder) Encode(v any) (err error) {
 	if err != nil {
 		return err
 	}
-	return e.w.WriteFrame(bs)
+	return e.w.WriteCommand(bs)
 }

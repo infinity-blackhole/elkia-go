@@ -17,7 +17,7 @@ func NewPackedChannelScanner(r io.Reader, key uint32) *PackedChannelScanner {
 	mode := byte(key >> 6 & 0x03)
 	offset := byte(key&0xFF + 0x40&0xFF)
 	s := bufio.NewScanner(r)
-	s.Split(NewScanFrame(mode, offset))
+	s.Split(NewScanCommand(mode, offset))
 	return &PackedChannelScanner{
 		s:      s,
 		mode:   mode,
@@ -55,7 +55,7 @@ func (s *PackedChannelScanner) Text() string {
 	return string(s.Bytes())
 }
 
-func NewScanFrame(mode, offset byte) bufio.SplitFunc {
+func NewScanCommand(mode, offset byte) bufio.SplitFunc {
 	var delimiter byte
 	switch mode {
 	case 0:
@@ -108,12 +108,12 @@ func (s *ChannelScanner) Bytes() []byte {
 		payload := bs[1:]
 		if flag <= 0x7A {
 			first := make([]byte, len(payload))
-			n := s.decodePackedLinearFrame(first, payload, flag)
+			n := s.decodePackedLinearCommand(first, payload, flag)
 			result = append(result, first[:n]...)
 			bs = payload[n:]
 		} else {
 			first := make([]byte, len(payload)*2)
-			ndst, nsrc := s.decodePackedCompactFrame(first, payload, flag&0x7F)
+			ndst, nsrc := s.decodePackedCompactCommand(first, payload, flag&0x7F)
 			bs = payload[nsrc:]
 			result = append(result, first[:ndst]...)
 		}
@@ -121,7 +121,7 @@ func (s *ChannelScanner) Bytes() []byte {
 	return result
 }
 
-func (s *ChannelScanner) decodePackedLinearFrame(dst, src []byte, flag byte) (n int) {
+func (s *ChannelScanner) decodePackedLinearCommand(dst, src []byte, flag byte) (n int) {
 	var l int
 	if int(flag) < len(src) {
 		l = int(flag)
@@ -138,7 +138,7 @@ var permutations = []byte{
 	' ', '-', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'n',
 }
 
-func (s *ChannelScanner) decodePackedCompactFrame(dst, src []byte, flag byte) (ndst, nsrc int) {
+func (s *ChannelScanner) decodePackedCompactCommand(dst, src []byte, flag byte) (ndst, nsrc int) {
 	buff := src
 	for ndst, nsrc = 0, 0; ndst < int(flag) && len(buff) > 0; ndst, nsrc = ndst+1, nsrc+1 {
 		h := int(buff[0] >> 4)

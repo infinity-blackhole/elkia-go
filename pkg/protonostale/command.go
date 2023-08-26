@@ -19,12 +19,12 @@ type ChannelInteractResponse struct {
 	*eventing.ChannelInteractResponse
 }
 
-type CommandFrame struct {
-	*eventing.CommandFrame
+type CommandCommand struct {
+	*eventing.CommandCommand
 }
 
-func (f *CommandFrame) UnmarshalNosTale(b []byte) error {
-	f.CommandFrame = &eventing.CommandFrame{}
+func (f *CommandCommand) UnmarshalNosTale(b []byte) error {
+	f.CommandCommand = &eventing.CommandCommand{}
 	fields := bytes.SplitN(b, FieldSeparator, 3)
 	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
 	if err != nil {
@@ -33,25 +33,25 @@ func (f *CommandFrame) UnmarshalNosTale(b []byte) error {
 	f.Sequence = uint32(sn)
 	switch {
 	case bytes.Equal(HeartbeatOpCode, fields[1]):
-		f.Payload = &eventing.CommandFrame_HeartbeatFrame{
-			HeartbeatFrame: &eventing.HeartbeatFrame{},
+		f.Payload = &eventing.CommandCommand_HeartbeatCommand{
+			HeartbeatCommand: &eventing.HeartbeatCommand{},
 		}
 	default:
-		f.Payload = &eventing.CommandFrame_RawFrame{
-			RawFrame: fields[1],
+		f.Payload = &eventing.CommandCommand_RawCommand{
+			RawCommand: fields[1],
 		}
 	}
 	return nil
 }
 
-type HeartbeatFrame struct {
-	*eventing.HeartbeatFrame
+type HeartbeatCommand struct {
+	*eventing.HeartbeatCommand
 }
 
-func (f *HeartbeatFrame) MarshalNosTale() ([]byte, error) {
+func (f *HeartbeatCommand) MarshalNosTale() ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (f *HeartbeatFrame) UnmarshalNosTale(b []byte) error {
+func (f *HeartbeatCommand) UnmarshalNosTale(b []byte) error {
 	return nil
 }
