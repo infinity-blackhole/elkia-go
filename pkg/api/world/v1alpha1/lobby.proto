@@ -98,14 +98,14 @@ message CharacterUpdateCommand {
     optional uint32 capacity = 7;
 }
 
-message CharacterListCommand { string identity_id = 1; }
+message ListCharacterCommand { string identity_id = 1; }
 
 message LobbyCommand {
     oneof command {
         CharacterAddCommand character_add = 1;
         CharacterRemoveCommand character_remove = 2;
         CharacterUpdateCommand character_update = 3;
-        CharacterListCommand character_list = 4;
+        ListCharacterCommand character_list = 4;
     }
 }
 
@@ -114,11 +114,11 @@ message LobbyInteractRequest {
     LobbyCommand command = 2;
 }
 
-message CharacterListEvent { repeated Character characters = 1; }
+message ListCharacterEvent { repeated Character characters = 1; }
 
 message LobbyEvent {
     oneof event {
-        CharacterListEvent character_list = 1;
+        ListCharacterEvent character_list = 1;
     }
 }
 

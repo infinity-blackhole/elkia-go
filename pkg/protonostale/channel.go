@@ -4,27 +4,27 @@ import (
 	"bytes"
 	"strconv"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (
 	HeartbeatOpCode = []byte("0")
 )
 
-type ChannelInteractRequest struct {
-	*eventing.ChannelInteractRequest
+type GatewayCommand struct {
+	*eventingpb.GatewayCommand
 }
 
-type ChannelEvent struct {
-	*eventing.ChannelEvent
+type GatewayEvent struct {
+	*eventingpb.GatewayEvent
 }
 
-type ClientInteractRequest struct {
-	*eventing.ClientInteractRequest
+type ClientCommand struct {
+	*eventingpb.ClientCommand
 }
 
-func (f *ClientInteractRequest) UnmarshalNosTale(b []byte) error {
-	f.ClientInteractRequest = &eventing.ClientInteractRequest{}
+func (f *ClientCommand) UnmarshalNosTale(b []byte) error {
+	f.ClientCommand = &eventingpb.ClientCommand{}
 	fields := bytes.SplitN(b, FieldSeparator, 3)
 	sn, err := strconv.ParseUint(string(fields[0]), 10, 32)
 	if err != nil {
@@ -33,9 +33,7 @@ func (f *ClientInteractRequest) UnmarshalNosTale(b []byte) error {
 	f.Sequence = uint32(sn)
 	switch {
 	case bytes.Equal(HeartbeatOpCode, fields[1]):
-		f.Command = &eventing.ClientCommand{
-			Command: &eventing.ClientCommand_Heartbeat{},
-		}
+		f.Command = &eventingpb.ClientCommand_Heartbeat{}
 	}
 	return nil
 }

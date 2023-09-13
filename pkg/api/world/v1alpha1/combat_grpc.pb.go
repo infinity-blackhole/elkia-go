@@ -49,7 +49,7 @@ func (c *combatClient) CombatInteract(ctx context.Context, opts ...grpc.CallOpti
 }
 
 type Combat_CombatInteractClient interface {
-	Send(*CombatInteractRequest) error
+	Send(*CombatCommand) error
 	Recv() (*CombatEvent, error)
 	grpc.ClientStream
 }
@@ -58,7 +58,7 @@ type combatCombatInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *combatCombatInteractClient) Send(m *CombatInteractRequest) error {
+func (x *combatCombatInteractClient) Send(m *CombatCommand) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -106,7 +106,7 @@ func _Combat_CombatInteract_Handler(srv interface{}, stream grpc.ServerStream) e
 
 type Combat_CombatInteractServer interface {
 	Send(*CombatEvent) error
-	Recv() (*CombatInteractRequest, error)
+	Recv() (*CombatCommand, error)
 	grpc.ServerStream
 }
 
@@ -118,8 +118,8 @@ func (x *combatCombatInteractServer) Send(m *CombatEvent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *combatCombatInteractServer) Recv() (*CombatInteractRequest, error) {
-	m := new(CombatInteractRequest)
+func (x *combatCombatInteractServer) Recv() (*CombatCommand, error) {
+	m := new(CombatCommand)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/sirupsen/logrus"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -27,15 +27,15 @@ func NewKubernetesClusterServer(config KubernetesClusterServerConfig) *Kubernete
 }
 
 type KubernetesClusterServer struct {
-	fleet.UnimplementedClusterServer
+	fleetpb.UnimplementedClusterServer
 	namespace string
 	kube      *kubernetes.Clientset
 }
 
 func (s *KubernetesClusterServer) MemberList(
 	ctx context.Context,
-	in *fleet.MemberListRequest,
-) (*fleet.MemberListResponse, error) {
+	in *fleetpb.MemberListRequest,
+) (*fleetpb.MemberListResponse, error) {
 	svcs, err := s.kube.
 		CoreV1().
 		Services(s.namespace).
@@ -51,21 +51,21 @@ func (s *KubernetesClusterServer) MemberList(
 		return nil, err
 	}
 	logrus.Debugf("fleet: found %d members", len(svcs.Items))
-	members := make([]*fleet.Member, len(svcs.Items))
+	members := make([]*fleetpb.Member, len(svcs.Items))
 	for i, ns := range svcs.Items {
 		members[i], err = s.getMemberFromService(&ns)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return &fleet.MemberListResponse{
+	return &fleetpb.MemberListResponse{
 		Members: members,
 	}, nil
 }
 
 func (s *KubernetesClusterServer) getMemberFromService(
 	svc *corev1.Service,
-) (*fleet.Member, error) {
+) (*fleetpb.Member, error) {
 	worldIdUint, err := strconv.ParseUint(
 		svc.Labels["fleet.elkia.io/world-id"],
 		10, 32,
@@ -98,7 +98,7 @@ func (s *KubernetesClusterServer) getMemberFromService(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.Member{
+	return &fleetpb.Member{
 		Id:         svc.Name,
 		WorldId:    uint32(worldIdUint),
 		ChannelId:  uint32(channelIdUint),

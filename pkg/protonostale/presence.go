@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"strconv"
 
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 )
 
-type EndpointListEvent struct {
-	*fleet.EndpointListEvent
+type ListEndpointEvent struct {
+	*fleetpb.ListEndpointEvent
 }
 
-func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
+func (f *ListEndpointEvent) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
 		return nil, err
 	}
 	for _, m := range f.Endpoints {
 		fields, err := MarshalNosTale(&Endpoint{
-			Endpoint: &fleet.Endpoint{
+			Endpoint: &fleetpb.Endpoint{
 				Host:      m.Host,
 				Port:      m.Port,
 				Weight:    m.Weight,
@@ -41,8 +41,8 @@ func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (f *EndpointListEvent) UnmarshalNosTale(b []byte) error {
-	f.EndpointListEvent = &fleet.EndpointListEvent{}
+func (f *ListEndpointEvent) UnmarshalNosTale(b []byte) error {
+	f.ListEndpointEvent = &fleetpb.ListEndpointEvent{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) < 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -66,7 +66,7 @@ func (f *EndpointListEvent) UnmarshalNosTale(b []byte) error {
 }
 
 type Endpoint struct {
-	*fleet.Endpoint
+	*fleetpb.Endpoint
 }
 
 func (f *Endpoint) MarshalNosTale() ([]byte, error) {
@@ -87,7 +87,7 @@ func (f *Endpoint) MarshalNosTale() ([]byte, error) {
 }
 
 func (f *Endpoint) UnmarshalNosTale(b []byte) error {
-	f.Endpoint = &fleet.Endpoint{}
+	f.Endpoint = &fleetpb.Endpoint{}
 	fields := bytes.Split(b, []byte(":"))
 	if len(fields) != 5 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -118,11 +118,11 @@ func (f *Endpoint) UnmarshalNosTale(b []byte) error {
 }
 
 type SyncCommand struct {
-	*fleet.SyncCommand
+	*fleetpb.SyncCommand
 }
 
 func (f *SyncCommand) UnmarshalNosTale(b []byte) error {
-	f.SyncCommand = &fleet.SyncCommand{}
+	f.SyncCommand = &fleetpb.SyncCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 3 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -141,7 +141,7 @@ func (f *SyncCommand) UnmarshalNosTale(b []byte) error {
 }
 
 type IdentifierCommand struct {
-	*fleet.IdentifierCommand
+	*fleetpb.IdentifierCommand
 }
 
 func (f *IdentifierCommand) MarshalNosTale() ([]byte, error) {
@@ -156,7 +156,7 @@ func (f *IdentifierCommand) MarshalNosTale() ([]byte, error) {
 }
 
 func (f *IdentifierCommand) UnmarshalNosTale(b []byte) error {
-	f.IdentifierCommand = &fleet.IdentifierCommand{}
+	f.IdentifierCommand = &fleetpb.IdentifierCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -171,7 +171,7 @@ func (f *IdentifierCommand) UnmarshalNosTale(b []byte) error {
 }
 
 type PasswordCommand struct {
-	*fleet.PasswordCommand
+	*fleetpb.PasswordCommand
 }
 
 func (f *PasswordCommand) MarshalNosTale() ([]byte, error) {
@@ -186,7 +186,7 @@ func (f *PasswordCommand) MarshalNosTale() ([]byte, error) {
 }
 
 func (f *PasswordCommand) UnmarshalNosTale(b []byte) error {
-	f.PasswordCommand = &fleet.PasswordCommand{}
+	f.PasswordCommand = &fleetpb.PasswordCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -201,7 +201,7 @@ func (f *PasswordCommand) UnmarshalNosTale(b []byte) error {
 }
 
 type PresenceEvent struct {
-	*fleet.PresenceEvent
+	*fleetpb.PresenceEvent
 }
 
 func (f *PresenceEvent) MarshalNosTale() ([]byte, error) {

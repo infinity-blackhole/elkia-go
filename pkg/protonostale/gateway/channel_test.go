@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 	"google.golang.org/protobuf/proto"
 )
@@ -17,11 +17,11 @@ func TestChannelDecodeIdentifierCommand(t *testing.T) {
 			"\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41\xda" +
 			"\xc1\xe0\x42\xf1\xcd",
 	)
-	expectedIdentifier := fleet.IdentifierCommand{
+	expectedIdentifier := fleetpb.IdentifierCommand{
 		Sequence:   60471,
 		Identifier: "ricofo8350@otanhome.com",
 	}
-	expectedPassword := fleet.PasswordCommand{
+	expectedPassword := fleetpb.PasswordCommand{
 		Sequence: 60472,
 		Password: "9hibwiwiG2e6Nr",
 	}
@@ -48,7 +48,7 @@ func TestChannelDecodePasswordCommand(t *testing.T) {
 			"\xda\xc1\xe0\x42\xf1\xcd",
 	)
 	expected := protonostale.PasswordCommand{
-		PasswordCommand: &fleet.PasswordCommand{
+		PasswordCommand: &fleetpb.PasswordCommand{
 			Sequence: 60472,
 			Password: "9hibwiwiG2e6Nr",
 		},
@@ -82,15 +82,13 @@ func TestChannelDecodeModeAndOffset(t *testing.T) {
 
 func TestChannelDecodeHeartbeatCommand(t *testing.T) {
 	input := []byte("\xc7\xcd\xab\xf1\x80")
-	expected := protonostale.ClientInteractRequest{
-		ClientInteractRequest: &eventing.ClientInteractRequest{
+	expected := protonostale.ClientCommand{
+		ClientCommand: &eventingpb.ClientCommand{
 			Sequence: 49277,
-			Command: &eventing.ClientCommand{
-				Command: &eventing.ClientCommand_Heartbeat{},
-			},
+			Command:  &eventingpb.ClientCommand_Heartbeat{},
 		},
 	}
-	var result protonostale.ClientInteractRequest
+	var result protonostale.ClientCommand
 	enc := NewChannelDecoder(bytes.NewReader(input), 0)
 	if err := enc.Decode(&result); err != nil {
 		t.Fatal(err)

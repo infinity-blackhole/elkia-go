@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -33,7 +34,7 @@ type SessionAdminClient interface {
 	// PutSession creates a session with a given identifier and token.
 	PutSession(ctx context.Context, in *PutSessionRequest, opts ...grpc.CallOption) (*PutSessionResponse, error)
 	// DeleteSession Deletes a session with a given code.
-	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error)
+	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sessionAdminClient struct {
@@ -62,8 +63,8 @@ func (c *sessionAdminClient) PutSession(ctx context.Context, in *PutSessionReque
 	return out, nil
 }
 
-func (c *sessionAdminClient) DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error) {
-	out := new(DeleteSessionResponse)
+func (c *sessionAdminClient) DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, SessionAdmin_DeleteSession_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -80,7 +81,7 @@ type SessionAdminServer interface {
 	// PutSession creates a session with a given identifier and token.
 	PutSession(context.Context, *PutSessionRequest) (*PutSessionResponse, error)
 	// DeleteSession Deletes a session with a given code.
-	DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error)
+	DeleteSession(context.Context, *DeleteSessionRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSessionAdminServer()
 }
 
@@ -94,7 +95,7 @@ func (UnimplementedSessionAdminServer) GetSession(context.Context, *GetSessionRe
 func (UnimplementedSessionAdminServer) PutSession(context.Context, *PutSessionRequest) (*PutSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutSession not implemented")
 }
-func (UnimplementedSessionAdminServer) DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error) {
+func (UnimplementedSessionAdminServer) DeleteSession(context.Context, *DeleteSessionRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSession not implemented")
 }
 func (UnimplementedSessionAdminServer) mustEmbedUnimplementedSessionAdminServer() {}

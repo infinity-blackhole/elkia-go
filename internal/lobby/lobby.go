@@ -3,17 +3,17 @@ package lobby
 import (
 	"context"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	world "go.shikanime.studio/elkia/pkg/api/world/v1alpha1"
 	"gorm.io/gorm"
 )
 
 type Character struct {
 	gorm.Model
 	Id             string
-	Class          eventing.CharacterClass
-	HairColor      eventing.CharacterHairColor
-	HairStyle      eventing.CharacterHairStyle
-	Faction        eventing.Faction
+	Class          world.CharacterClass
+	HairColor      world.CharacterHairColor
+	HairStyle      world.CharacterHairStyle
+	Faction        world.Faction
 	Reputation     int32
 	Dignity        int32
 	Compliment     int32
@@ -39,23 +39,23 @@ func NewLobbyServer(config LobbyServerConfig) *LobbyServer {
 }
 
 type LobbyServer struct {
-	eventing.UnimplementedLobbyServer
+	world.UnimplementedLobbyServer
 	db *gorm.DB
 }
 
-func (s *LobbyServer) CharacterList(
+func (s *LobbyServer) ListCharacter(
 	ctx context.Context,
-	in *eventing.CharacterListRequest,
-) (*eventing.CharacterListEvent, error) {
+	in *world.ListCharacterCommand,
+) (*world.ListCharacterEvent, error) {
 	var dbChar []Character
 	if err := s.db.
 		Where("id = ?", in.IdentityId).
 		Find(&dbChar).Error; err != nil {
 		return nil, err
 	}
-	var characters []*eventing.Character
+	var characters []*world.Character
 	for _, character := range characters {
-		characters = append(characters, &eventing.Character{
+		characters = append(characters, &world.Character{
 			Id:             character.Id,
 			Class:          character.Class,
 			HairColor:      character.HairColor,
@@ -75,7 +75,7 @@ func (s *LobbyServer) CharacterList(
 			Level:          character.Level,
 		})
 	}
-	return &eventing.CharacterListEvent{
-		CharacterEvents: characters,
+	return &world.ListCharacterEvent{
+		Characters: characters,
 	}, nil
 }

@@ -817,7 +817,7 @@ func (x *CharacterUpdateCommand) GetCapacity() uint32 {
 	return 0
 }
 
-type CharacterListCommand struct {
+type ListCharacterCommand struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -825,8 +825,8 @@ type CharacterListCommand struct {
 	IdentityId string `protobuf:"bytes,1,opt,name=identity_id,json=identityId,proto3" json:"identity_id,omitempty"`
 }
 
-func (x *CharacterListCommand) Reset() {
-	*x = CharacterListCommand{}
+func (x *ListCharacterCommand) Reset() {
+	*x = ListCharacterCommand{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -834,13 +834,13 @@ func (x *CharacterListCommand) Reset() {
 	}
 }
 
-func (x *CharacterListCommand) String() string {
+func (x *ListCharacterCommand) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CharacterListCommand) ProtoMessage() {}
+func (*ListCharacterCommand) ProtoMessage() {}
 
-func (x *CharacterListCommand) ProtoReflect() protoreflect.Message {
+func (x *ListCharacterCommand) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -852,12 +852,12 @@ func (x *CharacterListCommand) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CharacterListCommand.ProtoReflect.Descriptor instead.
-func (*CharacterListCommand) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListCharacterCommand.ProtoReflect.Descriptor instead.
+func (*ListCharacterCommand) Descriptor() ([]byte, []int) {
 	return file_pkg_api_world_v1alpha1_lobby_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *CharacterListCommand) GetIdentityId() string {
+func (x *ListCharacterCommand) GetIdentityId() string {
 	if x != nil {
 		return x.IdentityId
 	}
@@ -938,7 +938,7 @@ func (x *LobbyCommand) GetCharacterUpdate() *CharacterUpdateCommand {
 	return nil
 }
 
-func (x *LobbyCommand) GetCharacterList() *CharacterListCommand {
+func (x *LobbyCommand) GetCharacterList() *ListCharacterCommand {
 	if x, ok := x.GetCommand().(*LobbyCommand_CharacterList); ok {
 		return x.CharacterList
 	}
@@ -962,7 +962,7 @@ type LobbyCommand_CharacterUpdate struct {
 }
 
 type LobbyCommand_CharacterList struct {
-	CharacterList *CharacterListCommand `protobuf:"bytes,4,opt,name=character_list,json=characterList,proto3,oneof"`
+	CharacterList *ListCharacterCommand `protobuf:"bytes,4,opt,name=character_list,json=characterList,proto3,oneof"`
 }
 
 func (*LobbyCommand_CharacterAdd) isLobbyCommand_Command() {}
@@ -1028,7 +1028,7 @@ func (x *LobbyInteractRequest) GetCommand() *LobbyCommand {
 	return nil
 }
 
-type CharacterListEvent struct {
+type ListCharacterEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -1036,8 +1036,8 @@ type CharacterListEvent struct {
 	Characters []*Character `protobuf:"bytes,1,rep,name=characters,proto3" json:"characters,omitempty"`
 }
 
-func (x *CharacterListEvent) Reset() {
-	*x = CharacterListEvent{}
+func (x *ListCharacterEvent) Reset() {
+	*x = ListCharacterEvent{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1045,13 +1045,13 @@ func (x *CharacterListEvent) Reset() {
 	}
 }
 
-func (x *CharacterListEvent) String() string {
+func (x *ListCharacterEvent) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CharacterListEvent) ProtoMessage() {}
+func (*ListCharacterEvent) ProtoMessage() {}
 
-func (x *CharacterListEvent) ProtoReflect() protoreflect.Message {
+func (x *ListCharacterEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1063,12 +1063,12 @@ func (x *CharacterListEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CharacterListEvent.ProtoReflect.Descriptor instead.
-func (*CharacterListEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListCharacterEvent.ProtoReflect.Descriptor instead.
+func (*ListCharacterEvent) Descriptor() ([]byte, []int) {
 	return file_pkg_api_world_v1alpha1_lobby_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *CharacterListEvent) GetCharacters() []*Character {
+func (x *ListCharacterEvent) GetCharacters() []*Character {
 	if x != nil {
 		return x.Characters
 	}
@@ -1125,7 +1125,7 @@ func (m *LobbyEvent) GetEvent() isLobbyEvent_Event {
 	return nil
 }
 
-func (x *LobbyEvent) GetCharacterList() *CharacterListEvent {
+func (x *LobbyEvent) GetCharacterList() *ListCharacterEvent {
 	if x, ok := x.GetEvent().(*LobbyEvent_CharacterList); ok {
 		return x.CharacterList
 	}
@@ -1137,7 +1137,7 @@ type isLobbyEvent_Event interface {
 }
 
 type LobbyEvent_CharacterList struct {
-	CharacterList *CharacterListEvent `protobuf:"bytes,1,opt,name=character_list,json=characterList,proto3,oneof"`
+	CharacterList *ListCharacterEvent `protobuf:"bytes,1,opt,name=character_list,json=characterList,proto3,oneof"`
 }
 
 func (*LobbyEvent_CharacterList) isLobbyEvent_Event() {}
@@ -1247,7 +1247,7 @@ var file_pkg_api_world_v1alpha1_lobby_proto_rawDesc = []byte{
 	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
 	0x73, 0x42, 0x0d, 0x0a, 0x0b, 0x5f, 0x70, 0x6f, 0x70, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x42, 0x0b, 0x0a, 0x09, 0x5f, 0x63, 0x61, 0x70, 0x61, 0x63, 0x69, 0x74, 0x79, 0x22, 0x37, 0x0a,
-	0x14, 0x43, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f,
+	0x14, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x43, 0x6f,
 	0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x74,
 	0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69, 0x64, 0x65, 0x6e,
 	0x74, 0x69, 0x74, 0x79, 0x49, 0x64, 0x22, 0x9e, 0x03, 0x0a, 0x0c, 0x4c, 0x6f, 0x62, 0x62, 0x79,
@@ -1273,8 +1273,8 @@ var file_pkg_api_world_v1alpha1_lobby_proto_rawDesc = []byte{
 	0x0e, 0x63, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18,
 	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x34, 0x2e, 0x73, 0x68, 0x69, 0x6b, 0x61, 0x6e, 0x69, 0x6d,
 	0x65, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x2e, 0x76, 0x31,
-	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72,
-	0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x48, 0x00, 0x52, 0x0d, 0x63,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x68, 0x61, 0x72, 0x61,
+	0x63, 0x74, 0x65, 0x72, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x48, 0x00, 0x52, 0x0d, 0x63,
 	0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x09, 0x0a, 0x07,
 	0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x22, 0x7a, 0x0a, 0x14, 0x4c, 0x6f, 0x62, 0x62, 0x79,
 	0x49, 0x6e, 0x74, 0x65, 0x72, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
@@ -1284,8 +1284,8 @@ var file_pkg_api_world_v1alpha1_lobby_proto_rawDesc = []byte{
 	0x68, 0x69, 0x6b, 0x61, 0x6e, 0x69, 0x6d, 0x65, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x77,
 	0x6f, 0x72, 0x6c, 0x64, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x4c, 0x6f,
 	0x62, 0x62, 0x79, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x07, 0x63, 0x6f, 0x6d, 0x6d,
-	0x61, 0x6e, 0x64, 0x22, 0x5f, 0x0a, 0x12, 0x43, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72,
-	0x4c, 0x69, 0x73, 0x74, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0a, 0x63, 0x68, 0x61,
+	0x61, 0x6e, 0x64, 0x22, 0x5f, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x68, 0x61, 0x72, 0x61,
+	0x63, 0x74, 0x65, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0a, 0x63, 0x68, 0x61,
 	0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x29, 0x2e,
 	0x73, 0x68, 0x69, 0x6b, 0x61, 0x6e, 0x69, 0x6d, 0x65, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e,
 	0x77, 0x6f, 0x72, 0x6c, 0x64, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43,
@@ -1294,8 +1294,8 @@ var file_pkg_api_world_v1alpha1_lobby_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x12, 0x5b, 0x0a, 0x0e, 0x63, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x5f,
 	0x6c, 0x69, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x32, 0x2e, 0x73, 0x68, 0x69,
 	0x6b, 0x61, 0x6e, 0x69, 0x6d, 0x65, 0x2e, 0x65, 0x6c, 0x6b, 0x69, 0x61, 0x2e, 0x77, 0x6f, 0x72,
-	0x6c, 0x64, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x43, 0x68, 0x61, 0x72,
-	0x61, 0x63, 0x74, 0x65, 0x72, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00,
+	0x6c, 0x64, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x43, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x48, 0x00,
 	0x52, 0x0d, 0x63, 0x68, 0x61, 0x72, 0x61, 0x63, 0x74, 0x65, 0x72, 0x4c, 0x69, 0x73, 0x74, 0x42,
 	0x07, 0x0a, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x2a, 0x52, 0x0a, 0x0b, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x0d, 0x0a, 0x09, 0x52, 0x45, 0x51, 0x55, 0x45,
@@ -1368,10 +1368,10 @@ var file_pkg_api_world_v1alpha1_lobby_proto_goTypes = []interface{}{
 	(*CharacterAddCommand)(nil),    // 8: shikanime.elkia.world.v1alpha1.CharacterAddCommand
 	(*CharacterRemoveCommand)(nil), // 9: shikanime.elkia.world.v1alpha1.CharacterRemoveCommand
 	(*CharacterUpdateCommand)(nil), // 10: shikanime.elkia.world.v1alpha1.CharacterUpdateCommand
-	(*CharacterListCommand)(nil),   // 11: shikanime.elkia.world.v1alpha1.CharacterListCommand
+	(*ListCharacterCommand)(nil),   // 11: shikanime.elkia.world.v1alpha1.ListCharacterCommand
 	(*LobbyCommand)(nil),           // 12: shikanime.elkia.world.v1alpha1.LobbyCommand
 	(*LobbyInteractRequest)(nil),   // 13: shikanime.elkia.world.v1alpha1.LobbyInteractRequest
-	(*CharacterListEvent)(nil),     // 14: shikanime.elkia.world.v1alpha1.CharacterListEvent
+	(*ListCharacterEvent)(nil),     // 14: shikanime.elkia.world.v1alpha1.ListCharacterEvent
 	(*LobbyEvent)(nil),             // 15: shikanime.elkia.world.v1alpha1.LobbyEvent
 }
 var file_pkg_api_world_v1alpha1_lobby_proto_depIdxs = []int32{
@@ -1388,10 +1388,10 @@ var file_pkg_api_world_v1alpha1_lobby_proto_depIdxs = []int32{
 	8,  // 10: shikanime.elkia.world.v1alpha1.LobbyCommand.character_add:type_name -> shikanime.elkia.world.v1alpha1.CharacterAddCommand
 	9,  // 11: shikanime.elkia.world.v1alpha1.LobbyCommand.character_remove:type_name -> shikanime.elkia.world.v1alpha1.CharacterRemoveCommand
 	10, // 12: shikanime.elkia.world.v1alpha1.LobbyCommand.character_update:type_name -> shikanime.elkia.world.v1alpha1.CharacterUpdateCommand
-	11, // 13: shikanime.elkia.world.v1alpha1.LobbyCommand.character_list:type_name -> shikanime.elkia.world.v1alpha1.CharacterListCommand
+	11, // 13: shikanime.elkia.world.v1alpha1.LobbyCommand.character_list:type_name -> shikanime.elkia.world.v1alpha1.ListCharacterCommand
 	12, // 14: shikanime.elkia.world.v1alpha1.LobbyInteractRequest.command:type_name -> shikanime.elkia.world.v1alpha1.LobbyCommand
-	7,  // 15: shikanime.elkia.world.v1alpha1.CharacterListEvent.characters:type_name -> shikanime.elkia.world.v1alpha1.Character
-	14, // 16: shikanime.elkia.world.v1alpha1.LobbyEvent.character_list:type_name -> shikanime.elkia.world.v1alpha1.CharacterListEvent
+	7,  // 15: shikanime.elkia.world.v1alpha1.ListCharacterEvent.characters:type_name -> shikanime.elkia.world.v1alpha1.Character
+	14, // 16: shikanime.elkia.world.v1alpha1.LobbyEvent.character_list:type_name -> shikanime.elkia.world.v1alpha1.ListCharacterEvent
 	13, // 17: shikanime.elkia.world.v1alpha1.Lobby.LobbyInteract:input_type -> shikanime.elkia.world.v1alpha1.LobbyInteractRequest
 	15, // 18: shikanime.elkia.world.v1alpha1.Lobby.LobbyInteract:output_type -> shikanime.elkia.world.v1alpha1.LobbyEvent
 	18, // [18:19] is the sub-list for method output_type
@@ -1468,7 +1468,7 @@ func file_pkg_api_world_v1alpha1_lobby_proto_init() {
 			}
 		}
 		file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CharacterListCommand); i {
+			switch v := v.(*ListCharacterCommand); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1504,7 +1504,7 @@ func file_pkg_api_world_v1alpha1_lobby_proto_init() {
 			}
 		}
 		file_pkg_api_world_v1alpha1_lobby_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CharacterListEvent); i {
+			switch v := v.(*ListCharacterEvent); i {
 			case 0:
 				return &v.state
 			case 1:

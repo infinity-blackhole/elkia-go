@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 )
 
@@ -19,16 +19,16 @@ func TestAuthEncodingDecodeCommand(t *testing.T) {
 			"\x00\xf2\x02\x02\x04\x94\x03\x06\x06\x04\xd7\x02\xfc\x09\xfc\xff" +
 			"\xfc\xff\x02\x0a\x04\xd8",
 	)
-	expected := eventing.CreateHandoffFlowCommand{
+	expected := eventingpb.CreateHandoffFlowCommand{
 		Identifier:    "ricofo8350@otanhome.com",
 		Password:      "9hibwiwiG2e6Nr",
 		ClientVersion: "0.9.3+3086",
 	}
-	var result protonostale.AuthInteractRequest
+	var result protonostale.AuthCommand
 	if err := NewDecoder(bytes.NewReader(input)).Decode(&result); err != nil {
 		t.Fatal(err)
 	}
-	if command, ok := result.Command.Command.(*eventing.AuthCommand_CreateHandoffFlow); ok {
+	if command, ok := result.Command.(*eventingpb.AuthCommand_CreateHandoffFlow); ok {
 		if expected.Identifier != command.CreateHandoffFlow.Identifier {
 			t.Errorf("Expected %v, got %v", expected.Identifier, command.CreateHandoffFlow.Identifier)
 		}
@@ -43,7 +43,7 @@ func TestAuthEncodingDecodeCommand(t *testing.T) {
 
 func TestAuthEncodingEncodeCommand(t *testing.T) {
 	input := protonostale.InfoEvent{
-		InfoEvent: &eventing.InfoEvent{
+		InfoEvent: &eventingpb.InfoEvent{
 			Content: "fail Hello. This is a basic test",
 		},
 	}

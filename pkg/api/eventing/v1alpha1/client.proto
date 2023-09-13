@@ -33,6 +33,7 @@ enum CharacterOptions {
 message GlobalOptionsCommand { CharacterOptions option = 1; }
 
 message ClientCommand {
+    uint32 sequence = 1;
     oneof command{
         HeartbeatCommand heartbeat = 2;
         FStashEndCommand f_stash_end = 3;
@@ -40,11 +41,6 @@ message ClientCommand {
         LBSCommand lbs = 5;
         GlobalOptionsCommand global_options = 6;
     }
-}
-
-message ClientInteractRequest {
-    uint32 sequence = 1;
-    ClientCommand command = 2;
 }
 
 enum Code {
@@ -73,7 +69,7 @@ message ClientEvent {
 service Client {
     // ClientInteract is a bi-directional stream that is used to interact with the
     // auth server
-    rpc ClientInteract(stream ClientInteractRequest)
+    rpc ClientInteract(stream ClientCommand)
         returns (stream ClientEvent);
 }
 

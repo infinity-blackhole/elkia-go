@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"go.shikanime.studio/elkia/internal/presence"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -25,14 +25,14 @@ type FakePresence struct {
 
 func (f *FakePresence) Serve() error {
 	server := grpc.NewServer()
-	fleet.RegisterPresenceServer(
+	fleetpb.RegisterPresenceServer(
 		server,
 		presence.NewMemoryPresenceServer(f.c),
 	)
 	return server.Serve(f.lis)
 }
 
-func (f *FakePresence) Dial(ctx context.Context) (fleet.PresenceClient, error) {
+func (f *FakePresence) Dial(ctx context.Context) (fleetpb.PresenceClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -44,7 +44,7 @@ func (f *FakePresence) Dial(ctx context.Context) (fleet.PresenceClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fleet.NewPresenceClient(conn), nil
+	return fleetpb.NewPresenceClient(conn), nil
 }
 
 func (f *FakePresence) Close() error {

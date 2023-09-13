@@ -6,13 +6,13 @@ metadata:
   labels:
     app.kubernetes.io/name: elkia-gateway-proxy
     app.kubernetes.io/instance: elkia-gateway-proxy
-    fleet.elkia.io/managed: "true"
-    fleet.elkia.io/world-id: "1"
-    fleet.elkia.io/world-name: Elkia
-    fleet.elkia.io/channel-id: "1"
-    fleet.elkia.io/population: "0"
-    fleet.elkia.io/capacity: "3000"
-    fleet.elkia.io/port: nswp
+    fleetpb.elkia.io/managed: "true"
+    fleetpb.elkia.io/world-id: "1"
+    fleetpb.elkia.io/world-name: Elkia
+    fleetpb.elkia.io/channel-id: "1"
+    fleetpb.elkia.io/population: "0"
+    fleetpb.elkia.io/capacity: "3000"
+    fleetpb.elkia.io/port: nswp
 spec:
   ports:
     - name: nswp

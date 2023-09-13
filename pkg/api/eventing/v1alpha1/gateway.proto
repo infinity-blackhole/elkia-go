@@ -1,0 +1,34 @@
+syntax = "proto3";
+package shikanime.elkia.eventing.v1alpha1;
+
+import "pkg/api/fleet/v1alpha1/presence.proto";
+import "pkg/api/eventing/v1alpha1/client.proto";
+import "pkg/api/world/v1alpha1/lobby.proto";
+import "pkg/api/world/v1alpha1/combat.proto";
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
+
+message GatewayCommand {
+    oneof command {
+      shikanime.elkia.fleet.v1alpha1.PresenceCommand presence = 1;
+      shikanime.elkia.eventing.v1alpha1.ClientCommand client = 2;
+      shikanime.elkia.world.v1alpha1.LobbyCommand lobby = 3;
+      shikanime.elkia.world.v1alpha1.CombatCommand combat = 4;
+    }
+}
+
+message GatewayEvent {
+  oneof event {
+    shikanime.elkia.fleet.v1alpha1.PresenceEvent presence = 1;
+    shikanime.elkia.eventing.v1alpha1.ClientEvent client = 2;
+    shikanime.elkia.world.v1alpha1.LobbyEvent lobby = 3;
+    shikanime.elkia.world.v1alpha1.CombatEvent combat = 4;
+  }
+}
+
+service Gateway {
+  // GatewayInteract is a bi-directional stream that is used to interact with
+  // the channel server
+  rpc GatewayInteract(stream GatewayCommand)
+      returns (stream GatewayEvent);
+}

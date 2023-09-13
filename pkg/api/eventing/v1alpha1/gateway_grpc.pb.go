@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.21.12
-// source: pkg/api/eventing/v1alpha1/channel.proto
+// source: pkg/api/eventing/v1alpha1/gateway.proto
 
 package v1alpha1
 
@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Gateway_ChannelInteract_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Gateway/ChannelInteract"
+	Gateway_GatewayInteract_FullMethodName = "/shikanime.elkia.eventing.v1alpha1.Gateway/GatewayInteract"
 )
 
 // GatewayClient is the client API for Gateway service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayClient interface {
-	// ChannelInteract is a bi-directional stream that is used to interact with
+	// GatewayInteract is a bi-directional stream that is used to interact with
 	// the channel server
-	ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error)
+	GatewayInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_GatewayInteractClient, error)
 }
 
 type gatewayClient struct {
@@ -39,31 +39,31 @@ func NewGatewayClient(cc grpc.ClientConnInterface) GatewayClient {
 	return &gatewayClient{cc}
 }
 
-func (c *gatewayClient) ChannelInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_ChannelInteractClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[0], Gateway_ChannelInteract_FullMethodName, opts...)
+func (c *gatewayClient) GatewayInteract(ctx context.Context, opts ...grpc.CallOption) (Gateway_GatewayInteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[0], Gateway_GatewayInteract_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &gatewayChannelInteractClient{stream}
+	x := &gatewayGatewayInteractClient{stream}
 	return x, nil
 }
 
-type Gateway_ChannelInteractClient interface {
-	Send(*ChannelInteractRequest) error
-	Recv() (*ChannelEvent, error)
+type Gateway_GatewayInteractClient interface {
+	Send(*GatewayCommand) error
+	Recv() (*GatewayEvent, error)
 	grpc.ClientStream
 }
 
-type gatewayChannelInteractClient struct {
+type gatewayGatewayInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *gatewayChannelInteractClient) Send(m *ChannelInteractRequest) error {
+func (x *gatewayGatewayInteractClient) Send(m *GatewayCommand) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *gatewayChannelInteractClient) Recv() (*ChannelEvent, error) {
-	m := new(ChannelEvent)
+func (x *gatewayGatewayInteractClient) Recv() (*GatewayEvent, error) {
+	m := new(GatewayEvent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -74,9 +74,9 @@ func (x *gatewayChannelInteractClient) Recv() (*ChannelEvent, error) {
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
 type GatewayServer interface {
-	// ChannelInteract is a bi-directional stream that is used to interact with
+	// GatewayInteract is a bi-directional stream that is used to interact with
 	// the channel server
-	ChannelInteract(Gateway_ChannelInteractServer) error
+	GatewayInteract(Gateway_GatewayInteractServer) error
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -84,8 +84,8 @@ type GatewayServer interface {
 type UnimplementedGatewayServer struct {
 }
 
-func (UnimplementedGatewayServer) ChannelInteract(Gateway_ChannelInteractServer) error {
-	return status.Errorf(codes.Unimplemented, "method ChannelInteract not implemented")
+func (UnimplementedGatewayServer) GatewayInteract(Gateway_GatewayInteractServer) error {
+	return status.Errorf(codes.Unimplemented, "method GatewayInteract not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -100,26 +100,26 @@ func RegisterGatewayServer(s grpc.ServiceRegistrar, srv GatewayServer) {
 	s.RegisterService(&Gateway_ServiceDesc, srv)
 }
 
-func _Gateway_ChannelInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GatewayServer).ChannelInteract(&gatewayChannelInteractServer{stream})
+func _Gateway_GatewayInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GatewayServer).GatewayInteract(&gatewayGatewayInteractServer{stream})
 }
 
-type Gateway_ChannelInteractServer interface {
-	Send(*ChannelEvent) error
-	Recv() (*ChannelInteractRequest, error)
+type Gateway_GatewayInteractServer interface {
+	Send(*GatewayEvent) error
+	Recv() (*GatewayCommand, error)
 	grpc.ServerStream
 }
 
-type gatewayChannelInteractServer struct {
+type gatewayGatewayInteractServer struct {
 	grpc.ServerStream
 }
 
-func (x *gatewayChannelInteractServer) Send(m *ChannelEvent) error {
+func (x *gatewayGatewayInteractServer) Send(m *GatewayEvent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *gatewayChannelInteractServer) Recv() (*ChannelInteractRequest, error) {
-	m := new(ChannelInteractRequest)
+func (x *gatewayGatewayInteractServer) Recv() (*GatewayCommand, error) {
+	m := new(GatewayCommand)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -135,11 +135,11 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ChannelInteract",
-			Handler:       _Gateway_ChannelInteract_Handler,
+			StreamName:    "GatewayInteract",
+			Handler:       _Gateway_GatewayInteract_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
-	Metadata: "pkg/api/eventing/v1alpha1/channel.proto",
+	Metadata: "pkg/api/eventing/v1alpha1/gateway.proto",
 }

@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"go.shikanime.studio/elkia/internal/cluster"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -25,14 +25,14 @@ type FakeCluster struct {
 
 func (f *FakeCluster) Serve() error {
 	server := grpc.NewServer()
-	fleet.RegisterClusterServer(
+	fleetpb.RegisterClusterServer(
 		server,
 		cluster.NewMemoryClusterServer(f.c),
 	)
 	return server.Serve(f.lis)
 }
 
-func (f *FakeCluster) Dial(ctx context.Context) (fleet.ClusterClient, error) {
+func (f *FakeCluster) Dial(ctx context.Context) (fleetpb.ClusterClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -44,7 +44,7 @@ func (f *FakeCluster) Dial(ctx context.Context) (fleet.ClusterClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return fleet.NewClusterClient(conn), nil
+	return fleetpb.NewClusterClient(conn), nil
 }
 
 func (f *FakeCluster) Close() error {

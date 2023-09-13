@@ -14,7 +14,7 @@ import (
 	"go.shikanime.studio/elkia/internal/cluster/clustertest"
 	"go.shikanime.studio/elkia/internal/presence"
 	"go.shikanime.studio/elkia/internal/presence/presencetest"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -28,7 +28,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 				Password: "9hibwiwiG2e6Nr",
 			},
 		},
-		Sessions: map[uint32]*fleet.Session{},
+		Sessions: map[uint32]*fleetpb.Session{},
 		Seed:     1,
 	})
 	wg.Go(fakePresence.Serve)
@@ -37,7 +37,7 @@ func TestHandlerServeNosTale(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeCluster := clustertest.NewFakeCluster(cluster.MemoryClusterServerConfig{
-		Members: []*fleet.Member{
+		Members: []*fleetpb.Member{
 			{
 				Id:         "gateway-alpha",
 				WorldId:    1,

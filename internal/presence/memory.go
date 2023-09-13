@@ -6,7 +6,8 @@ import (
 	"errors"
 	"math/rand"
 
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Identity struct {
@@ -16,7 +17,7 @@ type Identity struct {
 
 type MemoryPresenceServerConfig struct {
 	Identities map[uint32]*Identity
-	Sessions   map[uint32]*fleet.Session
+	Sessions   map[uint32]*fleetpb.Session
 	Seed       int64
 }
 
@@ -29,16 +30,16 @@ func NewMemoryPresenceServer(c MemoryPresenceServerConfig) *MemoryPresenceServer
 }
 
 type MemoryPresenceServer struct {
-	fleet.UnimplementedPresenceServer
+	fleetpb.UnimplementedPresenceServer
 	identities map[uint32]*Identity
-	sessions   map[uint32]*fleet.Session
+	sessions   map[uint32]*fleetpb.Session
 	rand       *rand.Rand
 }
 
-func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
+func (s *MemoryPresenceServer) CreateHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthCreateHandoffFlowRequest,
-) (*fleet.AuthCreateHandoffFlowResponse, error) {
+	in *fleetpb.CreateHandoffFlowRequest,
+) (*fleetpb.CreateHandoffFlowResponse, error) {
 	var identity *Identity
 	for _, i := range s.identities {
 		if i.Username == in.Identifier && i.Password == in.Password {
@@ -57,25 +58,25 @@ func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
 	if err != nil {
 		return nil, err
 	}
-	sessionPut, err := s.SessionPut(ctx, &fleet.SessionPutRequest{
+	sessionPut, err := s.PutSession(ctx, &fleetpb.PutSessionRequest{
 		Code: code,
-		Session: &fleet.Session{
+		Session: &fleetpb.Session{
 			Token: sessionToken,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthCreateHandoffFlowResponse{
+	return &fleetpb.CreateHandoffFlowResponse{
 		Code: sessionPut.Code,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) AuthRefreshLogin(
+func (s *MemoryPresenceServer) RefreshLogin(
 	ctx context.Context,
-	in *fleet.AuthRefreshLoginRequest,
-) (*fleet.AuthRefreshLoginResponse, error) {
-	var session *fleet.Session
+	in *fleetpb.RefreshLoginRequest,
+) (*fleetpb.RefreshLoginResponse, error) {
+	var session *fleetpb.Session
 	for _, i := range s.sessions {
 		if i.Token == in.Token {
 			session = i
@@ -99,28 +100,28 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthRefreshLoginResponse{
+	return &fleetpb.RefreshLoginResponse{
 		Token: sessionToken,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
+func (s *MemoryPresenceServer) CompleteHandoffFlow(
 	ctx context.Context,
-	in *fleet.AuthCompleteHandoffFlowRequest,
-) (*fleet.AuthCompleteHandoffFlowResponse, error) {
+	in *fleetpb.CompleteHandoffFlowRequest,
+) (*fleetpb.CompleteHandoffFlowResponse, error) {
 	code, err := generateCode(in.Identifier)
 	if err != nil {
 		return nil, err
 	}
-	sessionGet, err := s.SessionGet(ctx, &fleet.SessionGetRequest{
+	sessionGet, err := s.GetSession(ctx, &fleetpb.GetSessionRequest{
 		Code: code,
 	})
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.AuthRefreshLogin(
+	_, err = s.RefreshLogin(
 		ctx,
-		&fleet.AuthRefreshLoginRequest{
+		&fleetpb.RefreshLoginRequest{
 			Identifier: in.Identifier,
 			Password:   in.Password,
 			Token:      sessionGet.Session.Token,
@@ -129,13 +130,13 @@ func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+	_, err = s.DeleteSession(ctx, &fleetpb.DeleteSessionRequest{
 		Code: code,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthCompleteHandoffFlowResponse{}, nil
+	return &fleetpb.CompleteHandoffFlowResponse{}, nil
 }
 
 func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
@@ -146,45 +147,45 @@ func (s *MemoryPresenceServer) generateSecureToken(length int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func (s *MemoryPresenceServer) AuthLogout(
+func (s *MemoryPresenceServer) Logout(
 	ctx context.Context,
-	in *fleet.AuthLogoutRequest,
-) (*fleet.AuthLogoutResponse, error) {
-	if _, err := s.SessionDelete(ctx, &fleet.SessionDeleteRequest{
+	in *fleetpb.LogoutRequest,
+) (*emptypb.Empty, error) {
+	if _, err := s.DeleteSession(ctx, &fleetpb.DeleteSessionRequest{
 		Code: in.Code,
 	}); err != nil {
 		return nil, err
 	}
-	return &fleet.AuthLogoutResponse{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (s *MemoryPresenceServer) SessionGet(
+func (s *MemoryPresenceServer) GetSession(
 	ctx context.Context,
-	in *fleet.SessionGetRequest,
-) (*fleet.SessionGetResponse, error) {
+	in *fleetpb.GetSessionRequest,
+) (*fleetpb.GetSessionResponse, error) {
 	session, ok := s.sessions[in.Code]
 	if !ok {
 		return nil, errors.New("session not found")
 	}
-	return &fleet.SessionGetResponse{
+	return &fleetpb.GetSessionResponse{
 		Session: session,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) SessionPut(
+func (s *MemoryPresenceServer) PutSession(
 	ctx context.Context,
-	in *fleet.SessionPutRequest,
-) (*fleet.SessionPutResponse, error) {
+	in *fleetpb.PutSessionRequest,
+) (*fleetpb.PutSessionResponse, error) {
 	s.sessions[in.Code] = in.Session
-	return &fleet.SessionPutResponse{
+	return &fleetpb.PutSessionResponse{
 		Code: in.Code,
 	}, nil
 }
 
-func (s *MemoryPresenceServer) SessionDelete(
+func (s *MemoryPresenceServer) DeleteSession(
 	ctx context.Context,
-	in *fleet.SessionDeleteRequest,
-) (*fleet.SessionDeleteResponse, error) {
+	in *fleetpb.DeleteSessionRequest,
+) (*emptypb.Empty, error) {
 	delete(s.sessions, in.Code)
-	return &fleet.SessionDeleteResponse{}, nil
+	return &emptypb.Empty{}, nil
 }

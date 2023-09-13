@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"go.shikanime.studio/elkia/internal/auth"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -25,14 +25,14 @@ type FakeAuth struct {
 
 func (f *FakeAuth) Serve() error {
 	server := grpc.NewServer()
-	eventing.RegisterAuthServer(
+	eventingpb.RegisterAuthServer(
 		server,
 		auth.NewServer(f.c),
 	)
 	return server.Serve(f.lis)
 }
 
-func (f *FakeAuth) Dial(ctx context.Context) (eventing.AuthClient, error) {
+func (f *FakeAuth) Dial(ctx context.Context) (eventingpb.AuthClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -44,5 +44,5 @@ func (f *FakeAuth) Dial(ctx context.Context) (eventing.AuthClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return eventing.NewAuthClient(conn), nil
+	return eventingpb.NewAuthClient(conn), nil
 }

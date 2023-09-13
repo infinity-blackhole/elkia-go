@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Presence_PresenceInteract_FullMethodName    = "/shikanime.elkia.fleet.v1alpha1.Presence/PresenceInteract"
 	Presence_CreateHandoffFlow_FullMethodName   = "/shikanime.elkia.fleet.v1alpha1.Presence/CreateHandoffFlow"
 	Presence_CompleteHandoffFlow_FullMethodName = "/shikanime.elkia.fleet.v1alpha1.Presence/CompleteHandoffFlow"
 	Presence_Login_FullMethodName               = "/shikanime.elkia.fleet.v1alpha1.Presence/Login"
@@ -31,6 +33,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PresenceClient interface {
+	// PresenceInteract is a bi-directional stream that is used to interact with
+	// the channel server
+	PresenceInteract(ctx context.Context, opts ...grpc.CallOption) (Presence_PresenceInteractClient, error)
 	// CreateHandoffFlow creates a handoff flow with a given identifier and
 	// password.
 	CreateHandoffFlow(ctx context.Context, in *CreateHandoffFlowRequest, opts ...grpc.CallOption) (*CreateHandoffFlowResponse, error)
@@ -46,7 +51,7 @@ type PresenceClient interface {
 	// WhoAmI returns the session associated with a given token.
 	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error)
 	// Logout logs out a session with a given code.
-	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type presenceClient struct {
@@ -55,6 +60,37 @@ type presenceClient struct {
 
 func NewPresenceClient(cc grpc.ClientConnInterface) PresenceClient {
 	return &presenceClient{cc}
+}
+
+func (c *presenceClient) PresenceInteract(ctx context.Context, opts ...grpc.CallOption) (Presence_PresenceInteractClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Presence_ServiceDesc.Streams[0], Presence_PresenceInteract_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &presencePresenceInteractClient{stream}
+	return x, nil
+}
+
+type Presence_PresenceInteractClient interface {
+	Send(*PresenceCommand) error
+	Recv() (*PresenceEvent, error)
+	grpc.ClientStream
+}
+
+type presencePresenceInteractClient struct {
+	grpc.ClientStream
+}
+
+func (x *presencePresenceInteractClient) Send(m *PresenceCommand) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *presencePresenceInteractClient) Recv() (*PresenceEvent, error) {
+	m := new(PresenceEvent)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *presenceClient) CreateHandoffFlow(ctx context.Context, in *CreateHandoffFlowRequest, opts ...grpc.CallOption) (*CreateHandoffFlowResponse, error) {
@@ -102,8 +138,8 @@ func (c *presenceClient) WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...
 	return out, nil
 }
 
-func (c *presenceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
-	out := new(LogoutResponse)
+func (c *presenceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, Presence_Logout_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -115,6 +151,9 @@ func (c *presenceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...
 // All implementations must embed UnimplementedPresenceServer
 // for forward compatibility
 type PresenceServer interface {
+	// PresenceInteract is a bi-directional stream that is used to interact with
+	// the channel server
+	PresenceInteract(Presence_PresenceInteractServer) error
 	// CreateHandoffFlow creates a handoff flow with a given identifier and
 	// password.
 	CreateHandoffFlow(context.Context, *CreateHandoffFlowRequest) (*CreateHandoffFlowResponse, error)
@@ -130,7 +169,7 @@ type PresenceServer interface {
 	// WhoAmI returns the session associated with a given token.
 	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error)
 	// Logout logs out a session with a given code.
-	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
+	Logout(context.Context, *LogoutRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPresenceServer()
 }
 
@@ -138,6 +177,9 @@ type PresenceServer interface {
 type UnimplementedPresenceServer struct {
 }
 
+func (UnimplementedPresenceServer) PresenceInteract(Presence_PresenceInteractServer) error {
+	return status.Errorf(codes.Unimplemented, "method PresenceInteract not implemented")
+}
 func (UnimplementedPresenceServer) CreateHandoffFlow(context.Context, *CreateHandoffFlowRequest) (*CreateHandoffFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHandoffFlow not implemented")
 }
@@ -153,7 +195,7 @@ func (UnimplementedPresenceServer) RefreshLogin(context.Context, *RefreshLoginRe
 func (UnimplementedPresenceServer) WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WhoAmI not implemented")
 }
-func (UnimplementedPresenceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
+func (UnimplementedPresenceServer) Logout(context.Context, *LogoutRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedPresenceServer) mustEmbedUnimplementedPresenceServer() {}
@@ -167,6 +209,32 @@ type UnsafePresenceServer interface {
 
 func RegisterPresenceServer(s grpc.ServiceRegistrar, srv PresenceServer) {
 	s.RegisterService(&Presence_ServiceDesc, srv)
+}
+
+func _Presence_PresenceInteract_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(PresenceServer).PresenceInteract(&presencePresenceInteractServer{stream})
+}
+
+type Presence_PresenceInteractServer interface {
+	Send(*PresenceEvent) error
+	Recv() (*PresenceCommand, error)
+	grpc.ServerStream
+}
+
+type presencePresenceInteractServer struct {
+	grpc.ServerStream
+}
+
+func (x *presencePresenceInteractServer) Send(m *PresenceEvent) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *presencePresenceInteractServer) Recv() (*PresenceCommand, error) {
+	m := new(PresenceCommand)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func _Presence_CreateHandoffFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -309,6 +377,13 @@ var Presence_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Presence_Logout_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "PresenceInteract",
+			Handler:       _Presence_PresenceInteract_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "pkg/api/fleet/v1alpha1/presence.proto",
 }

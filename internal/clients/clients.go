@@ -9,8 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/mysql"
@@ -83,8 +83,8 @@ func NewKubernetesClientSet() (*kubernetes.Clientset, error) {
 }
 
 type FleetClientSet struct {
-	PresenceClient fleet.PresenceClient
-	ClusterClient  fleet.ClusterClient
+	PresenceClient fleetpb.PresenceClient
+	ClusterClient  fleetpb.ClusterClient
 }
 
 func NewFleetClientSet() (*FleetClientSet, error) {
@@ -101,13 +101,13 @@ func NewFleetClientSet() (*FleetClientSet, error) {
 	)
 	logrus.Debugf("gateway: connected to fleet at %s", fleetEndpoint)
 	return &FleetClientSet{
-		PresenceClient: fleet.NewPresenceClient(fleetConn),
-		ClusterClient:  fleet.NewClusterClient(fleetConn),
+		PresenceClient: fleetpb.NewPresenceClient(fleetConn),
+		ClusterClient:  fleetpb.NewClusterClient(fleetConn),
 	}, err
 }
 
 type GatewayClientSet struct {
-	GatewayClient eventing.GatewayClient
+	GatewayClient eventingpb.GatewayClient
 }
 
 func NewGatewayClientSet() (*GatewayClientSet, error) {
@@ -124,12 +124,12 @@ func NewGatewayClientSet() (*GatewayClientSet, error) {
 	)
 	logrus.Debugf("gateway: connected to gateway at %s", gatewayEndpoint)
 	return &GatewayClientSet{
-		GatewayClient: eventing.NewGatewayClient(gatewayConn),
+		GatewayClient: eventingpb.NewGatewayClient(gatewayConn),
 	}, err
 }
 
 type AuthClientSet struct {
-	AuthClient eventing.AuthClient
+	AuthClient eventingpb.AuthClient
 }
 
 func NewAuthClientSet() (*AuthClientSet, error) {
@@ -146,6 +146,6 @@ func NewAuthClientSet() (*AuthClientSet, error) {
 	)
 	logrus.Debugf("gateway: connected to auth at %s", authEndpoint)
 	return &AuthClientSet{
-		AuthClient: eventing.NewAuthClient(authConn),
+		AuthClient: eventingpb.NewAuthClient(authConn),
 	}, err
 }

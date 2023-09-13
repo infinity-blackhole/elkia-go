@@ -6,15 +6,16 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	worldpb "go.shikanime.studio/elkia/pkg/api/world/v1alpha1"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
 type ServerConfig struct {
-	PresenceClient fleet.PresenceClient
-	LobbyClient    eventing.LobbyClient
+	PresenceClient fleetpb.PresenceClient
+	LobbyClient    worldpb.LobbyClient
 	RedisClient    redis.UniversalClient
 }
 
@@ -27,13 +28,13 @@ func NewServer(cfg ServerConfig) *Server {
 }
 
 type Server struct {
-	eventing.UnimplementedGatewayServer
-	presence fleet.PresenceClient
-	lobby    eventing.LobbyClient
+	eventingpb.UnimplementedGatewayServer
+	presence fleetpb.PresenceClient
+	lobby    worldpb.LobbyClient
 	redis    redis.UniversalClient
 }
 
-func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) error {
+func (s *Server) GatewayInteract(stream eventingpb.Gateway_ChannelInteractServer) error {
 	logrus.Debug("gateway: channel interact")
 	var sequence uint32
 	msg, err := stream.Recv()
@@ -65,7 +66,7 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 		return errors.New("handoff: session protocol error")
 	}
 	logrus.Debugf("gateway: channel interact: password: %v", password)
-	handoff, err := s.presence.AuthCompleteHandoffFlow(stream.Context(), &fleet.AuthCompleteHandoffFlowRequest{
+	handoff, err := s.presence.CompleteHandoffFlow(stream.Context(), &fleetpb.CompleteHandoffFlowRequest{
 		Identifier: identifier.Identifier,
 		Password:   password.Password,
 	})
@@ -84,12 +85,12 @@ func (s *Server) ChannelInteract(stream eventing.Gateway_ChannelInteractServer) 
 
 type ControllerProxy struct {
 	redis    redis.UniversalClient
-	presence fleet.PresenceClient
+	presence fleetpb.PresenceClient
 	token    string
 }
 
-func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) error {
-	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
+func (s *ControllerProxy) Push(stream eventingpb.Gateway_ChannelInteractServer) error {
+	whoami, err := s.presence.WhoAmI(stream.Context(), &fleetpb.WhoAmIRequest{
 		Token: s.token,
 	})
 	if err != nil {
@@ -117,8 +118,8 @@ func (s *ControllerProxy) Push(stream eventing.Gateway_ChannelInteractServer) er
 	}
 }
 
-func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) error {
-	whoami, err := s.presence.AuthWhoAmI(stream.Context(), &fleet.AuthWhoAmIRequest{
+func (s *ControllerProxy) Poll(stream eventingpb.Gateway_ChannelInteractServer) error {
+	whoami, err := s.presence.WhoAmI(stream.Context(), &fleetpb.WhoAmIRequest{
 		Token: s.token,
 	})
 	if err != nil {
@@ -126,7 +127,7 @@ func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) er
 	}
 	pubsub := s.redis.Subscribe(stream.Context(), fmt.Sprintf("elkia:controllers:events:%s", whoami.IdentityId))
 	for msg := range pubsub.Channel() {
-		var frame eventing.ChannelInteractResponse
+		var frame eventingpb.GatewayEvent
 		if err := prototext.Unmarshal([]byte(msg.Payload), &frame); err != nil {
 			return err
 		}
@@ -138,7 +139,7 @@ func (s *ControllerProxy) Poll(stream eventing.Gateway_ChannelInteractServer) er
 	return nil
 }
 
-func (s *ControllerProxy) Serve(stream eventing.Gateway_ChannelInteractServer) error {
+func (s *ControllerProxy) Serve(stream eventingpb.Gateway_ChannelInteractServer) error {
 	var wg errgroup.Group
 	wg.Go(func() error {
 		return s.Push(stream)

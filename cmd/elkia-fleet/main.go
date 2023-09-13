@@ -10,7 +10,7 @@ import (
 	"go.shikanime.studio/elkia/internal/clients"
 	"go.shikanime.studio/elkia/internal/cluster"
 	"go.shikanime.studio/elkia/internal/presence"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc"
 
 	_ "go.shikanime.studio/elkia/internal/monitoring"
@@ -44,7 +44,7 @@ func main() {
 		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
 	)
-	fleet.RegisterPresenceServer(
+	fleetpb.RegisterPresenceServer(
 		srv,
 		presence.NewPresenceServer(presence.PresenceServerConfig{
 			OryClient:   oryClient,
@@ -55,7 +55,7 @@ func main() {
 	if myNs == "" {
 		myNs = "elkia"
 	}
-	fleet.RegisterClusterServer(
+	fleetpb.RegisterClusterServer(
 		srv,
 		cluster.NewKubernetesClusterServer(cluster.KubernetesClusterServerConfig{
 			Namespace:        myNs,

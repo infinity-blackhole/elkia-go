@@ -7,8 +7,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 	"golang.org/x/sync/errgroup"
 )
@@ -16,7 +16,7 @@ import (
 var name = "go.shikanime.studio/elkia/internal/gateway"
 
 type HandlerConfig struct {
-	GatewayClient eventing.GatewayClient
+	GatewayClient eventingpb.GatewayClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
@@ -26,14 +26,14 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	gateway eventing.GatewayClient
+	gateway eventingpb.GatewayClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
 	ctx := context.Background()
 	_, span := otel.Tracer(name).Start(ctx, "Handle Messages")
 	defer span.End()
-	stream, err := h.gateway.ChannelInteract(ctx)
+	stream, err := h.gateway.GatewayInteract(ctx)
 	defer stream.CloseSend()
 	if err != nil {
 		logrus.Errorf("auth: error while creating auth interact stream: %v", err)
@@ -63,7 +63,7 @@ func NewProxy(rw *bufio.ReadWriter, code uint32) *Proxy {
 	}
 }
 
-func (p *Proxy) Serve(stream eventing.Gateway_ChannelInteractClient) error {
+func (p *Proxy) Serve(stream eventingpb.Gateway_ChannelInteractClient) error {
 	var wg errgroup.Group
 	wg.Go(func() error {
 		return p.sender.Serve(stream)
@@ -84,26 +84,24 @@ func NewProxyUpgrader(rwc *bufio.ReadWriter) *ProxyUpgrader {
 }
 
 func (p *ProxyUpgrader) Upgrade(
-	stream eventing.Gateway_ChannelInteractClient,
+	stream eventingpb.Gateway_ChannelInteractClient,
 ) (*Proxy, error) {
 	msg, err := p.proxy.RecvSync()
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("gateway: received sync frame: %v", msg.String())
-	if err := stream.Send(&eventing.ChannelInteractRequest{
-		Command: &eventing.ChannelCommand{
-			Command: &eventing.ChannelCommand_Presence{
-				Presence: &fleet.PresenceCommand{
-					Command: &fleet.PresenceCommand_Sync{
-						Sync: msg,
-					},
+	if err := stream.Send(&eventingpb.GatewayCommand{
+		Command: &eventingpb.ChannelCommand_Presence{
+			Presence: &fleetpb.PresenceCommand{
+				Command: &fleetpb.PresenceCommand_Sync{
+					Sync: msg,
 				},
 			},
 		},
 	}); err != nil {
 		return nil, p.proxy.SendMsg(
-			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 		)
 	}
 	return NewProxy(p.rwc, msg.Code), nil
@@ -123,11 +121,11 @@ func NewSessionProxyClient(rw *bufio.ReadWriter) *SessionProxyClient {
 	}
 }
 
-func (p *SessionProxyClient) RecvSync() (*fleet.SyncCommand, error) {
+func (p *SessionProxyClient) RecvSync() (*fleetpb.SyncCommand, error) {
 	var msg protonostale.SyncCommand
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
-			protonostale.NewStatus(eventing.Code_BAD_CASE),
+			protonostale.NewStatus(eventingpb.Code_BAD_CASE),
 		); err != nil {
 			return nil, err
 		}
@@ -140,9 +138,9 @@ func (p *SessionProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (u *SessionProxyClient) Send(msg *eventing.ChannelEvent) error {
-	return u.enc.Encode(&protonostale.ChannelEvent{
-		ChannelEvent: msg,
+func (u *SessionProxyClient) Send(msg *eventingpb.GatewayEvent) error {
+	return u.enc.Encode(&protonostale.GatewayEvent{
+		GatewayEvent: msg,
 	})
 }
 
@@ -154,7 +152,7 @@ func (p *SessionProxyClient) SendMsg(msg any) error {
 		}
 	default:
 		if err := p.enc.Encode(
-			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 		); err != nil {
 			return err
 		}
@@ -172,14 +170,14 @@ func NewProxySender(rw *bufio.ReadWriter, code uint32) *ProxySender {
 	}
 }
 
-func (p *ProxySender) Serve(stream eventing.Gateway_ChannelInteractClient) error {
+func (p *ProxySender) Serve(stream eventingpb.Gateway_ChannelInteractClient) error {
 	for {
 		msg, err := p.proxy.Recv()
 		if err != nil {
-			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR)
 		}
 		if err := stream.Send(msg); err != nil {
-			return protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR)
+			return protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR)
 		}
 	}
 }
@@ -199,7 +197,7 @@ func NewChannelProxyClient(rw *bufio.ReadWriter, code uint32) *ChannelProxyClien
 	}
 }
 
-func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
+func (p *ChannelProxyClient) Recv() (*eventingpb.GatewayCommand, error) {
 	const (
 		stateIdentifier = iota
 		statePassword
@@ -213,59 +211,55 @@ func (p *ChannelProxyClient) Recv() (*eventing.ChannelInteractRequest, error) {
 		p.state = stateCommand
 		return p.RecvPassword()
 	default:
-		var msg protonostale.ClientInteractRequest
+		var msg protonostale.GatewayCommand
 		if err := p.RecvMsg(&msg); err != nil {
 			if err := p.SendMsg(
-				protonostale.NewStatus(eventing.Code_BAD_CASE),
+				protonostale.NewStatus(eventingpb.Code_BAD_CASE),
 			); err != nil {
 				return nil, err
 			}
 			return nil, err
 		}
-		return msg.ClientInteractRequest, nil
+		return msg.GatewayCommand, nil
 	}
 }
 
-func (p *ChannelProxyClient) RecvIdentifier() (*eventing.ChannelInteractRequest, error) {
+func (p *ChannelProxyClient) RecvIdentifier() (*eventingpb.GatewayCommand, error) {
 	var msg protonostale.IdentifierCommand
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
-			protonostale.NewStatus(eventing.Code_BAD_CASE),
+			protonostale.NewStatus(eventingpb.Code_BAD_CASE),
 		); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
-	return &eventing.ChannelInteractRequest{
-		Command: &eventing.ChannelCommand{
-			Command: &eventing.ChannelCommand_Presence{
-				Presence: &fleet.PresenceCommand{
-					Command: &fleet.PresenceCommand_Identifier{
-						Identifier: msg.IdentifierCommand,
-					},
+	return &eventingpb.GatewayCommand{
+		Command: &eventingpb.ChannelCommand_Presence{
+			Presence: &fleetpb.PresenceCommand{
+				Command: &fleetpb.PresenceCommand_Identifier{
+					Identifier: msg.IdentifierCommand,
 				},
 			},
 		},
 	}, nil
 }
 
-func (p *ChannelProxyClient) RecvPassword() (*eventing.ChannelInteractRequest, error) {
+func (p *ChannelProxyClient) RecvPassword() (*eventingpb.GatewayCommand, error) {
 	var msg protonostale.PasswordCommand
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
-			protonostale.NewStatus(eventing.Code_BAD_CASE),
+			protonostale.NewStatus(eventingpb.Code_BAD_CASE),
 		); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
-	return &eventing.ChannelInteractRequest{
-		Command: &eventing.ChannelCommand{
-			Command: &eventing.ChannelCommand_Presence{
-				Presence: &fleet.PresenceCommand{
-					Command: &fleet.PresenceCommand_Password{
-						Password: msg.PasswordCommand,
-					},
+	return &eventingpb.GatewayCommand{
+		Command: &eventingpb.ChannelCommand_Presence{
+			Presence: &fleetpb.PresenceCommand{
+				Command: &fleetpb.PresenceCommand_Password{
+					Password: msg.PasswordCommand,
 				},
 			},
 		},
@@ -276,9 +270,9 @@ func (p *ChannelProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (u *ChannelProxyClient) Send(msg *eventing.ChannelEvent) error {
-	return u.enc.Encode(&protonostale.ChannelEvent{
-		ChannelEvent: msg,
+func (u *ChannelProxyClient) Send(msg *eventingpb.GatewayEvent) error {
+	return u.enc.Encode(&protonostale.GatewayEvent{
+		GatewayEvent: msg,
 	})
 }
 
@@ -290,7 +284,7 @@ func (p *ChannelProxyClient) SendMsg(msg any) error {
 		}
 	default:
 		if err := p.enc.Encode(
-			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 		); err != nil {
 			return err
 		}

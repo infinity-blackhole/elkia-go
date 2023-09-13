@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"go.shikanime.studio/elkia/internal/gateway"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -25,14 +25,14 @@ type FakeGateway struct {
 
 func (f *FakeGateway) Serve() error {
 	server := grpc.NewServer()
-	eventing.RegisterGatewayServer(
+	eventingpb.RegisterGatewayServer(
 		server,
 		gateway.NewServer(f.c),
 	)
 	return server.Serve(f.lis)
 }
 
-func (f *FakeGateway) Dial(ctx context.Context) (eventing.GatewayClient, error) {
+func (f *FakeGateway) Dial(ctx context.Context) (eventingpb.GatewayClient, error) {
 	conn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -44,7 +44,7 @@ func (f *FakeGateway) Dial(ctx context.Context) (eventing.GatewayClient, error) 
 	if err != nil {
 		return nil, err
 	}
-	return eventing.NewGatewayClient(conn), nil
+	return eventingpb.NewGatewayClient(conn), nil
 }
 
 func (f *FakeGateway) Close() error {

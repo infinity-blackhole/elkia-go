@@ -49,7 +49,7 @@ func (c *clientClient) ClientInteract(ctx context.Context, opts ...grpc.CallOpti
 }
 
 type Client_ClientInteractClient interface {
-	Send(*ClientInteractRequest) error
+	Send(*ClientCommand) error
 	Recv() (*ClientEvent, error)
 	grpc.ClientStream
 }
@@ -58,7 +58,7 @@ type clientClientInteractClient struct {
 	grpc.ClientStream
 }
 
-func (x *clientClientInteractClient) Send(m *ClientInteractRequest) error {
+func (x *clientClientInteractClient) Send(m *ClientCommand) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -106,7 +106,7 @@ func _Client_ClientInteract_Handler(srv interface{}, stream grpc.ServerStream) e
 
 type Client_ClientInteractServer interface {
 	Send(*ClientEvent) error
-	Recv() (*ClientInteractRequest, error)
+	Recv() (*ClientCommand, error)
 	grpc.ServerStream
 }
 
@@ -118,8 +118,8 @@ func (x *clientClientInteractServer) Send(m *ClientEvent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *clientClientInteractServer) Recv() (*ClientInteractRequest, error) {
-	m := new(ClientInteractRequest)
+func (x *clientClientInteractServer) Recv() (*ClientCommand, error) {
+	m := new(ClientCommand)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

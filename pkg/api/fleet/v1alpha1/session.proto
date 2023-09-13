@@ -1,6 +1,8 @@
 syntax = "proto3";
 package shikanime.elkia.fleet.v1alpha1;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1";
 
 message Session {
@@ -17,8 +19,6 @@ message PutSessionResponse { uint32 code = 1; }
 
 message DeleteSessionRequest { uint32 code = 1; }
 
-message DeleteSessionResponse {}
-
 service SessionAdmin {
   // GetSession gets a session with a given code.
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
@@ -27,5 +27,5 @@ service SessionAdmin {
   rpc PutSession(PutSessionRequest) returns (PutSessionResponse);
 
   // DeleteSession Deletes a session with a given code.
-  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
+  rpc DeleteSession(DeleteSessionRequest) returns (google.protobuf.Empty);
 }

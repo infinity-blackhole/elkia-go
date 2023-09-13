@@ -7,7 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"go.shikanime.studio/elkia/pkg/protonostale"
 	"golang.org/x/sync/errgroup"
 )
@@ -15,7 +15,7 @@ import (
 const name = "go.shikanime.studio/elkia/internal/auth"
 
 type HandlerConfig struct {
-	AuthClient eventing.AuthClient
+	AuthClient eventingpb.AuthClient
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
@@ -25,7 +25,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 }
 
 type Handler struct {
-	auth eventing.AuthClient
+	auth eventingpb.AuthClient
 }
 
 func (h *Handler) ServeNosTale(c net.Conn) {
@@ -59,7 +59,7 @@ func NewProxy(rw *bufio.ReadWriter) *Proxy {
 	}
 }
 
-func (p *Proxy) Serve(stream eventing.Auth_AuthInteractClient) error {
+func (p *Proxy) Serve(stream eventingpb.Auth_AuthInteractClient) error {
 	var wg errgroup.Group
 	wg.Go(func() error {
 		return p.s.Serve(stream)
@@ -80,18 +80,18 @@ func NewProxySender(rw *bufio.ReadWriter) *ProxySender {
 	}
 }
 
-func (p *ProxySender) Serve(stream eventing.Auth_AuthInteractClient) error {
+func (p *ProxySender) Serve(stream eventingpb.Auth_AuthInteractClient) error {
 	for {
 		msg, err := p.proxy.Recv()
 		if err != nil {
 			return p.proxy.SendMsg(
-				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+				protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 			)
 		}
 		logrus.Debugf("auth: read frame: %v", msg)
 		if err := stream.Send(msg); err != nil {
 			return p.proxy.SendMsg(
-				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+				protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 			)
 		}
 		logrus.Debug("auth: sent login request")
@@ -108,18 +108,18 @@ func NewProxyReceiver(rw *bufio.ReadWriter) *ProxyReceiver {
 	}
 }
 
-func (p *ProxyReceiver) Serve(stream eventing.Auth_AuthInteractClient) error {
+func (p *ProxyReceiver) Serve(stream eventingpb.Auth_AuthInteractClient) error {
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
 			return p.proxy.SendMsg(
-				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+				protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 			)
 		}
 		logrus.Debugf("auth: read frame: %v", msg)
 		if err := p.proxy.Send(msg); err != nil {
 			return p.proxy.SendMsg(
-				protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+				protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 			)
 		}
 		logrus.Debug("auth: sent login response")
@@ -140,24 +140,24 @@ func NewProxyClient(rw *bufio.ReadWriter) *ProxyClient {
 	}
 }
 
-func (p *ProxyClient) Recv() (*eventing.AuthInteractRequest, error) {
-	var msg protonostale.AuthInteractRequest
+func (p *ProxyClient) Recv() (*eventingpb.AuthCommand, error) {
+	var msg protonostale.AuthCommand
 	if err := p.RecvMsg(&msg); err != nil {
 		if err := p.SendMsg(
-			protonostale.NewStatus(eventing.Code_BAD_CASE),
+			protonostale.NewStatus(eventingpb.Code_BAD_CASE),
 		); err != nil {
 			return nil, err
 		}
 		return nil, err
 	}
-	return msg.AuthInteractRequest, nil
+	return msg.AuthCommand, nil
 }
 
 func (p *ProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (p *ProxyClient) Send(msg *eventing.AuthEvent) error {
+func (p *ProxyClient) Send(msg *eventingpb.AuthEvent) error {
 	return p.SendMsg(&protonostale.AuthEvent{
 		AuthEvent: msg,
 	})
@@ -171,7 +171,7 @@ func (p *ProxyClient) SendMsg(msg any) error {
 		}
 	default:
 		if err := p.enc.Encode(
-			protonostale.NewStatus(eventing.Code_UNEXPECTED_ERROR),
+			protonostale.NewStatus(eventingpb.Code_UNEXPECTED_ERROR),
 		); err != nil {
 			return err
 		}

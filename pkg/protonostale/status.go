@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 )
 
 type ErrorEvent struct {
-	*eventing.ErrorEvent
+	*eventingpb.ErrorEvent
 }
 
 func (f *ErrorEvent) MarshalNosTale() ([]byte, error) {
@@ -26,7 +26,7 @@ func (f *ErrorEvent) MarshalNosTale() ([]byte, error) {
 }
 
 func (f *ErrorEvent) UnmarshalNosTale(b []byte) error {
-	f.ErrorEvent = &eventing.ErrorEvent{}
+	f.ErrorEvent = &eventingpb.ErrorEvent{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -38,12 +38,12 @@ func (f *ErrorEvent) UnmarshalNosTale(b []byte) error {
 	if err != nil {
 		return err
 	}
-	f.Code = eventing.Code(code)
+	f.Code = eventingpb.Code(code)
 	return nil
 }
 
 type InfoEvent struct {
-	*eventing.InfoEvent
+	*eventingpb.InfoEvent
 }
 
 func (f *InfoEvent) MarshalNosTale() ([]byte, error) {
@@ -55,7 +55,7 @@ func (f *InfoEvent) MarshalNosTale() ([]byte, error) {
 }
 
 func (f *InfoEvent) UnmarshalNosTale(b []byte) error {
-	f.InfoEvent = &eventing.InfoEvent{}
+	f.InfoEvent = &eventingpb.InfoEvent{}
 	bs := bytes.Split(b, FieldSeparator)
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
@@ -67,10 +67,10 @@ func (f *InfoEvent) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-func NewStatus(code eventing.Code) *Status {
+func NewStatus(code eventingpb.Code) *Status {
 	return &Status{
 		&ErrorEvent{
-			ErrorEvent: &eventing.ErrorEvent{
+			ErrorEvent: &eventingpb.ErrorEvent{
 				Code: code,
 			},
 		},

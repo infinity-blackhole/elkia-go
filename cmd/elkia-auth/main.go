@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.shikanime.studio/elkia/internal/auth"
 	"go.shikanime.studio/elkia/internal/clients"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 
 	_ "go.shikanime.studio/elkia/internal/monitoring"
@@ -36,7 +35,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	eventing.RegisterAuthServer(
+	eventingpbRegisterAuthServer(
 		srv,
 		auth.NewServer(auth.ServerConfig{
 			PresenceClient: fleetCs.PresenceClient,

@@ -5,15 +5,15 @@ import (
 	"net"
 
 	"github.com/sirupsen/logrus"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type ServerConfig struct {
-	PresenceClient fleet.PresenceClient
-	ClusterClient  fleet.ClusterClient
+	PresenceClient fleetpb.PresenceClient
+	ClusterClient  fleetpb.ClusterClient
 }
 
 func NewServer(cfg ServerConfig) *Server {
@@ -24,39 +24,39 @@ func NewServer(cfg ServerConfig) *Server {
 }
 
 type Server struct {
-	eventing.UnimplementedAuthServer
-	presence fleet.PresenceClient
-	cluster  fleet.ClusterClient
+	eventingpb.UnimplementedAuthServer
+	presence fleetpb.PresenceClient
+	cluster  fleetpb.ClusterClient
 }
 
-func (s *Server) AuthInteract(stream eventing.Auth_AuthInteractServer) error {
+func (s *Server) AuthInteract(stream eventingpb.Auth_AuthInteractServer) error {
 	for {
 		m, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		switch m.Payload.(type) {
-		case *eventing.AuthInteractRequest_LoginCommand:
+		switch m.Command.(type) {
+		case *eventingpb.AuthCommand_CreateHandoffFlow:
 			logrus.Debugf("auth: handle handoff")
-			if err := s.ProduceCreateHandoffFlowCommand(
-				m.GetLoginCommand(),
+			if err := s.HandleCreateHandoffFlowCommand(
+				m.GetCreateHandoffFlow(),
 				stream,
 			); err != nil {
 				return err
 			}
 		default:
-			return status.Newf(codes.Unimplemented, "unimplemented frame type: %T", m.Payload).Err()
+			return status.Newf(codes.Unimplemented, "unimplemented frame type: %T", m.Command).Err()
 		}
 	}
 }
 
-func (s *Server) ProduceCreateHandoffFlowCommand(
-	m *eventing.CreateHandoffFlowCommand,
-	stream eventing.Auth_AuthCreateHandoffFlowCommandProduceServer,
+func (s *Server) HandleCreateHandoffFlowCommand(
+	m *eventingpb.CreateHandoffFlowCommand,
+	stream eventingpb.Auth_AuthInteractServer,
 ) error {
-	handoff, err := s.presence.AuthCreateHandoffFlow(
+	handoff, err := s.presence.CreateHandoffFlow(
 		stream.Context(),
-		&fleet.AuthCreateHandoffFlowRequest{
+		&fleetpb.CreateHandoffFlowRequest{
 			Identifier: m.Identifier,
 			Password:   m.Password,
 		},
@@ -68,20 +68,20 @@ func (s *Server) ProduceCreateHandoffFlowCommand(
 
 	memberList, err := s.cluster.MemberList(
 		stream.Context(),
-		&fleet.MemberListRequest{},
+		&fleetpb.MemberListRequest{},
 	)
 	if err != nil {
 		return err
 	}
 	logrus.Debugf("auth: list members: %v", memberList)
-	var ms []*eventing.Endpoint
+	var ms []*fleetpb.Endpoint
 	for _, m := range memberList.Members {
 		for _, a := range m.Addresses {
 			host, port, err := net.SplitHostPort(a)
 			if err != nil {
 				return err
 			}
-			ms = append(ms, &eventing.Endpoint{
+			ms = append(ms, &fleetpb.Endpoint{
 				Host:      host,
 				Port:      port,
 				Weight:    uint32(math.Round(float64(m.Population)/float64(m.Capacity)*20) + 1),
@@ -91,11 +91,15 @@ func (s *Server) ProduceCreateHandoffFlowCommand(
 			})
 		}
 	}
-	return stream.Send(&eventing.AuthInteractResponse{
-		Payload: &eventing.AuthInteractResponse_EndpointListEvent{
-			EndpointListEvent: &eventing.EndpointListEvent{
-				Code:      handoff.Code,
-				Endpoints: ms,
+	return stream.Send(&eventingpb.AuthEvent{
+		Event: &eventingpb.AuthEvent_Presence{
+			Presence: &fleetpb.PresenceEvent{
+				Event: &fleetpb.PresenceEvent_ListEndpoint{
+					ListEndpoint: &fleetpb.ListEndpointEvent{
+						Code:      handoff.Code,
+						Endpoints: ms,
+					},
+				},
 			},
 		},
 	})

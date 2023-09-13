@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.shikanime.studio/elkia/internal/clients"
 	"go.shikanime.studio/elkia/internal/gateway"
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 	"google.golang.org/grpc"
 )
 
@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	eventing.RegisterGatewayServer(
+	eventingpb.RegisterGatewayServer(
 		srv,
 		gateway.NewServer(gateway.ServerConfig{
 			PresenceClient: fleetCs.PresenceClient,

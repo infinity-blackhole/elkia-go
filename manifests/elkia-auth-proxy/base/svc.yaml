@@ -6,8 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/name: elkia-auth-proxy
     app.kubernetes.io/instance: elkia-auth-proxy
-    fleet.elkia.io/port: nslp
-    fleet.elkia.io/component: auth
+    fleetpb.elkia.io/port: nslp
+    fleetpb.elkia.io/component: auth
 spec:
   ports:
     - name: nslp

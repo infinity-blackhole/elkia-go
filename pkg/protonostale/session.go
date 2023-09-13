@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"strconv"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 )
 
 var (
 	CreateHandoffFlowOpCode = "NoS0575"
 )
 
-type AuthInteractRequest struct {
-	*eventing.AuthInteractRequest
+type AuthCommand struct {
+	*eventingpb.AuthCommand
 }
 
-func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
-	f.AuthInteractRequest = &eventing.AuthInteractRequest{}
+func (f *AuthCommand) UnmarshalNosTale(b []byte) error {
+	f.AuthCommand = &eventingpb.AuthCommand{}
 	fields := bytes.SplitN(b, FieldSeparator, 2)
 	opcode := string(fields[0])
 	switch opcode {
@@ -26,10 +26,8 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 		if err := CreateHandoffFlowCommand.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		f.Command = &eventing.AuthCommand{
-			Command: &eventing.AuthCommand_CreateHandoffFlow{
-				CreateHandoffFlow: CreateHandoffFlowCommand.CreateHandoffFlowCommand,
-			},
+		f.Command = &eventingpb.AuthCommand_CreateHandoffFlow{
+			CreateHandoffFlow: CreateHandoffFlowCommand.CreateHandoffFlowCommand,
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -38,7 +36,7 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 }
 
 type ClientEvent struct {
-	*eventing.ClientEvent
+	*eventingpb.ClientEvent
 }
 
 func (f *ClientEvent) MarshalNosTale() ([]byte, error) {
@@ -47,11 +45,11 @@ func (f *ClientEvent) MarshalNosTale() ([]byte, error) {
 		err    error
 	)
 	switch p := f.Event.(type) {
-	case *eventing.ClientEvent_Error:
+	case *eventingpb.ClientEvent_Error:
 		fields, err = MarshalNosTale(&ErrorEvent{
 			ErrorEvent: p.Error,
 		})
-	case *eventing.ClientEvent_Info:
+	case *eventingpb.ClientEvent_Info:
 		fields, err = MarshalNosTale(&InfoEvent{
 			InfoEvent: p.Info,
 		})
@@ -69,7 +67,7 @@ func (f *ClientEvent) MarshalNosTale() ([]byte, error) {
 }
 
 type AuthEvent struct {
-	*eventing.AuthEvent
+	*eventingpb.AuthEvent
 }
 
 func (f *AuthEvent) MarshalNosTale() ([]byte, error) {
@@ -78,11 +76,11 @@ func (f *AuthEvent) MarshalNosTale() ([]byte, error) {
 		err    error
 	)
 	switch p := f.Event.(type) {
-	case *eventing.AuthEvent_Client:
+	case *eventingpb.AuthEvent_Client:
 		fields, err = MarshalNosTale(&ClientEvent{
 			ClientEvent: p.Client,
 		})
-	case *eventing.AuthEvent_Presence:
+	case *eventingpb.AuthEvent_Presence:
 		fields, err = MarshalNosTale(&PresenceEvent{
 			PresenceEvent: p.Presence,
 		})
@@ -100,11 +98,11 @@ func (f *AuthEvent) MarshalNosTale() ([]byte, error) {
 }
 
 type CreateHandoffFlowCommand struct {
-	*eventing.CreateHandoffFlowCommand
+	*eventingpb.CreateHandoffFlowCommand
 }
 
 func (f *CreateHandoffFlowCommand) UnmarshalNosTale(b []byte) error {
-	f.CreateHandoffFlowCommand = &eventing.CreateHandoffFlowCommand{}
+	f.CreateHandoffFlowCommand = &eventingpb.CreateHandoffFlowCommand{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))

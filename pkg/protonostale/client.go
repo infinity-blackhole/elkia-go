@@ -1,9 +1,9 @@
 package protonostale
 
-import eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+import eventingpb "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
 
 type HeartbeatCommand struct {
-	*eventing.HeartbeatCommand
+	*eventingpb.HeartbeatCommand
 }
 
 func (f *HeartbeatCommand) UnmarshalNosTale(b []byte) error {

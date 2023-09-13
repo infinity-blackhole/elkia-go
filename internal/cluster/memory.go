@@ -3,11 +3,11 @@ package cluster
 import (
 	"context"
 
-	fleet "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 )
 
 type MemoryClusterServerConfig struct {
-	Members []*fleet.Member
+	Members []*fleetpb.Member
 }
 
 func NewMemoryClusterServer(config MemoryClusterServerConfig) *MemoryClusterServer {
@@ -17,15 +17,15 @@ func NewMemoryClusterServer(config MemoryClusterServerConfig) *MemoryClusterServ
 }
 
 type MemoryClusterServer struct {
-	fleet.UnimplementedClusterServer
-	members []*fleet.Member
+	fleetpb.UnimplementedClusterServer
+	members []*fleetpb.Member
 }
 
 func (s *MemoryClusterServer) MemberAdd(
 	ctx context.Context,
-	in *fleet.MemberAddRequest,
-) (*fleet.MemberAddResponse, error) {
-	s.members = append(s.members, &fleet.Member{
+	in *fleetpb.MemberAddRequest,
+) (*fleetpb.MemberAddResponse, error) {
+	s.members = append(s.members, &fleetpb.Member{
 		Id:         in.Id,
 		WorldId:    in.WorldId,
 		ChannelId:  in.ChannelId,
@@ -34,26 +34,26 @@ func (s *MemoryClusterServer) MemberAdd(
 		Population: in.Population,
 		Capacity:   in.Capacity,
 	})
-	return &fleet.MemberAddResponse{}, nil
+	return &fleetpb.MemberAddResponse{}, nil
 }
 
 func (s *MemoryClusterServer) MemberRemove(
 	ctx context.Context,
-	in *fleet.MemberRemoveRequest,
-) (*fleet.MemberRemoveResponse, error) {
+	in *fleetpb.MemberRemoveRequest,
+) (*fleetpb.MemberRemoveResponse, error) {
 	for i, member := range s.members {
 		if member.Id == in.Id {
 			s.members = append(s.members[:i], s.members[i+1:]...)
 			break
 		}
 	}
-	return &fleet.MemberRemoveResponse{}, nil
+	return &fleetpb.MemberRemoveResponse{}, nil
 }
 
 func (s *MemoryClusterServer) MemberUpdate(
 	ctx context.Context,
-	in *fleet.MemberUpdateRequest,
-) (*fleet.MemberUpdateResponse, error) {
+	in *fleetpb.MemberUpdateRequest,
+) (*fleetpb.MemberUpdateResponse, error) {
 	for _, member := range s.members {
 		if member.Id == in.Id {
 			if in.WorldId != nil {
@@ -77,14 +77,14 @@ func (s *MemoryClusterServer) MemberUpdate(
 			break
 		}
 	}
-	return &fleet.MemberUpdateResponse{}, nil
+	return &fleetpb.MemberUpdateResponse{}, nil
 }
 
 func (s *MemoryClusterServer) MemberList(
 	ctx context.Context,
-	in *fleet.MemberListRequest,
-) (*fleet.MemberListResponse, error) {
-	return &fleet.MemberListResponse{
+	in *fleetpb.MemberListRequest,
+) (*fleetpb.MemberListResponse, error) {
+	return &fleetpb.MemberListResponse{
 		Members: s.members,
 	}, nil
 }

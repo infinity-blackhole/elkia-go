@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"testing"
 
-	eventing "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	eventingbp "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1"
+	fleetpb "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestLoginCommandUnmarshalNosTale(t *testing.T) {
 	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
-	expected := AuthInteractRequest{
-		&eventing.AuthInteractRequest{
-			Payload: &eventing.AuthInteractRequest_LoginCommand{
-				CreateHandoffFlowCommand: &eventing.CreateHandoffFlowCommand{
+	expected := AuthCommand{
+		&eventingbp.AuthCommand{
+			Command: &eventingbp.AuthCommand_CreateHandoffFlow{
+				CreateHandoffFlow: &eventingbp.CreateHandoffFlowCommand{
 					Identifier:    "admin",
 					Password:      "s3cr3t",
 					ClientVersion: "0.9.3+3086",
@@ -21,7 +22,7 @@ func TestLoginCommandUnmarshalNosTale(t *testing.T) {
 			},
 		},
 	}
-	var result AuthInteractRequest
+	var result AuthCommand
 	if err := result.UnmarshalNosTale(input); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -65,10 +66,10 @@ func TestDecodeClientVersion(t *testing.T) {
 }
 
 func TestEndpointListCommandUnmarshalNosTale(t *testing.T) {
-	input := &EndpointListEvent{
-		EndpointListEvent: &eventing.EndpointListEvent{
+	input := &ListEndpointEvent{
+		ListEndpointEvent: &fleetpb.ListEndpointEvent{
 			Code: 1,
-			Endpoints: []*eventing.Endpoint{
+			Endpoints: []*fleetpb.Endpoint{
 				{
 					Host:      "127.0.0.1",
 					Port:      "4124",
@@ -100,7 +101,7 @@ func TestEndpointListCommandUnmarshalNosTale(t *testing.T) {
 
 func TestSyncCommandUnmarshalNosTale(t *testing.T) {
 	input := []byte("4349270 0 ;;")
-	expected := eventing.SyncCommand{
+	expected := fleetpb.SyncCommand{
 		Sequence: 49270,
 		Code:     0,
 	}
@@ -115,7 +116,7 @@ func TestSyncCommandUnmarshalNosTale(t *testing.T) {
 
 func TestIdentifierCommandUnmarshalNosTale(t *testing.T) {
 	input := []byte("60471 ricofo8350@otanhome.com")
-	expected := eventing.IdentifierCommand{
+	expected := fleetpb.IdentifierCommand{
 		Sequence:   60471,
 		Identifier: "ricofo8350@otanhome.com",
 	}
@@ -130,7 +131,7 @@ func TestIdentifierCommandUnmarshalNosTale(t *testing.T) {
 
 func TestPasswordCommandUnmarshalNosTale(t *testing.T) {
 	input := []byte("60472 9hibwiwiG2e6Nr")
-	expected := eventing.PasswordCommand{
+	expected := fleetpb.PasswordCommand{
 		Sequence: 60472,
 		Password: "9hibwiwiG2e6Nr",
 	}

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package shikanime.elkia.fleet.v1alpha1;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "go.shikanime.studio/elkia/pkg/api/fleet/v1alpha1";
 
 message SyncCommand {
@@ -27,26 +29,32 @@ message Endpoint {
     string world_name = 6;
 }
 
-message EndpointListEvent {
+message ListEndpointEvent {
     uint32 code = 1;
     repeated Endpoint endpoints = 2;
 }
 
+message CreateHandoffFlowCommand {
+    string identifier = 2;
+    string password = 3;
+    string client_version = 5;
+    string client_checksum = 7;
+}
+
 message PresenceCommand {
+    uint32 sequence = 1;
     oneof command {
-        SyncCommand sync = 1;
-        IdentifierCommand identifier = 2;
-        PasswordCommand password = 3;
-        EndpointListEvent endpoint_list_event = 4;
+        CreateHandoffFlowCommand create_handoff_flow = 2;
+        SyncCommand sync = 3;
+        IdentifierCommand identifier = 4;
+        PasswordCommand password = 5;
     }
 }
 
-message PresenceInteractRequest {
-    uint32 sequence = 1;
-    PresenceCommand command = 2;
-}
-
 message PresenceEvent {
+    oneof event {
+        ListEndpointEvent list_endpoint = 1;
+    }
 }
 
 message CreateHandoffFlowRequest {
@@ -91,9 +99,12 @@ message WhoAmIResponse {
 
 message LogoutRequest { uint32 code = 1; }
 
-message LogoutResponse {}
-
 service Presence {
+    // PresenceInteract is a bi-directional stream that is used to interact with
+    // the channel server
+    rpc PresenceInteract(stream PresenceCommand)
+        returns (stream PresenceEvent);
+
     // CreateHandoffFlow creates a handoff flow with a given identifier and
     // password.
     rpc CreateHandoffFlow(CreateHandoffFlowRequest) returns (CreateHandoffFlowResponse);
@@ -115,5 +126,5 @@ service Presence {
     rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
 
     // Logout logs out a session with a given code.
-    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
 }

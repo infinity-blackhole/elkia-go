@@ -14,14 +14,10 @@ message MultiTargetListCommand {
 }
 
 message CombatCommand {
+    uint32 sequence = 1;
     oneof command {
         MultiTargetListCommand multi_target_list_command = 2;
     }
-}
-
-message CombatInteractRequest {
-    uint32 sequence = 1;
-    CombatCommand command = 2;
 }
 
 message CombatEvent {}
@@ -29,6 +25,6 @@ message CombatEvent {}
 service Combat {
     // CombatInteract is a bi-directional stream that is used to interact with the
     // auth server
-    rpc CombatInteract(stream CombatInteractRequest)
+    rpc CombatInteract(stream CombatCommand)
         returns (stream CombatEvent);
 }
