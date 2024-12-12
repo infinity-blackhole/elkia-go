@@ -1,70 +1,7 @@
 syntax = "proto3";
-package shikanime.elkia.eventing.v1alpha1;
+package shikanime.elkia.core.v1alpha1;
 
-option go_package = "go.shikanime.studio/elkia/pkg/api/eventing/v1alpha1";
-
-enum Code {
-  OUTDATED_CLIENT = 0;
-  UNEXPECTED_ERROR = 1;
-  MAINTENANCE = 2;
-  SESSION_ALREADY_USED = 3;
-  UNVALID_CREDENTIALS = 4;
-  CANT_AUTHENTICATE = 5;
-  USER_BLOCKLISTED = 6;
-  COUNTRY_BLACKLISTED = 7;
-  BAD_CASE = 8;
-}
-
-message ErrorEvent { Code code = 1; }
-
-message InfoEvent { string content = 1; }
-
-message LoginCommand {
-  string identifier = 2;
-  string password = 3;
-  string client_version = 5;
-  string client_checksum = 7;
-}
-
-message Endpoint {
-  string host = 1;
-  string port = 2;
-  uint32 weight = 3;
-  uint32 world_id = 4;
-  uint32 channel_id = 5;
-  string world_name = 6;
-}
-
-message EndpointListEvent {
-  uint32 code = 1;
-  repeated Endpoint endpoints = 2;
-}
-
-message AuthInteractRequest {
-  oneof payload {
-    bytes raw_command = 1;
-    LoginCommand login_command = 2;
-  }
-}
-
-message AuthInteractResponse {
-  oneof payload {
-    ErrorEvent error_event = 1;
-    InfoEvent info_event = 2;
-    EndpointListEvent endpoint_list_event = 3;
-  }
-}
-
-service Auth {
-  // AuthInteract is a bi-directional stream that is used to interact with the
-  // auth server
-  rpc AuthInteract(stream AuthInteractRequest)
-      returns (stream AuthInteractResponse);
-
-  // AuthCreateHandoffFlowCommandProduce send a login frame to the auth server and returns a
-  // stream of events
-  rpc AuthCreateHandoffFlowCommandProduce(LoginCommand) returns (stream AuthInteractResponse);
-}
+option go_package = "go.shikanime.studio/elkia/pkg/api/core/v1alpha1";
 
 message SyncCommand {
   uint32 sequence = 1;

@@ -19,7 +19,7 @@ func TestAuthEncodingDecodeCommand(t *testing.T) {
 			"\x00\xf2\x02\x02\x04\x94\x03\x06\x06\x04\xd7\x02\xfc\x09\xfc\xff" +
 			"\xfc\xff\x02\x0a\x04\xd8",
 	)
-	expected := eventing.LoginCommand{
+	expected := eventing.HandoffFlowRequest{
 		Identifier:    "ricofo8350@otanhome.com",
 		Password:      "9hibwiwiG2e6Nr",
 		ClientVersion: "0.9.3+3086",
@@ -28,15 +28,15 @@ func TestAuthEncodingDecodeCommand(t *testing.T) {
 	if err := NewDecoder(bytes.NewReader(input)).Decode(&result); err != nil {
 		t.Fatal(err)
 	}
-	if payload, ok := result.Payload.(*eventing.AuthInteractRequest_LoginCommand); ok {
-		if expected.Identifier != payload.LoginCommand.Identifier {
-			t.Errorf("Expected %v, got %v", expected.Identifier, payload.LoginCommand.Identifier)
+	if payload, ok := result.Payload.(*eventing.AuthInteractRequest_HandoffFlowRequest); ok {
+		if expected.Identifier != payload.HandoffFlowRequest.Identifier {
+			t.Errorf("Expected %v, got %v", expected.Identifier, payload.HandoffFlowRequest.Identifier)
 		}
-		if expected.Password != payload.LoginCommand.Password {
-			t.Errorf("Expected %v, got %v", expected.Password, payload.LoginCommand.Password)
+		if expected.Password != payload.HandoffFlowRequest.Password {
+			t.Errorf("Expected %v, got %v", expected.Password, payload.HandoffFlowRequest.Password)
 		}
-		if expected.ClientVersion != payload.LoginCommand.ClientVersion {
-			t.Errorf("Expected %v, got %v", expected.ClientVersion, payload.LoginCommand.ClientVersion)
+		if expected.ClientVersion != payload.HandoffFlowRequest.ClientVersion {
+			t.Errorf("Expected %v, got %v", expected.ClientVersion, payload.HandoffFlowRequest.ClientVersion)
 		}
 	}
 }

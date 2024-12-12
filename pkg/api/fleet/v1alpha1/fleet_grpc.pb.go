@@ -251,10 +251,10 @@ type PresenceClient interface {
 	AuthCompleteHandoffFlow(ctx context.Context, in *AuthCompleteHandoffFlowRequest, opts ...grpc.CallOption) (*AuthCompleteHandoffFlowResponse, error)
 	// AuthLogin hands off a session to a gateway with a given token and
 	// code.
-	AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error)
+	AuthLogin(ctx context.Context, in *AuthHandoffFlowRequest, opts ...grpc.CallOption) (*AuthHandoffFlowResponse, error)
 	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
 	// token.
-	AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error)
+	AuthRefreshLogin(ctx context.Context, in *AuthRefreshHandoffFlowRequest, opts ...grpc.CallOption) (*AuthRefreshHandoffFlowResponse, error)
 	// AuthWhoAmI returns the session associated with a given token.
 	AuthWhoAmI(ctx context.Context, in *AuthWhoAmIRequest, opts ...grpc.CallOption) (*AuthWhoAmIResponse, error)
 	// AuthLogout logs out a session with a given code.
@@ -293,8 +293,8 @@ func (c *presenceClient) AuthCompleteHandoffFlow(ctx context.Context, in *AuthCo
 	return out, nil
 }
 
-func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthLoginRequest, opts ...grpc.CallOption) (*AuthLoginResponse, error) {
-	out := new(AuthLoginResponse)
+func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthHandoffFlowRequest, opts ...grpc.CallOption) (*AuthHandoffFlowResponse, error) {
+	out := new(AuthHandoffFlowResponse)
 	err := c.cc.Invoke(ctx, Presence_AuthLogin_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -302,8 +302,8 @@ func (c *presenceClient) AuthLogin(ctx context.Context, in *AuthLoginRequest, op
 	return out, nil
 }
 
-func (c *presenceClient) AuthRefreshLogin(ctx context.Context, in *AuthRefreshLoginRequest, opts ...grpc.CallOption) (*AuthRefreshLoginResponse, error) {
-	out := new(AuthRefreshLoginResponse)
+func (c *presenceClient) AuthRefreshLogin(ctx context.Context, in *AuthRefreshHandoffFlowRequest, opts ...grpc.CallOption) (*AuthRefreshHandoffFlowResponse, error) {
+	out := new(AuthRefreshHandoffFlowResponse)
 	err := c.cc.Invoke(ctx, Presence_AuthRefreshLogin_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -368,10 +368,10 @@ type PresenceServer interface {
 	AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error)
 	// AuthLogin hands off a session to a gateway with a given token and
 	// code.
-	AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error)
+	AuthLogin(context.Context, *AuthHandoffFlowRequest) (*AuthHandoffFlowResponse, error)
 	// AuthRefreshLogin authenticates a gateway with a given identifier, password, and
 	// token.
-	AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error)
+	AuthRefreshLogin(context.Context, *AuthRefreshHandoffFlowRequest) (*AuthRefreshHandoffFlowResponse, error)
 	// AuthWhoAmI returns the session associated with a given token.
 	AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error)
 	// AuthLogout logs out a session with a given code.
@@ -395,10 +395,10 @@ func (UnimplementedPresenceServer) AuthCreateHandoffFlow(context.Context, *AuthC
 func (UnimplementedPresenceServer) AuthCompleteHandoffFlow(context.Context, *AuthCompleteHandoffFlowRequest) (*AuthCompleteHandoffFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthCompleteHandoffFlow not implemented")
 }
-func (UnimplementedPresenceServer) AuthLogin(context.Context, *AuthLoginRequest) (*AuthLoginResponse, error) {
+func (UnimplementedPresenceServer) AuthLogin(context.Context, *AuthHandoffFlowRequest) (*AuthHandoffFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthLogin not implemented")
 }
-func (UnimplementedPresenceServer) AuthRefreshLogin(context.Context, *AuthRefreshLoginRequest) (*AuthRefreshLoginResponse, error) {
+func (UnimplementedPresenceServer) AuthRefreshLogin(context.Context, *AuthRefreshHandoffFlowRequest) (*AuthRefreshHandoffFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthRefreshLogin not implemented")
 }
 func (UnimplementedPresenceServer) AuthWhoAmI(context.Context, *AuthWhoAmIRequest) (*AuthWhoAmIResponse, error) {
@@ -466,7 +466,7 @@ func _Presence_AuthCompleteHandoffFlow_Handler(srv interface{}, ctx context.Cont
 }
 
 func _Presence_AuthLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthLoginRequest)
+	in := new(AuthHandoffFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -478,13 +478,13 @@ func _Presence_AuthLogin_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: Presence_AuthLogin_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthLogin(ctx, req.(*AuthLoginRequest))
+		return srv.(PresenceServer).AuthLogin(ctx, req.(*AuthHandoffFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Presence_AuthRefreshLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthRefreshLoginRequest)
+	in := new(AuthRefreshHandoffFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -496,7 +496,7 @@ func _Presence_AuthRefreshLogin_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: Presence_AuthRefreshLogin_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PresenceServer).AuthRefreshLogin(ctx, req.(*AuthRefreshLoginRequest))
+		return srv.(PresenceServer).AuthRefreshLogin(ctx, req.(*AuthRefreshHandoffFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

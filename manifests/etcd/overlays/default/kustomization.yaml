@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+components:
+  - ../../components/elkia-fleet
+secretGenerator:
+  - name: etcd
+    namespace: elkia
+    literals:
+      - username=root
+      - password=7c^8i$33V$2&dU
+    type: kubernetes.io/basic-auth
+    options:
+      labels:
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/instance: etcd
+  - name: etcd-jwt-token
+    namespace: elkia
+    files:
+      - etcd/jwt-token.pem
+    options:
+      labels:
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/instance: etcd

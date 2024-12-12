@@ -82,12 +82,12 @@ func NewKubernetesClientSet() (*kubernetes.Clientset, error) {
 	return kubernetes.NewForConfig(config)
 }
 
-type FleetClientSet struct {
+type ClientSet struct {
 	PresenceClient fleet.PresenceClient
 	ClusterClient  fleet.ClusterClient
 }
 
-func NewFleetClientSet() (*FleetClientSet, error) {
+func NewClientSet() (*ClientSet, error) {
 	fleetEndpoint := os.Getenv("ELKIA_FLEET_ENDPOINT")
 	if fleetEndpoint == "" {
 		fleetEndpoint = "localhost:8080"
@@ -100,7 +100,7 @@ func NewFleetClientSet() (*FleetClientSet, error) {
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
 	logrus.Debugf("gateway: connected to fleet at %s", fleetEndpoint)
-	return &FleetClientSet{
+	return &ClientSet{
 		PresenceClient: fleet.NewPresenceClient(fleetConn),
 		ClusterClient:  fleet.NewClusterClient(fleetConn),
 	}, err

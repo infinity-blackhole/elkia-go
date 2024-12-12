@@ -21,6 +21,7 @@
           gofmt.enable = true;
           nixfmt.enable = true;
           prettier.enable = true;
+          protolint.enable = true;
           shfmt.enable = true;
           statix.enable = true;
           terraform.enable = true;

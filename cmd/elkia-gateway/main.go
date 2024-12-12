@@ -24,7 +24,7 @@ func init() {
 }
 
 func main() {
-	fleetCs, err := clients.NewFleetClientSet()
+	fleetCs, err := clients.NewClientSet()
 	if err != nil {
 		logrus.Fatal(err)
 	}
