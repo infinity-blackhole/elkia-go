@@ -157,9 +157,9 @@ func (p *ProxyClient) RecvMsg(msg any) error {
 	return p.dec.Decode(msg)
 }
 
-func (p *ProxyClient) Send(msg *eventing.AuthInteractResponse) error {
-	return p.SendMsg(&protonostale.AuthInteractResponse{
-		AuthInteractResponse: msg,
+func (p *ProxyClient) Send(msg *eventing.HandoffFlowResponse) error {
+	return p.SendMsg(&protonostale.HandoffFlowResponse{
+		HandoffFlowResponse: msg,
 	})
 }
 

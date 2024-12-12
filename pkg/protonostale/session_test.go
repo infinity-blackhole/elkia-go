@@ -8,12 +8,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestLoginCommandUnmarshalNosTale(t *testing.T) {
+func TestHandoffFlowRequestUnmarshalNosTale(t *testing.T) {
 	input := []byte("NoS0575 2503350 admin 9827F3538326B33722633327E4 006666A8\v0.9.3.3086")
 	expected := AuthInteractRequest{
 		&eventing.AuthInteractRequest{
-			Payload: &eventing.AuthInteractRequest_LoginCommand{
-				LoginCommand: &eventing.LoginCommand{
+			Payload: &eventing.AuthInteractRequest_HandoffFlowRequest{
+				HandoffFlowRequest: &eventing.HandoffFlowRequest{
 					Identifier:    "admin",
 					Password:      "s3cr3t",
 					ClientVersion: "0.9.3+3086",
@@ -65,8 +65,8 @@ func TestDecodeClientVersion(t *testing.T) {
 }
 
 func TestEndpointListCommandUnmarshalNosTale(t *testing.T) {
-	input := &EndpointListEvent{
-		EndpointListEvent: &eventing.EndpointListEvent{
+	input := &HandoffFlowResponse{
+		HandoffFlowResponse: &eventing.HandoffFlowResponse{
 			Code: 1,
 			Endpoints: []*eventing.Endpoint{
 				{

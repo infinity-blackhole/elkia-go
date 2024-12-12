@@ -1,0 +1,65 @@
+syntax = "proto3";
+package shikanime.elkia.core.v1alpha1;
+
+option go_package = "go.shikanime.studio/elkia/pkg/api/core/v1alpha1";
+
+message HandoffFlowRequest {
+  string identifier = 2;
+  string password = 3;
+  string client_version = 5;
+  string client_checksum = 7;
+}
+
+message Endpoint {
+  string host = 1;
+  string port = 2;
+  uint32 weight = 3;
+  uint32 world_id = 4;
+  uint32 channel_id = 5;
+  string world_name = 6;
+}
+
+message HandoffFlowResponse {
+  uint32 code = 1;
+  repeated Endpoint endpoints = 2;
+}
+
+message WatchRequest {}
+
+message ErrorEvent {
+  enum ErrorEventType {
+  OUTDATED_CLIENT = 0;
+  UNEXPECTED_ERROR = 1;
+  MAINTENANCE = 2;
+  SESSION_ALREADY_USED = 3;
+  UNVALID_CREDENTIALS = 4;
+  CANT_AUTHENTICATE = 5;
+  USER_BLOCKLISTED = 6;
+  COUNTRY_BLACKLISTED = 7;
+  BAD_CASE = 8;
+};
+
+ErrorEventType type = 1;
+ }
+
+message NotificationEvent { string text = 1; }
+
+message Event {
+  oneof data {
+    ErrorEvent error_event = 1;
+    NotificationEvent notification_event = 2;
+  }
+}
+
+message WatchResponse {
+  repeated Event events = 1;
+}
+
+service Auth {
+  // CreateHandoffFlow send a login frame to the auth server and returns a
+  // stream of events
+  rpc CreateHandoffFlow(HandoffFlowRequest) returns (HandoffFlowResponse);
+  // Watch is used to watch for events from the auth server
+  rpc Watch(stream WatchRequest) returns (stream WatchResponse);
+}
+

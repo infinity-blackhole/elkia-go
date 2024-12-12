@@ -33,7 +33,7 @@ func (s *PresenceServer) AuthCreateHandoffFlow(
 	ctx context.Context,
 	in *fleet.AuthCreateHandoffFlowRequest,
 ) (*fleet.AuthCreateHandoffFlowResponse, error) {
-	login, err := s.AuthLogin(ctx, &fleet.AuthLoginRequest{
+	login, err := s.AuthLogin(ctx, &fleet.AuthHandoffFlowRequest{
 		Identifier: in.Identifier,
 		Password:   in.Password,
 	})
@@ -60,8 +60,8 @@ func (s *PresenceServer) AuthCreateHandoffFlow(
 
 func (i *PresenceServer) AuthLogin(
 	ctx context.Context,
-	in *fleet.AuthLoginRequest,
-) (*fleet.AuthLoginResponse, error) {
+	in *fleet.AuthHandoffFlowRequest,
+) (*fleet.AuthHandoffFlowResponse, error) {
 	flow, _, err := i.ory.FrontendApi.
 		CreateNativeLoginFlow(ctx).
 		Execute()
@@ -86,15 +86,15 @@ func (i *PresenceServer) AuthLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	return &fleet.AuthLoginResponse{
+	return &fleet.AuthHandoffFlowResponse{
 		Token: *successLogin.SessionToken,
 	}, nil
 }
 
 func (s *PresenceServer) AuthRefreshLogin(
 	ctx context.Context,
-	in *fleet.AuthRefreshLoginRequest,
-) (*fleet.AuthRefreshLoginResponse, error) {
+	in *fleet.AuthRefreshHandoffFlowRequest,
+) (*fleet.AuthRefreshHandoffFlowResponse, error) {
 	flow, _, err := s.ory.FrontendApi.
 		CreateNativeLoginFlow(ctx).
 		XSessionToken(in.Token).
@@ -122,7 +122,7 @@ func (s *PresenceServer) AuthRefreshLogin(
 		return nil, err
 	}
 	logrus.Debugf("fleet: updated login flow: %v", successLogin)
-	return &fleet.AuthRefreshLoginResponse{
+	return &fleet.AuthRefreshHandoffFlowResponse{
 		Token: *successLogin.SessionToken,
 	}, nil
 }
@@ -144,7 +144,7 @@ func (s *PresenceServer) AuthCompleteHandoffFlow(
 	logrus.Debugf("fleet: got session: %v", sessionGet)
 	refreshLogin, err := s.AuthRefreshLogin(
 		ctx,
-		&fleet.AuthRefreshLoginRequest{
+		&fleet.AuthRefreshHandoffFlowRequest{
 			Identifier: in.Identifier,
 			Password:   in.Password,
 			Token:      sessionGet.Session.Token,

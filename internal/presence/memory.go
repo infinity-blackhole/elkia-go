@@ -73,8 +73,8 @@ func (s *MemoryPresenceServer) AuthCreateHandoffFlow(
 
 func (s *MemoryPresenceServer) AuthRefreshLogin(
 	ctx context.Context,
-	in *fleet.AuthRefreshLoginRequest,
-) (*fleet.AuthRefreshLoginResponse, error) {
+	in *fleet.AuthRefreshHandoffFlowRequest,
+) (*fleet.AuthRefreshHandoffFlowResponse, error) {
 	var session *fleet.Session
 	for _, i := range s.sessions {
 		if i.Token == in.Token {
@@ -99,7 +99,7 @@ func (s *MemoryPresenceServer) AuthRefreshLogin(
 	if err != nil {
 		return nil, err
 	}
-	return &fleet.AuthRefreshLoginResponse{
+	return &fleet.AuthRefreshHandoffFlowResponse{
 		Token: sessionToken,
 	}, nil
 }
@@ -120,7 +120,7 @@ func (s *MemoryPresenceServer) AuthCompleteHandoffFlow(
 	}
 	_, err = s.AuthRefreshLogin(
 		ctx,
-		&fleet.AuthRefreshLoginRequest{
+		&fleet.AuthRefreshHandoffFlowRequest{
 			Identifier: in.Identifier,
 			Password:   in.Password,
 			Token:      sessionGet.Session.Token,

@@ -22,12 +22,12 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	opcode := string(fields[0])
 	switch opcode {
 	case AuthCreateHandoffFlowOpCode:
-		var LoginCommand LoginCommand
-		if err := LoginCommand.UnmarshalNosTale(fields[1]); err != nil {
+		var HandoffFlowRequest HandoffFlowRequest
+		if err := HandoffFlowRequest.UnmarshalNosTale(fields[1]); err != nil {
 			return err
 		}
-		f.Payload = &eventing.AuthInteractRequest_LoginCommand{
-			LoginCommand: LoginCommand.LoginCommand,
+		f.Payload = &eventing.AuthInteractRequest_HandoffFlowRequest{
+			HandoffFlowRequest: HandoffFlowRequest.HandoffFlowRequest,
 		}
 	default:
 		return fmt.Errorf("invalid opcode: %s", opcode)
@@ -35,14 +35,14 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	return nil
 }
 
-type AuthInteractResponse struct {
-	*eventing.AuthInteractResponse
+type HandoffFlowResponse struct {
+	*eventing.HandoffFlowResponse
 }
 
-func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
+func (f *HandoffFlowResponse) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	switch p := f.Payload.(type) {
-	case *eventing.AuthInteractResponse_ErrorEvent:
+	case *eventing.HandoffFlowResponse_ErrorEvent:
 		vv := &ErrorEvent{
 			ErrorEvent: p.ErrorEvent,
 		}
@@ -53,7 +53,7 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		if _, err := buff.Write(fields); err != nil {
 			return nil, err
 		}
-	case *eventing.AuthInteractResponse_InfoEvent:
+	case *eventing.HandoffFlowResponse_InfoEvent:
 		vv := &InfoEvent{
 			InfoEvent: p.InfoEvent,
 		}
@@ -64,9 +64,9 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 		if _, err := buff.Write(fields); err != nil {
 			return nil, err
 		}
-	case *eventing.AuthInteractResponse_EndpointListEvent:
-		vv := &EndpointListEvent{
-			EndpointListEvent: p.EndpointListEvent,
+	case *eventing.HandoffFlowResponse_HandoffFlowResponse:
+		vv := &HandoffFlowResponse{
+			HandoffFlowResponse: p.HandoffFlowResponse,
 		}
 		fields, err := vv.MarshalNosTale()
 		if err != nil {
@@ -81,12 +81,12 @@ func (f *AuthInteractResponse) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-type LoginCommand struct {
-	*eventing.LoginCommand
+type HandoffFlowRequest struct {
+	*eventing.HandoffFlowRequest
 }
 
-func (f *LoginCommand) UnmarshalNosTale(b []byte) error {
-	f.LoginCommand = &eventing.LoginCommand{}
+func (f *HandoffFlowRequest) UnmarshalNosTale(b []byte) error {
+	f.HandoffFlowRequest = &eventing.HandoffFlowRequest{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) != 4 {
 		return fmt.Errorf("invalid length: %d", len(fields))
@@ -153,11 +153,11 @@ func DecodeClientVersion(b []byte) (string, error) {
 	return fmt.Sprintf("%d.%d.%d+%d", major, minor, patch, build), nil
 }
 
-type EndpointListEvent struct {
-	*eventing.EndpointListEvent
+type HandoffFlowResponse struct {
+	*eventing.HandoffFlowResponse
 }
 
-func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
+func (f *HandoffFlowResponse) MarshalNosTale() ([]byte, error) {
 	var buff bytes.Buffer
 	if _, err := fmt.Fprintf(&buff, "NsTeST %d ", f.Code); err != nil {
 		return nil, err
@@ -187,8 +187,8 @@ func (f *EndpointListEvent) MarshalNosTale() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-func (f *EndpointListEvent) UnmarshalNosTale(b []byte) error {
-	f.EndpointListEvent = &eventing.EndpointListEvent{}
+func (f *HandoffFlowResponse) UnmarshalNosTale(b []byte) error {
+	f.HandoffFlowResponse = &eventing.HandoffFlowResponse{}
 	fields := bytes.Split(b, FieldSeparator)
 	if len(fields) < 2 {
 		return fmt.Errorf("invalid length: %d", len(fields))
