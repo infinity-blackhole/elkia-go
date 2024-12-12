@@ -23,11 +23,15 @@ message MemberAddRequest {
   uint32 capacity = 7;
 }
 
-message MemberAddResponse {}
+message MemberAddResponse {
+}
 
-message MemberRemoveRequest { string id = 1; }
+message MemberRemoveRequest {
+  string id = 1;
+}
 
-message MemberRemoveResponse {}
+message MemberRemoveResponse {
+}
 
 message MemberUpdateRequest {
   string id = 1;
@@ -39,11 +43,15 @@ message MemberUpdateRequest {
   optional uint32 capacity = 7;
 }
 
-message MemberUpdateResponse {}
+message MemberUpdateResponse {
+}
 
-message MemberListRequest {}
+message MemberListRequest {
+}
 
-message MemberListResponse { repeated Member members = 1; }
+message MemberListResponse {
+  repeated Member members = 1;
+}
 
 service Cluster {
   // MemberAdd adds a member into the cluster.
@@ -64,15 +72,19 @@ message AuthCreateHandoffFlowRequest {
   string password = 2;
 }
 
-message AuthCreateHandoffFlowResponse { uint32 code = 1; }
+message AuthCreateHandoffFlowResponse {
+  uint32 code = 1;
+}
 
-message AuthRefreshLoginRequest {
+message AuthRefreshHandoffFlowRequest {
   string identifier = 1;
   string password = 2;
   string token = 3;
 }
 
-message AuthRefreshLoginResponse { string token = 1; }
+message AuthRefreshHandoffFlowResponse {
+  string token = 1;
+}
 
 message AuthCompleteHandoffFlowRequest {
   string identifier = 1;
@@ -83,41 +95,58 @@ message AuthCompleteHandoffFlowResponse {
   string token = 1;
 }
 
-message AuthLoginRequest {
+message AuthHandoffFlowRequest {
   string identifier = 1;
   string password = 2;
 }
 
-message AuthLoginResponse {
+message AuthHandoffFlowResponse {
   string token = 1;
 }
 
-message AuthWhoAmIRequest { string token = 1; }
+message AuthWhoAmIRequest {
+  string token = 1;
+}
 
 message AuthWhoAmIResponse {
   string id = 1;
   string identity_id = 2;
 }
 
-message AuthLogoutRequest { uint32 code = 1; }
+message AuthLogoutRequest {
+  uint32 code = 1;
+}
 
-message AuthLogoutResponse {}
+message AuthLogoutResponse {
+}
 
 message Session {
   string token = 1;
 }
 
-message SessionGetRequest { uint32 code = 1; }
+message SessionGetRequest {
+  uint32 code = 1;
+}
 
-message SessionGetResponse { Session session = 1; }
+message SessionGetResponse {
+  Session session = 1;
+}
 
-message SessionPutRequest { uint32 code = 1; Session session = 2; }
+message SessionPutRequest {
+  uint32 code = 1;
+  Session session = 2;
+}
 
-message SessionPutResponse { uint32 code = 1; }
+message SessionPutResponse {
+  uint32 code = 1;
+}
 
-message SessionDeleteRequest { uint32 code = 1; }
+message SessionDeleteRequest {
+  uint32 code = 1;
+}
 
-message SessionDeleteResponse {}
+message SessionDeleteResponse {
+}
 
 service Presence {
   // AuthCreateHandoffFlow creates a handoff flow with a given identifier and
@@ -130,12 +159,12 @@ service Presence {
 
   // AuthLogin hands off a session to a gateway with a given token and
   // code.
-  rpc AuthLogin(AuthLoginRequest) returns (AuthLoginResponse);
+  rpc AuthLogin(AuthHandoffFlowRequest) returns (AuthHandoffFlowResponse);
 
   // AuthRefreshLogin authenticates a gateway with a given identifier, password, and
   // token.
-  rpc AuthRefreshLogin(AuthRefreshLoginRequest)
-      returns (AuthRefreshLoginResponse);
+  rpc AuthRefreshLogin(AuthRefreshHandoffFlowRequest)
+      returns (AuthRefreshHandoffFlowResponse);
 
   // AuthWhoAmI returns the session associated with a given token.
   rpc AuthWhoAmI(AuthWhoAmIRequest) returns (AuthWhoAmIResponse);

@@ -653,7 +653,7 @@ func (x *AuthCreateHandoffFlowResponse) GetCode() uint32 {
 	return 0
 }
 
-type AuthRefreshLoginRequest struct {
+type AuthRefreshHandoffFlowRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -663,8 +663,8 @@ type AuthRefreshLoginRequest struct {
 	Token      string `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 }
 
-func (x *AuthRefreshLoginRequest) Reset() {
-	*x = AuthRefreshLoginRequest{}
+func (x *AuthRefreshHandoffFlowRequest) Reset() {
+	*x = AuthRefreshHandoffFlowRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -672,13 +672,13 @@ func (x *AuthRefreshLoginRequest) Reset() {
 	}
 }
 
-func (x *AuthRefreshLoginRequest) String() string {
+func (x *AuthRefreshHandoffFlowRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthRefreshLoginRequest) ProtoMessage() {}
+func (*AuthRefreshHandoffFlowRequest) ProtoMessage() {}
 
-func (x *AuthRefreshLoginRequest) ProtoReflect() protoreflect.Message {
+func (x *AuthRefreshHandoffFlowRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -690,33 +690,33 @@ func (x *AuthRefreshLoginRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthRefreshLoginRequest.ProtoReflect.Descriptor instead.
-func (*AuthRefreshLoginRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthRefreshHandoffFlowRequest.ProtoReflect.Descriptor instead.
+func (*AuthRefreshHandoffFlowRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_api_fleet_v1alpha1_fleet_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *AuthRefreshLoginRequest) GetIdentifier() string {
+func (x *AuthRefreshHandoffFlowRequest) GetIdentifier() string {
 	if x != nil {
 		return x.Identifier
 	}
 	return ""
 }
 
-func (x *AuthRefreshLoginRequest) GetPassword() string {
+func (x *AuthRefreshHandoffFlowRequest) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-func (x *AuthRefreshLoginRequest) GetToken() string {
+func (x *AuthRefreshHandoffFlowRequest) GetToken() string {
 	if x != nil {
 		return x.Token
 	}
 	return ""
 }
 
-type AuthRefreshLoginResponse struct {
+type AuthRefreshHandoffFlowResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -724,8 +724,8 @@ type AuthRefreshLoginResponse struct {
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 }
 
-func (x *AuthRefreshLoginResponse) Reset() {
-	*x = AuthRefreshLoginResponse{}
+func (x *AuthRefreshHandoffFlowResponse) Reset() {
+	*x = AuthRefreshHandoffFlowResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -733,13 +733,13 @@ func (x *AuthRefreshLoginResponse) Reset() {
 	}
 }
 
-func (x *AuthRefreshLoginResponse) String() string {
+func (x *AuthRefreshHandoffFlowResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthRefreshLoginResponse) ProtoMessage() {}
+func (*AuthRefreshHandoffFlowResponse) ProtoMessage() {}
 
-func (x *AuthRefreshLoginResponse) ProtoReflect() protoreflect.Message {
+func (x *AuthRefreshHandoffFlowResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -751,12 +751,12 @@ func (x *AuthRefreshLoginResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthRefreshLoginResponse.ProtoReflect.Descriptor instead.
-func (*AuthRefreshLoginResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthRefreshHandoffFlowResponse.ProtoReflect.Descriptor instead.
+func (*AuthRefreshHandoffFlowResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_api_fleet_v1alpha1_fleet_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *AuthRefreshLoginResponse) GetToken() string {
+func (x *AuthRefreshHandoffFlowResponse) GetToken() string {
 	if x != nil {
 		return x.Token
 	}
@@ -865,7 +865,7 @@ func (x *AuthCompleteHandoffFlowResponse) GetToken() string {
 	return ""
 }
 
-type AuthLoginRequest struct {
+type AuthHandoffFlowRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -874,8 +874,8 @@ type AuthLoginRequest struct {
 	Password   string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 }
 
-func (x *AuthLoginRequest) Reset() {
-	*x = AuthLoginRequest{}
+func (x *AuthHandoffFlowRequest) Reset() {
+	*x = AuthHandoffFlowRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -883,13 +883,13 @@ func (x *AuthLoginRequest) Reset() {
 	}
 }
 
-func (x *AuthLoginRequest) String() string {
+func (x *AuthHandoffFlowRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthLoginRequest) ProtoMessage() {}
+func (*AuthHandoffFlowRequest) ProtoMessage() {}
 
-func (x *AuthLoginRequest) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffFlowRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -901,26 +901,26 @@ func (x *AuthLoginRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthLoginRequest.ProtoReflect.Descriptor instead.
-func (*AuthLoginRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffFlowRequest.ProtoReflect.Descriptor instead.
+func (*AuthHandoffFlowRequest) Descriptor() ([]byte, []int) {
 	return file_pkg_api_fleet_v1alpha1_fleet_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *AuthLoginRequest) GetIdentifier() string {
+func (x *AuthHandoffFlowRequest) GetIdentifier() string {
 	if x != nil {
 		return x.Identifier
 	}
 	return ""
 }
 
-func (x *AuthLoginRequest) GetPassword() string {
+func (x *AuthHandoffFlowRequest) GetPassword() string {
 	if x != nil {
 		return x.Password
 	}
 	return ""
 }
 
-type AuthLoginResponse struct {
+type AuthHandoffFlowResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -928,8 +928,8 @@ type AuthLoginResponse struct {
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 }
 
-func (x *AuthLoginResponse) Reset() {
-	*x = AuthLoginResponse{}
+func (x *AuthHandoffFlowResponse) Reset() {
+	*x = AuthHandoffFlowResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -937,13 +937,13 @@ func (x *AuthLoginResponse) Reset() {
 	}
 }
 
-func (x *AuthLoginResponse) String() string {
+func (x *AuthHandoffFlowResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthLoginResponse) ProtoMessage() {}
+func (*AuthHandoffFlowResponse) ProtoMessage() {}
 
-func (x *AuthLoginResponse) ProtoReflect() protoreflect.Message {
+func (x *AuthHandoffFlowResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -955,12 +955,12 @@ func (x *AuthLoginResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthLoginResponse.ProtoReflect.Descriptor instead.
-func (*AuthLoginResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthHandoffFlowResponse.ProtoReflect.Descriptor instead.
+func (*AuthHandoffFlowResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_api_fleet_v1alpha1_fleet_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *AuthLoginResponse) GetToken() string {
+func (x *AuthHandoffFlowResponse) GetToken() string {
 	if x != nil {
 		return x.Token
 	}
@@ -1750,12 +1750,12 @@ var file_pkg_api_fleet_v1alpha1_fleet_proto_goTypes = []interface{}{
 	(*MemberListResponse)(nil),              // 8: shikanime.elkia.fleet.v1alpha1.MemberListResponse
 	(*AuthCreateHandoffFlowRequest)(nil),    // 9: shikanime.elkia.fleet.v1alpha1.AuthCreateHandoffFlowRequest
 	(*AuthCreateHandoffFlowResponse)(nil),   // 10: shikanime.elkia.fleet.v1alpha1.AuthCreateHandoffFlowResponse
-	(*AuthRefreshLoginRequest)(nil),         // 11: shikanime.elkia.fleet.v1alpha1.AuthRefreshLoginRequest
-	(*AuthRefreshLoginResponse)(nil),        // 12: shikanime.elkia.fleet.v1alpha1.AuthRefreshLoginResponse
+	(*AuthRefreshHandoffFlowRequest)(nil),   // 11: shikanime.elkia.fleet.v1alpha1.AuthRefreshHandoffFlowRequest
+	(*AuthRefreshHandoffFlowResponse)(nil),  // 12: shikanime.elkia.fleet.v1alpha1.AuthRefreshHandoffFlowResponse
 	(*AuthCompleteHandoffFlowRequest)(nil),  // 13: shikanime.elkia.fleet.v1alpha1.AuthCompleteHandoffFlowRequest
 	(*AuthCompleteHandoffFlowResponse)(nil), // 14: shikanime.elkia.fleet.v1alpha1.AuthCompleteHandoffFlowResponse
-	(*AuthLoginRequest)(nil),                // 15: shikanime.elkia.fleet.v1alpha1.AuthLoginRequest
-	(*AuthLoginResponse)(nil),               // 16: shikanime.elkia.fleet.v1alpha1.AuthLoginResponse
+	(*AuthHandoffFlowRequest)(nil),          // 15: shikanime.elkia.fleet.v1alpha1.AuthHandoffFlowRequest
+	(*AuthHandoffFlowResponse)(nil),         // 16: shikanime.elkia.fleet.v1alpha1.AuthHandoffFlowResponse
 	(*AuthWhoAmIRequest)(nil),               // 17: shikanime.elkia.fleet.v1alpha1.AuthWhoAmIRequest
 	(*AuthWhoAmIResponse)(nil),              // 18: shikanime.elkia.fleet.v1alpha1.AuthWhoAmIResponse
 	(*AuthLogoutRequest)(nil),               // 19: shikanime.elkia.fleet.v1alpha1.AuthLogoutRequest
@@ -1778,8 +1778,8 @@ var file_pkg_api_fleet_v1alpha1_fleet_proto_depIdxs = []int32{
 	7,  // 6: shikanime.elkia.fleet.v1alpha1.Cluster.MemberList:input_type -> shikanime.elkia.fleet.v1alpha1.MemberListRequest
 	9,  // 7: shikanime.elkia.fleet.v1alpha1.Presence.AuthCreateHandoffFlow:input_type -> shikanime.elkia.fleet.v1alpha1.AuthCreateHandoffFlowRequest
 	13, // 8: shikanime.elkia.fleet.v1alpha1.Presence.AuthCompleteHandoffFlow:input_type -> shikanime.elkia.fleet.v1alpha1.AuthCompleteHandoffFlowRequest
-	15, // 9: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogin:input_type -> shikanime.elkia.fleet.v1alpha1.AuthLoginRequest
-	11, // 10: shikanime.elkia.fleet.v1alpha1.Presence.AuthRefreshLogin:input_type -> shikanime.elkia.fleet.v1alpha1.AuthRefreshLoginRequest
+	15, // 9: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogin:input_type -> shikanime.elkia.fleet.v1alpha1.AuthHandoffFlowRequest
+	11, // 10: shikanime.elkia.fleet.v1alpha1.Presence.AuthRefreshLogin:input_type -> shikanime.elkia.fleet.v1alpha1.AuthRefreshHandoffFlowRequest
 	17, // 11: shikanime.elkia.fleet.v1alpha1.Presence.AuthWhoAmI:input_type -> shikanime.elkia.fleet.v1alpha1.AuthWhoAmIRequest
 	19, // 12: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogout:input_type -> shikanime.elkia.fleet.v1alpha1.AuthLogoutRequest
 	22, // 13: shikanime.elkia.fleet.v1alpha1.Presence.SessionGet:input_type -> shikanime.elkia.fleet.v1alpha1.SessionGetRequest
@@ -1791,8 +1791,8 @@ var file_pkg_api_fleet_v1alpha1_fleet_proto_depIdxs = []int32{
 	8,  // 19: shikanime.elkia.fleet.v1alpha1.Cluster.MemberList:output_type -> shikanime.elkia.fleet.v1alpha1.MemberListResponse
 	10, // 20: shikanime.elkia.fleet.v1alpha1.Presence.AuthCreateHandoffFlow:output_type -> shikanime.elkia.fleet.v1alpha1.AuthCreateHandoffFlowResponse
 	14, // 21: shikanime.elkia.fleet.v1alpha1.Presence.AuthCompleteHandoffFlow:output_type -> shikanime.elkia.fleet.v1alpha1.AuthCompleteHandoffFlowResponse
-	16, // 22: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogin:output_type -> shikanime.elkia.fleet.v1alpha1.AuthLoginResponse
-	12, // 23: shikanime.elkia.fleet.v1alpha1.Presence.AuthRefreshLogin:output_type -> shikanime.elkia.fleet.v1alpha1.AuthRefreshLoginResponse
+	16, // 22: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogin:output_type -> shikanime.elkia.fleet.v1alpha1.AuthHandoffFlowResponse
+	12, // 23: shikanime.elkia.fleet.v1alpha1.Presence.AuthRefreshLogin:output_type -> shikanime.elkia.fleet.v1alpha1.AuthRefreshHandoffFlowResponse
 	18, // 24: shikanime.elkia.fleet.v1alpha1.Presence.AuthWhoAmI:output_type -> shikanime.elkia.fleet.v1alpha1.AuthWhoAmIResponse
 	20, // 25: shikanime.elkia.fleet.v1alpha1.Presence.AuthLogout:output_type -> shikanime.elkia.fleet.v1alpha1.AuthLogoutResponse
 	23, // 26: shikanime.elkia.fleet.v1alpha1.Presence.SessionGet:output_type -> shikanime.elkia.fleet.v1alpha1.SessionGetResponse
@@ -1944,7 +1944,7 @@ func file_pkg_api_fleet_v1alpha1_fleet_proto_init() {
 			}
 		}
 		file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthRefreshLoginRequest); i {
+			switch v := v.(*AuthRefreshHandoffFlowRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1956,7 +1956,7 @@ func file_pkg_api_fleet_v1alpha1_fleet_proto_init() {
 			}
 		}
 		file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthRefreshLoginResponse); i {
+			switch v := v.(*AuthRefreshHandoffFlowResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1992,7 +1992,7 @@ func file_pkg_api_fleet_v1alpha1_fleet_proto_init() {
 			}
 		}
 		file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthLoginRequest); i {
+			switch v := v.(*AuthHandoffFlowRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2004,7 +2004,7 @@ func file_pkg_api_fleet_v1alpha1_fleet_proto_init() {
 			}
 		}
 		file_pkg_api_fleet_v1alpha1_fleet_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthLoginResponse); i {
+			switch v := v.(*AuthHandoffFlowResponse); i {
 			case 0:
 				return &v.state
 			case 1:

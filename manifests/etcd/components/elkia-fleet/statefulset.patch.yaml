@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: etcd
+  namespace: elkia
+spec:
+  template:
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: elkia-fleet
+                    app.kubernetes.io/instance: elkia-fleet
+                topologyKey: kubernetes.io/hostname
+              weight: 1
