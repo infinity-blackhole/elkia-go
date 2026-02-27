@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	HeartbeatOpCode = []byte("0")
+	HeartbeatTag = []byte("0")
 )
 
 type ChannelInteractRequest struct {
@@ -32,7 +32,7 @@ func (f *CommandCommand) UnmarshalNosTale(b []byte) error {
 	}
 	f.Sequence = uint32(sn)
 	switch {
-	case bytes.Equal(HeartbeatOpCode, fields[1]):
+	case bytes.Equal(HeartbeatTag, fields[1]):
 		f.Payload = &eventing.CommandCommand_HeartbeatCommand{
 			HeartbeatCommand: &eventing.HeartbeatCommand{},
 		}

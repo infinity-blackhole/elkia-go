@@ -14,9 +14,8 @@ impl GatewayCodec {
         Self { mode, offset }
     }
 
-    fn decrypt_and_unpack(&self, data: &[u8]) -> Result<String, io::Error> {
-        // Layer 1: Decrypt
-        let mut decrypted_layer1 = Vec::with_capacity(data.len());
+    fn decrypt(&self, data: &[u8]) -> Vec<u8> {
+        let mut decrypted = Vec::with_capacity(data.len());
         for &b in data.iter() {
             let val = match self.mode {
                 0 => b.wrapping_sub(self.offset),
@@ -25,12 +24,14 @@ impl GatewayCodec {
                 3 => (b.wrapping_add(self.offset)) ^ 0xC3,
                 _ => b,
             };
-            decrypted_layer1.push(val);
+            decrypted.push(val);
         }
+        decrypted
+    }
 
-        // Layer 2: Unpack
+    fn unpack(&self, data: &[u8]) -> Result<String, io::Error> {
         let mut unpacked = Vec::new();
-        let mut remaining = &decrypted_layer1[..];
+        let mut remaining = data;
 
         let permutations = b" -.0123456789n";
 
@@ -108,7 +109,8 @@ impl Decoder for GatewayCodec {
         if let Some(n) = src.iter().position(|&b| b == delimiter) {
             let data = src.split_to(n);
             src.advance(1); // skip delimiter
-            let s = self.decrypt_and_unpack(&data)?;
+            let decrypted = self.decrypt(&data);
+            let s = self.unpack(&decrypted)?;
             Ok(Some(s))
         } else {
             Ok(None)
@@ -124,7 +126,8 @@ impl Decoder for GatewayCodec {
                     Ok(None)
                 } else {
                     let data = src.split_to(src.len());
-                    let s = self.decrypt_and_unpack(&data)?;
+                    let decrypted = self.decrypt(&data);
+                    let s = self.unpack(&decrypted)?;
                     Ok(Some(s))
                 }
             }
@@ -136,12 +139,19 @@ impl Encoder<String> for GatewayCodec {
     type Error = io::Error;
 
     fn encode(&mut self, item: String, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let bytes = item.as_bytes();
-        let len = bytes.len();
+        self.encode(item.as_bytes(), dst)
+    }
+}
+
+impl Encoder<&[u8]> for GatewayCodec {
+    type Error = io::Error;
+
+    fn encode(&mut self, item: &[u8], dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let len = item.len();
 
         dst.reserve(len + (len / 0x7E) + 2);
 
-        for (i, &b) in bytes.iter().enumerate() {
+        for (i, &b) in item.iter().enumerate() {
             if i % 0x7E == 0 {
                 let remaining = len - i;
                 let chunk_len = std::cmp::min(remaining, 0x7E) as u8;

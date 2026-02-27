@@ -1,13 +1,13 @@
-use crate::packets::session::{AuthInteractRequest, AuthInteractResponse};
+use crate::packets::session::{SessionCommandPacket, SessionEventPacket};
+use crate::packets::error::{Error, ErrorKind};
 use bytes::{Buf, BufMut, BytesMut};
-use std::io;
 use tokio_util::codec::{Decoder, Encoder};
 
 pub struct AuthCodec;
 
 impl Decoder for AuthCodec {
-    type Item = AuthInteractRequest;
-    type Error = io::Error;
+    type Item = SessionCommandPacket;
+    type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         if let Some(n) = src.iter().position(|&b| b == 0xD8) {
@@ -25,11 +25,11 @@ impl Decoder for AuthCodec {
             }
 
             match String::from_utf8(decrypted) {
-                Ok(s) => match s.parse::<AuthInteractRequest>() {
+                Ok(s) => match s.parse::<SessionCommandPacket>() {
                     Ok(packet) => Ok(Some(packet)),
-                    Err(e) => Err(io::Error::new(io::ErrorKind::InvalidData, e)),
+                    Err(e) => Err(Error::new(ErrorKind::BadCase, e.to_string())),
                 },
-                Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF-8")),
+                Err(_) => Err(Error::new(ErrorKind::BadCase, "Invalid UTF-8")),
             }
         } else {
             Ok(None)
@@ -37,12 +37,12 @@ impl Decoder for AuthCodec {
     }
 }
 
-impl Encoder<AuthInteractResponse> for AuthCodec {
-    type Error = io::Error;
+impl Encoder<SessionEventPacket> for AuthCodec {
+    type Error = Error;
 
     fn encode(
         &mut self,
-        item: AuthInteractResponse,
+        item: SessionEventPacket,
         dst: &mut BytesMut,
     ) -> Result<(), Self::Error> {
         let s = item.to_string();

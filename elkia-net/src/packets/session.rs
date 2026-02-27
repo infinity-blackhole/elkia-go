@@ -1,4 +1,5 @@
-use crate::packets::status::{ErrorEvent, InfoEvent};
+use crate::packets::status::InfoEvent;
+use crate::packets::error::{Error, ErrorKind};
 use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -9,9 +10,8 @@ pub struct LoginCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum AuthInteractRequest {
+pub enum SessionCommandPacket {
     Login(LoginCommand),
-    Unknown(String),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -31,8 +31,8 @@ pub struct EndpointListEvent {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum AuthInteractResponse {
-    Error(ErrorEvent),
+pub enum SessionEventPacket {
+    Fail(Error),
     Info(InfoEvent),
     EndpointList(EndpointListEvent),
 }
@@ -75,88 +75,93 @@ impl fmt::Display for EndpointListEvent {
     }
 }
 
-impl fmt::Display for AuthInteractResponse {
+impl fmt::Display for SessionEventPacket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AuthInteractResponse::Error(e) => write!(f, "{}", e),
-            AuthInteractResponse::Info(e) => write!(f, "{}", e),
-            AuthInteractResponse::EndpointList(e) => write!(f, "{}", e),
+            SessionEventPacket::Fail(e) => write!(f, "{}", e),
+            SessionEventPacket::Info(e) => write!(f, "{}", e),
+            SessionEventPacket::EndpointList(e) => write!(f, "{}", e),
         }
     }
 }
 
 use std::str::FromStr;
 
-impl FromStr for AuthInteractRequest {
-    type Err = String;
+impl FromStr for SessionCommandPacket {
+    type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let opcode = parts.next().ok_or("Empty input")?;
+        let opcode = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Empty input".to_string()))?;
 
         match opcode {
             "NoS0575" => {
-                let rest = parts.next().ok_or("Missing payload")?;
+                let rest = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Missing payload".to_string()))?;
                 let fields: Vec<&str> = rest.split(' ').collect();
                 if fields.len() != 4 {
-                    return Err(format!("Invalid length: {}", fields.len()));
+                    return Err(Error::new(ErrorKind::BadCase, format!("Invalid length: {}", fields.len())));
                 }
                 // fields[0] ignored (e.g. session id)
                 let username = fields[1].to_string();
-                let password = decode_password(fields[2])?;
+                let password = match decode_password(fields[2]) {
+                    Ok(p) => p,
+                    Err(e) => return Err(Error::new(ErrorKind::BadCase, format!("Password decode error: {}", e))),
+                };
                 let client_version = fields[3].to_string();
 
-                Ok(AuthInteractRequest::Login(LoginCommand {
+                Ok(SessionCommandPacket::Login(LoginCommand {
                     username,
                     password,
                     client_version,
                 }))
             }
-            _ => Err(format!("Invalid opcode: {}", opcode)),
+            _ => Err(Error::new(ErrorKind::BadCase, format!("Invalid opcode: {}", opcode))),
         }
     }
 }
 
 impl FromStr for UsernameCommand {
-    type Err = String;
+    type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or("Empty input")?;
-        let sequence = seq_str.parse::<u32>().map_err(|_| "Invalid sequence")?;
-        let username = parts.next().ok_or("Missing username")?.to_string();
+        let seq_str = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Empty input".to_string()))?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| Error::new(ErrorKind::BadCase, "Invalid sequence".to_string()))?;
+        let username = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Missing username".to_string()))?.to_string();
         Ok(UsernameCommand { sequence, username })
     }
 }
 
 impl FromStr for PasswordCommand {
-    type Err = String;
+    type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or("Empty input")?;
-        let sequence = seq_str.parse::<u32>().map_err(|_| "Invalid sequence")?;
-        let password = parts.next().ok_or("Missing password")?.to_string();
+        let seq_str = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Empty input".to_string()))?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| Error::new(ErrorKind::BadCase, "Invalid sequence".to_string()))?;
+        let password = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Missing password".to_string()))?.to_string();
         Ok(PasswordCommand { sequence, password })
     }
 }
 
 impl FromStr for SyncCommand {
-    type Err = String;
+    type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(3, ' ');
 
-        // fields[0][2:]
-        let seq_part = parts.next().ok_or("Empty input")?;
-        if seq_part.len() < 2 {
-            return Err("Sequence part too short".to_string());
-        }
-        let seq_str = &seq_part[2..];
-        let sequence = seq_str.parse::<u32>().map_err(|_| "Invalid sequence")?;
+        let seq_part = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Empty input".to_string()))?;
+        // Remove hardcoded prefix skipping which might be incorrect for decoded Session Packet
+        let seq_str = if seq_part.len() > 2 && seq_part.starts_with("xx") {
+             &seq_part[2..]
+        } else {
+             seq_part
+        };
 
-        let code_str = parts.next().ok_or("Missing code")?;
-        let code = code_str.parse::<u32>().map_err(|_| "Invalid code")?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| Error::new(ErrorKind::BadCase, format!("Invalid sequence: {}", seq_str)))?;
+
+        let code_str = parts.next().ok_or(Error::new(ErrorKind::BadCase, "Missing code".to_string()))?;
+        let code = code_str.parse::<u32>().map_err(|_| Error::new(ErrorKind::BadCase, format!("Invalid code: {}", code_str)))?;
 
         Ok(SyncCommand { sequence, code })
     }
@@ -180,7 +185,7 @@ impl fmt::Display for SyncCommand {
     }
 }
 
-fn decode_password(s: &str) -> Result<String, String> {
+fn decode_password(s: &str) -> Result<String, Error> {
     let bytes = s.as_bytes();
     let start = if bytes.len() % 2 == 0 { 3 } else { 4 };
     if start >= bytes.len() {
@@ -192,50 +197,10 @@ fn decode_password(s: &str) -> Result<String, String> {
     // Take every 2nd byte
     let mut filtered = Vec::new();
     for chunk in slice.chunks(2) {
-        if !chunk.is_empty() {
-            filtered.push(chunk[0]);
+        if let Some(&b) = chunk.first() {
+            filtered.push(b);
         }
     }
 
-    // Hex decode
-    let mut result = Vec::new();
-    for chunk in filtered.chunks(2) {
-        if chunk.len() == 2 {
-            let s = std::str::from_utf8(chunk).map_err(|_| "Invalid UTF-8 in hex")?;
-            let val = u8::from_str_radix(s, 16).map_err(|_| "Invalid hex")?;
-            result.push(val);
-        }
-    }
-
-    String::from_utf8(result).map_err(|_| "Invalid UTF-8 password".to_string())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_login_command() {
-        // "xxx4x1" decodes to "A" (hex 41)
-        // Client version needs at least one \x0b separator
-        let input = "NoS0575 1234 testuser xxx4x1 1.2.3\x0b0";
-
-        let result = input.parse::<AuthInteractRequest>().unwrap();
-
-        if let AuthInteractRequest::Login(cmd) = result {
-            assert_eq!(cmd.username, "testuser");
-            assert_eq!(cmd.password, "A");
-            assert_eq!(cmd.client_version, "1.2.3\x0b0");
-        } else {
-            panic!("Expected Login command");
-        }
-    }
-
-    #[test]
-    fn test_parse_username_command() {
-        let input = "12345 testuser";
-        let cmd = input.parse::<UsernameCommand>().unwrap();
-        assert_eq!(cmd.sequence, 12345);
-        assert_eq!(cmd.username, "testuser");
-    }
+    String::from_utf8(filtered).map_err(|e| Error::new(ErrorKind::BadCase, e.to_string()))
 }

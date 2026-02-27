@@ -1,7 +1,8 @@
 use crate::codec::gateway::GatewayCodec;
 use crate::codec::session::SessionCodec;
-use crate::packets::command::CommandCommand;
+use crate::packets::world::WorldCommandPacket;
 use crate::packets::session::{PasswordCommand, SyncCommand, UsernameCommand};
+use crate::packets::error::{Error, ErrorKind};
 use futures::stream::StreamExt;
 use std::fmt;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -18,11 +19,11 @@ impl<T: AsyncRead + AsyncWrite + Unpin> SessionClient<T> {
         }
     }
 
-    pub async fn recv(&mut self) -> Result<SyncCommand, String> {
+    pub async fn recv(&mut self) -> Result<SyncCommand, Error> {
         match self.framed.next().await {
             Some(Ok(frame)) => frame.parse::<SyncCommand>(),
-            Some(Err(e)) => Err(e.to_string()),
-            None => Err("Connection closed".to_string()),
+            Some(Err(e)) => Err(Error::new(ErrorKind::BadCase, e.to_string())),
+            None => Err(Error::new(ErrorKind::BadCase, "Connection closed".to_string())),
         }
     }
 
@@ -44,18 +45,18 @@ enum ChannelState {
 }
 
 #[derive(Debug)]
-pub enum ChannelInteractRequest {
+pub enum ChannelPayload {
     Username(UsernameCommand),
     Password(PasswordCommand),
-    Command(CommandCommand),
+    Command(WorldCommandPacket),
 }
 
-impl fmt::Display for ChannelInteractRequest {
+impl fmt::Display for ChannelPayload {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ChannelInteractRequest::Username(c) => write!(f, "{}", c),
-            ChannelInteractRequest::Password(c) => write!(f, "{}", c),
-            ChannelInteractRequest::Command(c) => write!(f, "{}", c),
+            ChannelPayload::Username(c) => write!(f, "{}", c),
+            ChannelPayload::Password(c) => write!(f, "{}", c),
+            ChannelPayload::Command(c) => write!(f, "{}", c),
         }
     }
 }
@@ -68,29 +69,29 @@ impl<T: AsyncRead + AsyncWrite + Unpin> ChannelClient<T> {
         }
     }
 
-    pub async fn recv(&mut self) -> Result<ChannelInteractRequest, String> {
+    pub async fn recv(&mut self) -> Result<ChannelPayload, Error> {
         match self.framed.next().await {
             Some(Ok(frame)) => self.handle_frame(&frame),
-            Some(Err(e)) => Err(e.to_string()),
-            None => Err("Connection closed".to_string()),
+            Some(Err(e)) => Err(Error::new(ErrorKind::BadCase, e.to_string())),
+            None => Err(Error::new(ErrorKind::BadCase, "Connection closed".to_string())),
         }
     }
 
-    fn handle_frame(&mut self, frame: &str) -> Result<ChannelInteractRequest, String> {
+    fn handle_frame(&mut self, frame: &str) -> Result<ChannelPayload, Error> {
         match self.state {
             ChannelState::Username => {
                 let cmd = frame.parse::<UsernameCommand>()?;
                 self.state = ChannelState::Password;
-                Ok(ChannelInteractRequest::Username(cmd))
+                Ok(ChannelPayload::Username(cmd))
             }
             ChannelState::Password => {
                 let cmd = frame.parse::<PasswordCommand>()?;
                 self.state = ChannelState::Command;
-                Ok(ChannelInteractRequest::Password(cmd))
+                Ok(ChannelPayload::Password(cmd))
             }
             ChannelState::Command => {
-                let cmd = frame.parse::<CommandCommand>()?;
-                Ok(ChannelInteractRequest::Command(cmd))
+                let cmd = frame.parse::<WorldCommandPacket>()?;
+                Ok(ChannelPayload::Command(cmd))
             }
         }
     }
