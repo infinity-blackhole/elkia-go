@@ -1,0 +1,3 @@
+[workspace]
+members = ["elkia-net"]
+resolver = "2"
