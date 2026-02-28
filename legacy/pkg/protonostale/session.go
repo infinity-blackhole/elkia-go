@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	AuthCreateHandoffFlowOpCode = "NoS0575"
+	AuthCreateHandoffFlowTag = "NoS0575"
 )
 
 type AuthInteractRequest struct {
@@ -19,9 +19,9 @@ type AuthInteractRequest struct {
 func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 	f.AuthInteractRequest = &eventing.AuthInteractRequest{}
 	fields := bytes.SplitN(b, FieldSeparator, 2)
-	opcode := string(fields[0])
-	switch opcode {
-	case AuthCreateHandoffFlowOpCode:
+	tag := string(fields[0])
+	switch tag {
+	case AuthCreateHandoffFlowTag:
 		var LoginCommand LoginCommand
 		if err := LoginCommand.UnmarshalNosTale(fields[1]); err != nil {
 			return err
@@ -30,7 +30,7 @@ func (f *AuthInteractRequest) UnmarshalNosTale(b []byte) error {
 			LoginCommand: LoginCommand.LoginCommand,
 		}
 	default:
-		return fmt.Errorf("invalid opcode: %s", opcode)
+		return fmt.Errorf("invalid tag: %s", tag)
 	}
 	return nil
 }
