@@ -1,14 +1,16 @@
 use crate::auth::{AuthError, AuthService};
+use crate::game::GameService;
+use crate::lobby::LobbyService;
 use crate::net::codec::handshake::HandshakeCodec;
 use crate::net::codec::world::WorldCodec;
 use crate::net::packet::game::GameCommandPacket;
-use crate::net::packet::handshake::HandshakeCommandPacket;
+use crate::net::packet::handshake::{HandshakeCommandPacket, HandshakeEventPacket};
 use crate::net::packet::lobby::{
-    CharacterInfoPacket, CharacterListEndPacket, CharacterListStartPacket, LobbyCommandPacket,
-    LobbyEventPacket, SelectResponsePacket,
+    CharacterInfoPacket, LobbyCommandPacket, LobbyEventPacket, SelectResponsePacket,
 };
+use crate::net::packet::status::{FailCode, FailPacket, StatusEventPacket};
 use crate::net::packet::world::{WorldCommandPayload, WorldEventPacket};
-use crate::world::services::{Character, GameService, LobbyService};
+use crate::net::utils::lobby::send_character_list;
 use futures::{SinkExt, StreamExt};
 use std::fmt;
 use std::sync::Arc;
@@ -86,12 +88,12 @@ impl HandshakeState {
     pub async fn process(
         &self,
         mut socket: TcpStream,
-    ) -> Result<(TcpStream, String, u32), HandshakeError> {
-        let (sync_cmd, user_cmd, pass_cmd) = {
+    ) -> Result<(TcpStream, i64, u32), HandshakeError> {
+        let (sync, user, pass) = {
             let mut framed = Framed::new(&mut socket, HandshakeCodec::new());
 
             // Read SyncCommand (Packet 1)
-            let sync_cmd = match framed
+            let sync = match framed
                 .next()
                 .await
                 .ok_or(HandshakeError::ConnectionClosed("Sync".into()))??
@@ -99,10 +101,10 @@ impl HandshakeState {
                 HandshakeCommandPacket::Sync(cmd) => cmd,
                 _ => return Err(HandshakeError::ExpectedPacket("Sync".into())),
             };
-            info!("Received SyncCommand: {:?}", sync_cmd);
+            info!("Received SyncCommand: {:?}", sync);
 
             // Read UsernameCommand (Packet 2)
-            let user_cmd = match framed
+            let user = match framed
                 .next()
                 .await
                 .ok_or(HandshakeError::ConnectionClosed("User".into()))??
@@ -110,10 +112,10 @@ impl HandshakeState {
                 HandshakeCommandPacket::Username(cmd) => cmd,
                 _ => return Err(HandshakeError::ExpectedPacket("Username".into())),
             };
-            info!("Received UsernameCommand: {:?}", user_cmd);
+            info!("Received UsernameCommand: {:?}", user);
 
             // Read PasswordCommand (Packet 3)
-            let pass_cmd = match framed
+            let pass = match framed
                 .next()
                 .await
                 .ok_or(HandshakeError::ConnectionClosed("Pass".into()))??
@@ -121,148 +123,124 @@ impl HandshakeState {
                 HandshakeCommandPacket::Password(cmd) => cmd,
                 _ => return Err(HandshakeError::ExpectedPacket("Password".into())),
             };
-            info!("Received PasswordCommand: {:?}", pass_cmd);
+            info!("Received PasswordCommand: {:?}", pass);
 
-            (sync_cmd, user_cmd, pass_cmd)
+            (sync, user, pass)
         };
 
-        // Verify Session
-        let session = self
+        // Verify World Login (Credentials + Session)
+        let session_id = match self
             .auth_service
-            .verify_handshake(&pass_cmd.password)
-            .await?;
-        if session.username != user_cmd.username {
-            warn!(
-                "Security Alert: Username mismatch! Packet: {}, Session: {}",
-                user_cmd.username, session.username
-            );
-            return Err(HandshakeError::UsernameMismatch {
-                expected: session.username,
-                actual: user_cmd.username,
-            });
-        }
-        info!(
-            "Session verified for user: {} (ID: {})",
-            session.username, session.user_id
-        );
+            .activate_session(&user.username, &pass.password, sync.code)
+            .await
+        {
+            Ok(id) => id,
+            Err(e) => {
+                warn!("World login failed for user: {}: {:?}", user.username, e);
 
-        Ok((socket, user_cmd.username, sync_cmd.code))
+                let fail_code = match e {
+                    AuthError::InvalidCredentials | AuthError::UserNotFound => {
+                        FailCode::InvalidCredentials
+                    }
+                    AuthError::ActiveSession => FailCode::SessionAlreadyUsed,
+                    AuthError::HandshakeExpired | AuthError::HandshakeNotFound => {
+                        FailCode::CannotAuthenticate
+                    }
+                    _ => FailCode::UnexpectedError,
+                };
+
+                let mut framed = Framed::new(&mut socket, HandshakeCodec::new());
+                let packet = HandshakeEventPacket::Status(StatusEventPacket::Error(
+                    FailPacket::new(fail_code),
+                ));
+                let _ = framed.send(packet).await;
+                return Err(HandshakeError::AuthError(e));
+            }
+        };
+        Ok((socket, session_id, sync.code))
     }
 }
 
 #[derive(Debug)]
-pub enum LobbyError {
+pub enum LobbyStateError {
     ConnectionClosed,
-    Codec(crate::net::error::Error),
+    Net(crate::net::error::Error),
     Io(std::io::Error),
-    CharacterCreation(String),
+    Service(crate::lobby::LobbyError),
 }
 
-impl fmt::Display for LobbyError {
+impl fmt::Display for LobbyStateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LobbyError::ConnectionClosed => write!(f, "Connection closed during lobby"),
-            LobbyError::Codec(e) => write!(f, "Codec error: {}", e),
-            LobbyError::Io(e) => write!(f, "IO error: {}", e),
-            LobbyError::CharacterCreation(e) => write!(f, "Character creation failed: {}", e),
+            LobbyStateError::ConnectionClosed => write!(f, "Connection closed during lobby"),
+            LobbyStateError::Net(e) => write!(f, "Codec error: {}", e),
+            LobbyStateError::Io(e) => write!(f, "IO error: {}", e),
+            LobbyStateError::Service(e) => write!(f, "Lobby service error: {}", e),
         }
     }
 }
 
-impl std::error::Error for LobbyError {
+impl std::error::Error for LobbyStateError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            LobbyError::Codec(e) => Some(e),
-            LobbyError::Io(e) => Some(e),
+            LobbyStateError::Net(e) => Some(e),
+            LobbyStateError::Io(e) => Some(e),
+            LobbyStateError::Service(e) => Some(e),
             _ => None,
         }
     }
 }
 
-impl From<crate::net::error::Error> for LobbyError {
+impl From<crate::net::error::Error> for LobbyStateError {
     fn from(e: crate::net::error::Error) -> Self {
-        LobbyError::Codec(e)
+        LobbyStateError::Net(e)
     }
 }
 
-impl From<std::io::Error> for LobbyError {
+impl From<std::io::Error> for LobbyStateError {
     fn from(e: std::io::Error) -> Self {
-        LobbyError::Io(e)
+        LobbyStateError::Io(e)
+    }
+}
+
+impl From<crate::lobby::LobbyError> for LobbyStateError {
+    fn from(e: crate::lobby::LobbyError) -> Self {
+        LobbyStateError::Service(e)
     }
 }
 
 pub struct LobbyState {
     lobby_service: Arc<dyn LobbyService>,
+    auth_service: Arc<dyn AuthService>,
 }
 
 impl LobbyState {
-    pub fn new(lobby_service: Arc<dyn LobbyService>) -> Self {
-        Self { lobby_service }
-    }
-
-    async fn send_character_list(
-        &self,
-        framed: &mut Framed<TcpStream, WorldCodec>,
-        chars: &[Character],
-    ) -> Result<(), LobbyError> {
-        framed
-            .send(WorldEventPacket::Lobby(
-                LobbyEventPacket::CharacterListStart(CharacterListStartPacket { sequence: 0 }),
-            ))
-            .await?;
-        for char in chars {
-            framed
-                .send(WorldEventPacket::Lobby(LobbyEventPacket::CharacterInfo(
-                    CharacterInfoPacket {
-                        name: char.name.clone(),
-                        id: char.id.clone(),
-                        class: char.class,
-                        level: char.level,
-                        hero_level: char.hero_level,
-                        hair_color: char.hair_color,
-                        hair_style: char.hair_style,
-                        faction: char.faction,
-                        reputation: char.reputation,
-                        dignity: char.dignity,
-                        compliment: char.compliment,
-                        job_level: char.job_level,
-                        experience: char.experience,
-                        job_experience: char.job_experience,
-                        hero_experience: char.hero_experience,
-                    },
-                )))
-                .await?;
+    pub fn new(lobby_service: Arc<dyn LobbyService>, auth_service: Arc<dyn AuthService>) -> Self {
+        Self {
+            lobby_service,
+            auth_service,
         }
-        framed
-            .send(WorldEventPacket::Lobby(LobbyEventPacket::CharacterListEnd(
-                CharacterListEndPacket,
-            )))
-            .await?;
-        Ok(())
     }
 
     pub async fn process(
         &self,
         framed: &mut Framed<TcpStream, WorldCodec>,
-        username: &str,
-    ) -> Result<Character, LobbyError> {
-        // Send Character List
-        let mut chars = self.lobby_service.get_characters(username).await;
-
-        // Create a default character if none exists (for testing)
-        if chars.is_empty() {
-            if let Ok(_) = self
-                .lobby_service
-                .create_character(username, "Hero", 1)
-                .await
-            {
-                chars = self.lobby_service.get_characters(username).await;
-            }
-        }
-
-        self.send_character_list(framed, &chars).await?;
-
-        let mut selected_slot: Option<usize> = None;
+        session_id: i64,
+    ) -> Result<(), LobbyStateError> {
+        let chars = self
+            .lobby_service
+            .list_characters(session_id)
+            .filter_map(|res| async move {
+                match res {
+                    Ok(c) => Some(CharacterInfoPacket::from(c)),
+                    Err(e) => {
+                        warn!("Error listing characters: {}", e);
+                        None
+                    }
+                }
+            })
+            .boxed();
+        send_character_list(framed, chars).await?;
 
         while let Some(pkt_res) = framed.next().await {
             match pkt_res {
@@ -270,46 +248,74 @@ impl LobbyState {
                     info!("Lobby Received Command: {:?}", cmd);
                     match cmd.payload {
                         WorldCommandPayload::Heartbeat => {
-                            // Heartbeat
+                            if let Err(e) = self.auth_service.refresh_session(session_id).await {
+                                warn!("Failed to update heartbeat: {}", e);
+                            }
                         }
-                        WorldCommandPayload::Lobby(lobby_cmd) => match lobby_cmd {
+                        WorldCommandPayload::Lobby(lobby) => match lobby {
                             LobbyCommandPacket::Select(pkt) => {
-                                if pkt.slot < chars.len() {
-                                    info!("Client selected character: {}", chars[pkt.slot].name);
-                                    selected_slot = Some(pkt.slot);
-                                    framed
-                                        .send(WorldEventPacket::Lobby(
-                                            LobbyEventPacket::SelectResponse(SelectResponsePacket),
-                                        ))
-                                        .await?;
-                                } else {
-                                    warn!("Client selected invalid slot: {}", pkt.slot);
+                                info!("Client selecting slot: {}", pkt.slot);
+                                match self
+                                    .lobby_service
+                                    .select_character(session_id, pkt.slot)
+                                    .await
+                                {
+                                    Ok(char_id) => {
+                                        info!("Client selected character ID: {}", char_id);
+                                        framed
+                                            .send(WorldEventPacket::Lobby(
+                                                LobbyEventPacket::SelectResponse(
+                                                    SelectResponsePacket,
+                                                ),
+                                            ))
+                                            .await?;
+                                    }
+                                    Err(e) => {
+                                        warn!("Failed to select character (invalid slot?): {}", e);
+                                    }
                                 }
                             }
                             LobbyCommandPacket::GameStart(_) => {
-                                if let Some(slot) = selected_slot {
-                                    info!("Client requested game start with slot {}", slot);
-                                    if slot < chars.len() {
-                                        return Ok(chars[slot].clone());
-                                    }
-                                } else {
-                                    warn!("Client requested game start without selection");
-                                }
+                                return Ok(());
                             }
                             LobbyCommandPacket::CharNew(pkt) => {
-                                match self
+                                let chars = self
                                     .lobby_service
-                                    .create_character(username, &pkt.name, pkt.class)
-                                    .await
-                                {
-                                    Ok(_) => {
-                                        chars = self.lobby_service.get_characters(username).await;
-                                        self.send_character_list(framed, &chars).await?;
-                                    }
-                                    Err(e) => {
-                                        error!("Failed to create character: {}", e);
-                                    }
-                                }
+                                    .create_character(
+                                        session_id,
+                                        &pkt.name,
+                                        pkt.slot as i32,
+                                        pkt.gender,
+                                        pkt.hair_style,
+                                        pkt.hair_color,
+                                    )
+                                    .filter_map(|res| async move {
+                                        match res {
+                                            Ok(c) => Some(CharacterInfoPacket::from(c)),
+                                            Err(e) => {
+                                                warn!("Error creating character: {}", e);
+                                                None
+                                            }
+                                        }
+                                    })
+                                    .boxed();
+                                send_character_list(framed, chars).await?;
+                            }
+                            LobbyCommandPacket::CharDel(pkt) => {
+                                let chars = self
+                                    .lobby_service
+                                    .delete_character(session_id, pkt.slot, &pkt.password)
+                                    .filter_map(|res| async move {
+                                        match res {
+                                            Ok(c) => Some(CharacterInfoPacket::from(c)),
+                                            Err(e) => {
+                                                warn!("Error deleting character: {}", e);
+                                                None
+                                            }
+                                        }
+                                    })
+                                    .boxed();
+                                send_character_list(framed, chars).await?;
                             }
                         },
                         WorldCommandPayload::Game(_) => {
@@ -317,97 +323,113 @@ impl LobbyState {
                         }
                     }
                 }
-                Err(e) => {
-                    return Err(LobbyError::Codec(e));
-                }
+                Err(e) => return Err(LobbyStateError::Net(e)),
             }
         }
-
-        Err(LobbyError::ConnectionClosed)
+        Err(LobbyStateError::ConnectionClosed)
     }
 }
 
 #[derive(Debug)]
-pub enum GameError {
+pub enum GameStateError {
     ConnectionClosed,
     Codec(crate::net::error::Error),
     Io(std::io::Error),
+    Service(crate::game::GameError),
 }
 
-impl fmt::Display for GameError {
+impl fmt::Display for GameStateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GameError::ConnectionClosed => write!(f, "Connection closed during game"),
-            GameError::Codec(e) => write!(f, "Codec error: {}", e),
-            GameError::Io(e) => write!(f, "IO error: {}", e),
+            GameStateError::ConnectionClosed => write!(f, "Connection closed during game"),
+            GameStateError::Codec(e) => write!(f, "Codec error: {}", e),
+            GameStateError::Io(e) => write!(f, "IO error: {}", e),
+            GameStateError::Service(e) => write!(f, "Game service error: {}", e),
         }
     }
 }
 
-impl std::error::Error for GameError {
+impl std::error::Error for GameStateError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            GameError::Codec(e) => Some(e),
-            GameError::Io(e) => Some(e),
+            GameStateError::Codec(e) => Some(e),
+            GameStateError::Io(e) => Some(e),
+            GameStateError::Service(e) => Some(e),
             _ => None,
         }
     }
 }
 
-impl From<crate::net::error::Error> for GameError {
+impl From<crate::net::error::Error> for GameStateError {
     fn from(e: crate::net::error::Error) -> Self {
-        GameError::Codec(e)
+        GameStateError::Codec(e)
     }
 }
 
-impl From<std::io::Error> for GameError {
+impl From<std::io::Error> for GameStateError {
     fn from(e: std::io::Error) -> Self {
-        GameError::Io(e)
+        GameStateError::Io(e)
+    }
+}
+
+impl From<crate::game::GameError> for GameStateError {
+    fn from(e: crate::game::GameError) -> Self {
+        GameStateError::Service(e)
     }
 }
 
 pub struct GameState {
     game_service: Arc<dyn GameService>,
+    auth_service: Arc<dyn AuthService>,
 }
 
 impl GameState {
-    pub fn new(game_service: Arc<dyn GameService>) -> Self {
-        Self { game_service }
+    pub fn new(game_service: Arc<dyn GameService>, auth_service: Arc<dyn AuthService>) -> Self {
+        Self {
+            game_service,
+            auth_service,
+        }
     }
 
     pub async fn process(
         &self,
         framed: &mut Framed<TcpStream, WorldCodec>,
-        username: &str,
-        _character: Character,
-    ) -> Result<(), GameError> {
-        info!("Entered Game State for user: {}", username);
-
-        // TODO: Implement map loading logic here (send map info, etc.)
-
+        session_id: i64,
+    ) -> Result<(), GameStateError> {
         while let Some(pkt_res) = framed.next().await {
             match pkt_res {
                 Ok(cmd) => {
                     info!("Game Received Command: {:?}", cmd);
                     match cmd.payload {
                         WorldCommandPayload::Heartbeat => {
-                            // Heartbeat
+                            if let Err(e) = self.auth_service.refresh_session(session_id).await {
+                                warn!("Failed to update heartbeat: {}", e);
+                            }
                         }
                         WorldCommandPayload::Lobby(_) => {
                             warn!("Received lobby command in game state, ignoring");
                         }
-                        WorldCommandPayload::Game(game_cmd) => match game_cmd {
+                        WorldCommandPayload::Game(game) => match game {
                             GameCommandPacket::Walk(pkt) => {
-                                self.game_service.walk(username, pkt.x, pkt.y).await;
+                                if let Err(e) =
+                                    self.game_service.walk(session_id, pkt.x, pkt.y).await
+                                {
+                                    error!("Failed to process walk command: {}", e);
+                                    // Depending on severity, we might want to return Err or just log
+                                }
                             }
                             GameCommandPacket::Say(pkt) => {
-                                self.game_service.chat(username, &pkt.message).await;
+                                if let Err(e) =
+                                    self.game_service.chat(session_id, &pkt.message).await
+                                {
+                                    error!("Failed to process say command: {}", e);
+                                }
                             }
                         },
                     }
                 }
                 Err(e) => {
-                    return Err(GameError::Codec(e));
+                    return Err(GameStateError::Codec(e));
                 }
             }
         }

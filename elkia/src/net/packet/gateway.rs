@@ -55,7 +55,9 @@ impl FromStr for GatewayCommandPacket {
                     client_version,
                 }))
             }
-            _ => Err(Error::from(ParsePacketError::UnexpectedTag(tag.to_string()))),
+            _ => Err(Error::from(ParsePacketError::UnexpectedTag(
+                tag.to_string(),
+            ))),
         }
     }
 }

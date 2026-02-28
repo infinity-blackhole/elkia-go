@@ -6,10 +6,10 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio_util::codec::Framed;
 use tracing::{error, info};
 
-pub mod services;
 pub mod state;
-use self::services::{GameService, LobbyService};
 use self::state::{GameState, HandshakeState, LobbyState};
+use crate::game::GameService;
+use crate::lobby::LobbyService;
 
 pub struct WorldServer {
     addr: String,
@@ -33,7 +33,7 @@ impl WorldServer {
         }
     }
 
-    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
         let listener = TcpListener::bind(&self.addr).await?;
         info!("elkia-world listening on: {}", self.addr);
 
@@ -61,21 +61,33 @@ async fn handle_connection(
     lobby_service: Arc<dyn LobbyService>,
     game_service: Arc<dyn GameService>,
     auth_service: Arc<dyn AuthService>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     // 1. Handshake State
-    let handshake_state = HandshakeState::new(auth_service);
-    let (socket, username, code) = handshake_state.process(socket).await?;
+    let handshake_state = HandshakeState::new(auth_service.clone());
+    let (socket, session_id, code) = handshake_state.process(socket).await?;
 
-    // 2. Lobby State
-    let mut framed = Framed::new(socket, WorldCodec::new(code));
-    let lobby_state = LobbyState::new(lobby_service);
-    let character = lobby_state.process(&mut framed, &username).await?;
+    // Run session logic (Lobby -> Game)
+    let run_session = async {
+        // 2. Lobby State
+        let mut framed = Framed::new(socket, WorldCodec::new(code));
+        let lobby_state = LobbyState::new(lobby_service, auth_service.clone());
+        lobby_state.process(&mut framed, session_id).await?;
 
-    // 3. Game State
-    let game_state = GameState::new(game_service);
-    game_state
-        .process(&mut framed, &username, character)
-        .await?;
+        // 3. Game State
+        let game_state = GameState::new(game_service, auth_service.clone());
+        game_state.process(&mut framed, session_id).await?;
 
-    Ok(())
+        Ok::<(), Box<dyn Error + Send + Sync>>(())
+    };
+
+    let result = run_session.await;
+
+    // Cleanup: Logout session
+    if let Err(e) = auth_service.terminate_session(session_id).await {
+        error!("Failed to terminate session {}: {}", session_id, e);
+    } else {
+        info!("Session {} terminated", session_id);
+    }
+
+    result
 }

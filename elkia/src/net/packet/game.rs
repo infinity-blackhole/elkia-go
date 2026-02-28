@@ -20,7 +20,9 @@ impl FromStr for GameCommandPacket {
         match tag {
             "walk" => Ok(GameCommandPacket::Walk(args.parse()?)),
             "say" => Ok(GameCommandPacket::Say(args.parse()?)),
-            _ => Err(Error::from(ParsePacketError::UnexpectedTag(tag.to_string()))),
+            _ => Err(Error::from(ParsePacketError::UnexpectedTag(
+                tag.to_string(),
+            ))),
         }
     }
 }
@@ -36,18 +38,22 @@ impl FromStr for WalkPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.split_whitespace();
-        let x_str = parts.next().ok_or(Error::from(ParsePacketError::MissingField(
-            "x coordinate".to_string(),
-        )))?;
+        let x_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "x coordinate".to_string(),
+            )))?;
         let x = x_str.parse::<i32>().map_err(|_| {
             Error::from(ParsePacketError::InvalidField {
                 field: "x coordinate".to_string(),
                 value: x_str.to_string(),
             })
         })?;
-        let y_str = parts.next().ok_or(Error::from(ParsePacketError::MissingField(
-            "y coordinate".to_string(),
-        )))?;
+        let y_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "y coordinate".to_string(),
+            )))?;
         let y = y_str.parse::<i32>().map_err(|_| {
             Error::from(ParsePacketError::InvalidField {
                 field: "y coordinate".to_string(),

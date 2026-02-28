@@ -67,7 +67,9 @@ impl FromStr for UsernamePacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let seq_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::EmptyInput))?;
         let sequence = seq_str.parse::<u32>().map_err(|_| {
             Error::from(ParsePacketError::InvalidField {
                 field: "sequence".to_string(),
@@ -95,7 +97,9 @@ impl FromStr for PasswordPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let seq_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::EmptyInput))?;
         let sequence = seq_str.parse::<u32>().map_err(|_| {
             Error::from(ParsePacketError::InvalidField {
                 field: "sequence".to_string(),

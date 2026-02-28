@@ -25,7 +25,9 @@ impl FromStr for WorldCommandPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let seq_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::EmptyInput))?;
         let sequence = seq_str.parse::<u32>().map_err(|_| {
             Error::from(ParsePacketError::InvalidField {
                 field: "sequence".to_string(),
@@ -50,16 +52,16 @@ impl FromStr for WorldCommandPacket {
 
         let payload = match tag {
             "select" | "game_start" | "char_new" => {
-                let lobby_cmd = payload_str.parse::<LobbyCommandPacket>()?;
-                WorldCommandPayload::Lobby(lobby_cmd)
+                let lobby = payload_str.parse::<LobbyCommandPacket>()?;
+                WorldCommandPayload::Lobby(lobby)
             }
             "walk" | "say" => {
-                let game_cmd = payload_str.parse::<GameCommandPacket>()?;
-                WorldCommandPayload::Game(game_cmd)
+                let game = payload_str.parse::<GameCommandPacket>()?;
+                WorldCommandPayload::Game(game)
             }
             _ => {
-                let game_cmd = payload_str.parse::<GameCommandPacket>()?;
-                WorldCommandPayload::Game(game_cmd)
+                let game = payload_str.parse::<GameCommandPacket>()?;
+                WorldCommandPayload::Game(game)
             }
         };
 

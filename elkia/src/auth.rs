@@ -4,7 +4,6 @@ use sqlx::{Pool, Row, Sqlite};
 use std::error::Error;
 use std::fmt;
 use tracing::{info, warn};
-use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum AuthError {
@@ -12,7 +11,25 @@ pub enum AuthError {
     UserNotFound,
     HandshakeExpired,
     HandshakeNotFound,
+    ActiveSession,
     DatabaseError(sqlx::Error),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SessionStatus {
+    Active,
+    Activating,
+    Terminated,
+}
+
+impl fmt::Display for SessionStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SessionStatus::Active => write!(f, "active"),
+            SessionStatus::Activating => write!(f, "activating"),
+            SessionStatus::Terminated => write!(f, "terminated"),
+        }
+    }
 }
 
 impl fmt::Display for AuthError {
@@ -22,6 +39,7 @@ impl fmt::Display for AuthError {
             AuthError::UserNotFound => write!(f, "User not found"),
             AuthError::HandshakeExpired => write!(f, "Handshake expired"),
             AuthError::HandshakeNotFound => write!(f, "Handshake not found"),
+            AuthError::ActiveSession => write!(f, "Session already used"),
             AuthError::DatabaseError(e) => write!(f, "Database error: {}", e),
         }
     }
@@ -42,21 +60,24 @@ impl From<sqlx::Error> for AuthError {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct HandshakeData {
-    pub id: String,
-    pub user_id: String,
-    pub username: String,
-}
-
 #[async_trait]
 pub trait AuthService: Send + Sync {
     /// Authenticates user and creates a handshake flow, returning the code.
-    async fn create_handshake_flow(&self, username: &str, password: &str)
-    -> Result<u32, AuthError>;
+    async fn create_session(&self, username: &str, password: &str) -> Result<u32, AuthError>;
 
-    /// Verifies the handshake ID and returns handshake data.
-    async fn verify_handshake(&self, handshake_id: &str) -> Result<HandshakeData, AuthError>;
+    /// Verifies the world login (credentials + handshake code + uniqueness check).
+    async fn activate_session(
+        &self,
+        username: &str,
+        password: &str,
+        code: u32,
+    ) -> Result<i64, AuthError>;
+
+    /// Invalidates/Removes a session (logout).
+    async fn terminate_session(&self, session_id: i64) -> Result<(), AuthError>;
+
+    /// Updates the session's last_seen timestamp.
+    async fn refresh_session(&self, session_id: i64) -> Result<(), AuthError>;
 }
 
 pub struct SqliteAuthService {
@@ -67,54 +88,44 @@ impl SqliteAuthService {
     pub fn new(pool: Pool<Sqlite>) -> Self {
         Self { pool }
     }
-
-    async fn verify_credentials(
-        &self,
-        username: &str,
-        password: &str,
-    ) -> Result<String, AuthError> {
-        let row = sqlx::query("SELECT id, password_hash FROM users WHERE username = ?")
-            .bind(username)
-            .fetch_optional(&self.pool)
-            .await?;
-
-        if let Some(row) = row {
-            let user_id: String = row.try_get("id").map_err(AuthError::DatabaseError)?;
-            let password_hash: String = row
-                .try_get("password_hash")
-                .map_err(AuthError::DatabaseError)?;
-
-            if password_hash != password {
-                warn!("Invalid password for user: {}", username);
-                return Err(AuthError::InvalidCredentials);
-            }
-            Ok(user_id)
-        } else {
-            warn!("User not found: {}", username);
-            Err(AuthError::UserNotFound)
-        }
-    }
 }
 
 #[async_trait]
 impl AuthService for SqliteAuthService {
-    async fn create_handshake_flow(
-        &self,
-        username: &str,
-        password: &str,
-    ) -> Result<u32, AuthError> {
-        let user_id = self.verify_credentials(username, password).await?;
-        let handshake_id = Uuid::new_v4().to_string();
+    async fn create_session(&self, username: &str, password: &str) -> Result<u32, AuthError> {
+        let mut tx = self.pool.begin().await.map_err(AuthError::DatabaseError)?;
+
+        // 1. Verify Credentials
+        let row = sqlx::query("SELECT id FROM accounts WHERE username = ? AND password = ?")
+            .bind(username)
+            .bind(password)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(AuthError::DatabaseError)?;
+
+        let account_id = if let Some(row) = row {
+            row.try_get::<i64, _>("id")
+                .map_err(AuthError::DatabaseError)?
+        } else {
+            return Err(AuthError::InvalidCredentials);
+        };
+
+        // 2. Create Session
         let code: u32 = rand::random();
         let expires_at = Utc::now() + Duration::hours(24);
 
-        sqlx::query("INSERT INTO sessions (id, user_id, code, expires_at) VALUES (?, ?, ?, ?)")
-            .bind(&handshake_id)
-            .bind(&user_id)
-            .bind(code)
-            .bind(expires_at)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(
+            "INSERT INTO sessions (account_id, code, expires_at, status) VALUES (?, ?, ?, ?)",
+        )
+        .bind(account_id)
+        .bind(code)
+        .bind(expires_at)
+        .bind(SessionStatus::Activating.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(AuthError::DatabaseError)?;
+
+        tx.commit().await.map_err(AuthError::DatabaseError)?;
 
         info!(
             "Created handshake flow for user: {}, code: {}",
@@ -123,39 +134,99 @@ impl AuthService for SqliteAuthService {
         Ok(code)
     }
 
-    async fn verify_handshake(&self, handshake_id: &str) -> Result<HandshakeData, AuthError> {
-        let row = sqlx::query(
-            r#"
-            SELECT s.id, s.user_id, s.expires_at, u.username
-            FROM sessions s
-            JOIN users u ON s.user_id = u.id
-            WHERE s.id = ?
-            "#,
-        )
-        .bind(handshake_id)
-        .fetch_optional(&self.pool)
-        .await?;
+    async fn activate_session(
+        &self,
+        username: &str,
+        password: &str,
+        code: u32,
+    ) -> Result<i64, AuthError> {
+        let mut tx = self.pool.begin().await.map_err(AuthError::DatabaseError)?;
 
-        if let Some(row) = row {
+        // 1. Verify Credentials
+        let row = sqlx::query("SELECT id FROM accounts WHERE username = ? AND password = ?")
+            .bind(username)
+            .bind(password)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(AuthError::DatabaseError)?;
+
+        let account_id = if let Some(row) = row {
+            row.try_get::<i64, _>("id")
+                .map_err(AuthError::DatabaseError)?
+        } else {
+            return Err(AuthError::InvalidCredentials);
+        };
+
+        // 2. Check for active session (already logged in)
+        // We check for status = 'active'
+        let active_session = sqlx::query(
+            "SELECT id FROM sessions WHERE account_id = ? AND status = ? AND expires_at > ?",
+        )
+        .bind(account_id)
+        .bind(SessionStatus::Active.to_string())
+        .bind(Utc::now())
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(AuthError::DatabaseError)?;
+
+        if active_session.is_some() {
+            warn!("User {} already has an active session", username);
+            return Err(AuthError::ActiveSession);
+        }
+
+        // 3. Verify Handshake Code
+        let session_row =
+            sqlx::query("SELECT id, expires_at FROM sessions WHERE account_id = ? AND code = ?")
+                .bind(account_id)
+                .bind(code)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(AuthError::DatabaseError)?;
+
+        let session_id = if let Some(row) = session_row {
             let expires_at: chrono::DateTime<Utc> = row
                 .try_get("expires_at")
                 .map_err(AuthError::DatabaseError)?;
             if expires_at < Utc::now() {
-                warn!("Handshake expired: {}", handshake_id);
+                warn!("Handshake expired for user: {}", username);
                 return Err(AuthError::HandshakeExpired);
             }
-
-            let user_id: String = row.try_get("user_id").map_err(AuthError::DatabaseError)?;
-            let username: String = row.try_get("username").map_err(AuthError::DatabaseError)?;
-
-            Ok(HandshakeData {
-                id: handshake_id.to_string(),
-                user_id,
-                username,
-            })
+            row.try_get::<i64, _>("id")
+                .map_err(AuthError::DatabaseError)?
         } else {
-            warn!("Handshake not found: {}", handshake_id);
-            Err(AuthError::HandshakeNotFound)
-        }
+            warn!("Handshake code not found or invalid for user: {}", username);
+            return Err(AuthError::HandshakeNotFound);
+        };
+
+        // 4. Mark code as used (set to NULL) and status to Active
+        sqlx::query("UPDATE sessions SET code = NULL, status = ? WHERE id = ?")
+            .bind(SessionStatus::Active.to_string())
+            .bind(session_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(AuthError::DatabaseError)?;
+
+        tx.commit().await.map_err(AuthError::DatabaseError)?;
+
+        Ok(session_id)
+    }
+
+    async fn terminate_session(&self, session_id: i64) -> Result<(), AuthError> {
+        sqlx::query("UPDATE sessions SET status = ? WHERE id = ?")
+            .bind(SessionStatus::Terminated.to_string())
+            .bind(session_id)
+            .execute(&self.pool)
+            .await
+            .map_err(AuthError::DatabaseError)?;
+        Ok(())
+    }
+
+    async fn refresh_session(&self, session_id: i64) -> Result<(), AuthError> {
+        sqlx::query("UPDATE sessions SET last_seen = CURRENT_TIMESTAMP WHERE id = ?")
+            .bind(session_id)
+            .execute(&self.pool)
+            .await
+            .map_err(AuthError::DatabaseError)?;
+        Ok(())
     }
 }

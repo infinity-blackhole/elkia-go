@@ -33,7 +33,7 @@ impl GatewayService {
 
         match self
             .auth_service
-            .create_handshake_flow(&cmd.username, &cmd.password)
+            .create_session(&cmd.username, &cmd.password)
             .await
         {
             Ok(code) => {
@@ -68,9 +68,9 @@ impl GatewayService {
                     AuthError::InvalidCredentials | AuthError::UserNotFound => {
                         FailCode::InvalidCredentials
                     }
-                    AuthError::HandshakeExpired | AuthError::HandshakeNotFound => {
-                        FailCode::CannotAuthenticate
-                    }
+                    AuthError::HandshakeExpired
+                    | AuthError::HandshakeNotFound
+                    | AuthError::ActiveSession => FailCode::CannotAuthenticate,
                     AuthError::DatabaseError(_) => FailCode::UnexpectedError,
                 };
                 Ok(GatewayEventPacket::Status(StatusEventPacket::Error(
@@ -172,27 +172,32 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::auth::{AuthService, HandshakeData};
+    use crate::auth::AuthService;
     use async_trait::async_trait;
 
     struct MockAuthService;
 
     #[async_trait]
     impl AuthService for MockAuthService {
-        async fn create_handshake_flow(
-            &self,
-            _username: &str,
-            _password: &str,
-        ) -> Result<u32, AuthError> {
+        async fn create_session(&self, _username: &str, _password: &str) -> Result<u32, AuthError> {
             Ok(12345)
         }
 
-        async fn verify_handshake(&self, _handshake_id: &str) -> Result<HandshakeData, AuthError> {
-            Ok(HandshakeData {
-                id: "test-handshake".to_string(),
-                user_id: "test-user".to_string(),
-                username: "test_user".to_string(),
-            })
+        async fn activate_session(
+            &self,
+            _username: &str,
+            _password: &str,
+            _code: u32,
+        ) -> Result<i64, AuthError> {
+            Ok(1)
+        }
+
+        async fn terminate_session(&self, _session_id: i64) -> Result<(), AuthError> {
+            Ok(())
+        }
+
+        async fn refresh_session(&self, _session_id: i64) -> Result<(), AuthError> {
+            Ok(())
         }
     }
 

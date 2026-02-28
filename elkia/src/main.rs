@@ -1,9 +1,10 @@
 use clap::{Parser, Subcommand};
 use elkia::auth::{AuthService, SqliteAuthService};
 use elkia::db;
+use elkia::game::SqliteGameService;
 use elkia::gateway::{GatewayServer, GatewayService};
+use elkia::lobby::SqliteLobbyService;
 use elkia::world::WorldServer;
-use elkia::world::services::{SqliteGameService, SqliteLobbyService};
 use std::error::Error;
 use std::sync::Arc;
 use tower::ServiceBuilder;
@@ -45,7 +46,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt::init();
     let args = Args::parse();
 
-    let db_pool = db::connect().await?;
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite::memory:".to_string());
+    let db_pool = db::connect(&database_url).await?;
 
     match args.command {
         Commands::Migrate => {
@@ -73,7 +76,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let game_service = Arc::new(SqliteGameService::new(db_pool));
 
             let server = WorldServer::new(addr, lobby_service, game_service, auth_service);
-            server.run().await?;
+            server.run().await.map_err(|e| e as Box<dyn Error>)?;
         }
     }
 
