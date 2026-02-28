@@ -1,7 +1,6 @@
 use crate::net::error::{Error, ParsePacketError};
 use crate::net::packet::world::{WorldCommandPacket, WorldEventPacket};
 use bytes::{Buf, BufMut, BytesMut};
-use std::io;
 use tokio_util::codec::{Decoder, Encoder};
 
 pub struct WorldCodec {
