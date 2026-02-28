@@ -73,7 +73,9 @@ async fn handle_connection(
 
     // 3. Game State
     let game_state = GameState::new(game_service);
-    game_state.process(&mut framed, &username, character).await?;
+    game_state
+        .process(&mut framed, &username, character)
+        .await?;
 
     Ok(())
 }

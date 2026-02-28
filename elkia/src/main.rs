@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
 use elkia::auth::{AuthService, SqliteAuthService};
 use elkia::db;
-use elkia::gateway::AuthServer;
+use elkia::gateway::{GatewayServer, GatewayService};
 use elkia::world::WorldServer;
 use elkia::world::services::{SqliteGameService, SqliteLobbyService};
 use std::error::Error;
 use std::sync::Arc;
+use tower::ServiceBuilder;
 use tracing::info;
 use tracing_subscriber;
 
@@ -55,7 +56,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::Gateway { addr, world_addr } => {
             info!("Starting Elkia Gateway (Auth) Server...");
             let auth_service: Arc<dyn AuthService> = Arc::new(SqliteAuthService::new(db_pool));
-            let server = Arc::new(AuthServer::new(auth_service, world_addr));
+            let service = ServiceBuilder::new()
+                .concurrency_limit(100)
+                .service(GatewayService::new(auth_service, world_addr));
+            let server = GatewayServer::new(service);
             server.run(&addr).await?;
         }
         Commands::World { addr } => {

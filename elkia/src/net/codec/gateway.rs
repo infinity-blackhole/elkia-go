@@ -1,4 +1,8 @@
-use crate::net::packets::gateway::{GatewayCommandPacket, GatewayEventPacket};
+use crate::net::error::Error;
+use crate::net::{
+    error::ParsePacketError,
+    packet::gateway::{GatewayCommandPacket, GatewayEventPacket},
+};
 use bytes::{Buf, BufMut, BytesMut};
 use std::io;
 use tokio_util::codec::{Decoder, Encoder};
@@ -7,7 +11,7 @@ pub struct GatewayCodec;
 
 impl Decoder for GatewayCodec {
     type Item = GatewayCommandPacket;
-    type Error = io::Error;
+    type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         if let Some(n) = src.iter().position(|&b| b == 0xD8) {
@@ -27,9 +31,9 @@ impl Decoder for GatewayCodec {
             match String::from_utf8(decrypted) {
                 Ok(s) => match s.parse::<GatewayCommandPacket>() {
                     Ok(packet) => Ok(Some(packet)),
-                    Err(e) => Err(io::Error::new(io::ErrorKind::InvalidData, e.to_string())),
+                    Err(e) => Err(Error::from(e)),
                 },
-                Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF-8")),
+                Err(e) => Err(Error::from(ParsePacketError::FromUtf8(e))),
             }
         } else {
             Ok(None)
@@ -40,11 +44,7 @@ impl Decoder for GatewayCodec {
 impl Encoder<GatewayEventPacket> for GatewayCodec {
     type Error = io::Error;
 
-    fn encode(
-        &mut self,
-        item: GatewayEventPacket,
-        dst: &mut BytesMut,
-    ) -> Result<(), Self::Error> {
+    fn encode(&mut self, item: GatewayEventPacket, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let s = match item {
             GatewayEventPacket::EndpointList(e) => {
                 let mut s = format!("NsTeST {} ", e.code);

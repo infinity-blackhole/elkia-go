@@ -1,4 +1,4 @@
-use crate::net::error::{Error, ErrorKind};
+use crate::net::error::Error;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -55,15 +55,5 @@ impl FailPacket {
 impl fmt::Display for FailPacket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "failc {}", self.code as u32)
-    }
-}
-
-impl From<Error> for FailPacket {
-    fn from(err: Error) -> Self {
-        let code = match err.kind {
-            ErrorKind::Parse(_) => FailCode::BadCase,
-            ErrorKind::Io(_) => FailCode::UnexpectedError,
-        };
-        Self::new(code)
     }
 }

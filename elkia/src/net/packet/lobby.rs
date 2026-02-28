@@ -1,4 +1,4 @@
-use crate::net::error::{Error, ParseErrorKind};
+use crate::net::error::{Error, ParsePacketError};
 use std::fmt;
 use std::str::FromStr;
 
@@ -14,20 +14,14 @@ impl FromStr for LobbyCommandPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let tag = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
+        let tag = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
         let args = parts.next().unwrap_or("");
 
         match tag {
             "select" => Ok(LobbyCommandPacket::Select(args.parse()?)),
             "game_start" => Ok(LobbyCommandPacket::GameStart(args.parse()?)),
             "char_new" => Ok(LobbyCommandPacket::CharNew(args.parse()?)),
-            _ => Err(Error::parse(
-                ParseErrorKind::InvalidTag,
-                format!("Unknown lobby command: {}", tag),
-            )),
+            _ => Err(Error::from(ParsePacketError::UnexpectedTag(tag.to_string()))),
         }
     }
 }
@@ -41,10 +35,13 @@ impl FromStr for SelectPacket {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let slot = input
-            .trim()
-            .parse::<usize>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid slot".to_string()))?;
+        let slot_str = input.trim();
+        let slot = slot_str.parse::<usize>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "slot".to_string(),
+                value: slot_str.to_string(),
+            })
+        })?;
         Ok(SelectPacket { slot })
     }
 }
@@ -74,27 +71,28 @@ impl FromStr for CharNewPacket {
         let mut parts = input.split_whitespace();
         let name = parts
             .next()
-            .ok_or(Error::parse(
-                ParseErrorKind::Malformed,
-                "Missing name".to_string(),
-            ))?
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "name".to_string(),
+            )))?
             .to_string();
-        let slot = parts
-            .next()
-            .ok_or(Error::parse(
-                ParseErrorKind::Malformed,
-                "Missing slot".to_string(),
-            ))?
-            .parse::<usize>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid slot".to_string()))?;
-        let class = parts
-            .next()
-            .ok_or(Error::parse(
-                ParseErrorKind::Malformed,
-                "Missing class".to_string(),
-            ))?
-            .parse::<i32>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid class".to_string()))?;
+        let slot_str = parts.next().ok_or(Error::from(ParsePacketError::MissingField(
+            "slot".to_string(),
+        )))?;
+        let slot = slot_str.parse::<usize>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "slot".to_string(),
+                value: slot_str.to_string(),
+            })
+        })?;
+        let class_str = parts.next().ok_or(Error::from(ParsePacketError::MissingField(
+            "class".to_string(),
+        )))?;
+        let class = class_str.parse::<i32>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "class".to_string(),
+                value: class_str.to_string(),
+            })
+        })?;
         Ok(CharNewPacket { name, slot, class })
     }
 }

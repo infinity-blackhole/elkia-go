@@ -1,20 +1,78 @@
-use crate::auth::AuthService;
+use crate::auth::{AuthError, AuthService};
 use crate::net::codec::handshake::HandshakeCodec;
 use crate::net::codec::world::WorldCodec;
-use crate::net::packets::game::GameCommandPacket;
-use crate::net::packets::handshake::HandshakeCommandPacket;
-use crate::net::packets::lobby::{
+use crate::net::packet::game::GameCommandPacket;
+use crate::net::packet::handshake::HandshakeCommandPacket;
+use crate::net::packet::lobby::{
     CharacterInfoPacket, CharacterListEndPacket, CharacterListStartPacket, LobbyCommandPacket,
     LobbyEventPacket, SelectResponsePacket,
 };
-use crate::net::packets::world::{WorldCommandPayload, WorldEventPacket};
+use crate::net::packet::world::{WorldCommandPayload, WorldEventPacket};
 use crate::world::services::{Character, GameService, LobbyService};
 use futures::{SinkExt, StreamExt};
-use std::error::Error;
+use std::fmt;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio_util::codec::Framed;
 use tracing::{error, info, warn};
+
+#[derive(Debug)]
+pub enum HandshakeError {
+    ConnectionClosed(String),
+    ExpectedPacket(String),
+    AuthError(AuthError),
+    UsernameMismatch { expected: String, actual: String },
+    Io(std::io::Error),
+    Codec(crate::net::error::Error),
+}
+
+impl fmt::Display for HandshakeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            HandshakeError::ConnectionClosed(s) => write!(f, "Connection closed: {}", s),
+            HandshakeError::ExpectedPacket(s) => write!(f, "Expected packet: {}", s),
+            HandshakeError::AuthError(e) => write!(f, "Authentication error: {}", e),
+            HandshakeError::UsernameMismatch { expected, actual } => {
+                write!(
+                    f,
+                    "Username mismatch: expected {}, got {}",
+                    expected, actual
+                )
+            }
+            HandshakeError::Io(e) => write!(f, "IO error: {}", e),
+            HandshakeError::Codec(e) => write!(f, "Codec error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for HandshakeError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            HandshakeError::AuthError(e) => Some(e),
+            HandshakeError::Io(e) => Some(e),
+            HandshakeError::Codec(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<AuthError> for HandshakeError {
+    fn from(e: AuthError) -> Self {
+        HandshakeError::AuthError(e)
+    }
+}
+
+impl From<std::io::Error> for HandshakeError {
+    fn from(e: std::io::Error) -> Self {
+        HandshakeError::Io(e)
+    }
+}
+
+impl From<crate::net::error::Error> for HandshakeError {
+    fn from(e: crate::net::error::Error) -> Self {
+        HandshakeError::Codec(e)
+    }
+}
 
 pub struct HandshakeState {
     auth_service: Arc<dyn AuthService>,
@@ -28,28 +86,40 @@ impl HandshakeState {
     pub async fn process(
         &self,
         mut socket: TcpStream,
-    ) -> Result<(TcpStream, String, u32), Box<dyn Error>> {
+    ) -> Result<(TcpStream, String, u32), HandshakeError> {
         let (sync_cmd, user_cmd, pass_cmd) = {
             let mut framed = Framed::new(&mut socket, HandshakeCodec::new());
 
             // Read SyncCommand (Packet 1)
-            let sync_cmd = match framed.next().await.ok_or("Connection closed (Sync)")?? {
+            let sync_cmd = match framed
+                .next()
+                .await
+                .ok_or(HandshakeError::ConnectionClosed("Sync".into()))??
+            {
                 HandshakeCommandPacket::Sync(cmd) => cmd,
-                _ => return Err("Expected Sync packet".into()),
+                _ => return Err(HandshakeError::ExpectedPacket("Sync".into())),
             };
             info!("Received SyncCommand: {:?}", sync_cmd);
 
             // Read UsernameCommand (Packet 2)
-            let user_cmd = match framed.next().await.ok_or("Connection closed (User)")?? {
+            let user_cmd = match framed
+                .next()
+                .await
+                .ok_or(HandshakeError::ConnectionClosed("User".into()))??
+            {
                 HandshakeCommandPacket::Username(cmd) => cmd,
-                _ => return Err("Expected Username packet".into()),
+                _ => return Err(HandshakeError::ExpectedPacket("Username".into())),
             };
             info!("Received UsernameCommand: {:?}", user_cmd);
 
             // Read PasswordCommand (Packet 3)
-            let pass_cmd = match framed.next().await.ok_or("Connection closed (Pass)")?? {
+            let pass_cmd = match framed
+                .next()
+                .await
+                .ok_or(HandshakeError::ConnectionClosed("Pass".into()))??
+            {
                 HandshakeCommandPacket::Password(cmd) => cmd,
-                _ => return Err("Expected Password packet".into()),
+                _ => return Err(HandshakeError::ExpectedPacket("Password".into())),
             };
             info!("Received PasswordCommand: {:?}", pass_cmd);
 
@@ -57,13 +127,19 @@ impl HandshakeState {
         };
 
         // Verify Session
-        let session = self.auth_service.verify_handshake(&pass_cmd.password).await?;
+        let session = self
+            .auth_service
+            .verify_handshake(&pass_cmd.password)
+            .await?;
         if session.username != user_cmd.username {
             warn!(
                 "Security Alert: Username mismatch! Packet: {}, Session: {}",
                 user_cmd.username, session.username
             );
-            return Err("Username mismatch".into());
+            return Err(HandshakeError::UsernameMismatch {
+                expected: session.username,
+                actual: user_cmd.username,
+            });
         }
         info!(
             "Session verified for user: {} (ID: {})",
@@ -71,6 +147,47 @@ impl HandshakeState {
         );
 
         Ok((socket, user_cmd.username, sync_cmd.code))
+    }
+}
+
+#[derive(Debug)]
+pub enum LobbyError {
+    ConnectionClosed,
+    Codec(crate::net::error::Error),
+    Io(std::io::Error),
+    CharacterCreation(String),
+}
+
+impl fmt::Display for LobbyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LobbyError::ConnectionClosed => write!(f, "Connection closed during lobby"),
+            LobbyError::Codec(e) => write!(f, "Codec error: {}", e),
+            LobbyError::Io(e) => write!(f, "IO error: {}", e),
+            LobbyError::CharacterCreation(e) => write!(f, "Character creation failed: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for LobbyError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            LobbyError::Codec(e) => Some(e),
+            LobbyError::Io(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<crate::net::error::Error> for LobbyError {
+    fn from(e: crate::net::error::Error) -> Self {
+        LobbyError::Codec(e)
+    }
+}
+
+impl From<std::io::Error> for LobbyError {
+    fn from(e: std::io::Error) -> Self {
+        LobbyError::Io(e)
     }
 }
 
@@ -87,7 +204,7 @@ impl LobbyState {
         &self,
         framed: &mut Framed<TcpStream, WorldCodec>,
         chars: &[Character],
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), LobbyError> {
         framed
             .send(WorldEventPacket::Lobby(
                 LobbyEventPacket::CharacterListStart(CharacterListStartPacket { sequence: 0 }),
@@ -117,9 +234,9 @@ impl LobbyState {
                 .await?;
         }
         framed
-            .send(WorldEventPacket::Lobby(
-                LobbyEventPacket::CharacterListEnd(CharacterListEndPacket),
-            ))
+            .send(WorldEventPacket::Lobby(LobbyEventPacket::CharacterListEnd(
+                CharacterListEndPacket,
+            )))
             .await?;
         Ok(())
     }
@@ -128,7 +245,7 @@ impl LobbyState {
         &self,
         framed: &mut Framed<TcpStream, WorldCodec>,
         username: &str,
-    ) -> Result<Character, Box<dyn Error>> {
+    ) -> Result<Character, LobbyError> {
         // Send Character List
         let mut chars = self.lobby_service.get_characters(username).await;
 
@@ -201,12 +318,51 @@ impl LobbyState {
                     }
                 }
                 Err(e) => {
-                    return Err(format!("Error reading frame: {}", e).into());
+                    return Err(LobbyError::Codec(e));
                 }
             }
         }
 
-        Err("Connection closed during lobby".into())
+        Err(LobbyError::ConnectionClosed)
+    }
+}
+
+#[derive(Debug)]
+pub enum GameError {
+    ConnectionClosed,
+    Codec(crate::net::error::Error),
+    Io(std::io::Error),
+}
+
+impl fmt::Display for GameError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GameError::ConnectionClosed => write!(f, "Connection closed during game"),
+            GameError::Codec(e) => write!(f, "Codec error: {}", e),
+            GameError::Io(e) => write!(f, "IO error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for GameError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            GameError::Codec(e) => Some(e),
+            GameError::Io(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<crate::net::error::Error> for GameError {
+    fn from(e: crate::net::error::Error) -> Self {
+        GameError::Codec(e)
+    }
+}
+
+impl From<std::io::Error> for GameError {
+    fn from(e: std::io::Error) -> Self {
+        GameError::Io(e)
     }
 }
 
@@ -224,7 +380,7 @@ impl GameState {
         framed: &mut Framed<TcpStream, WorldCodec>,
         username: &str,
         _character: Character,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), GameError> {
         info!("Entered Game State for user: {}", username);
 
         // TODO: Implement map loading logic here (send map info, etc.)
@@ -238,7 +394,7 @@ impl GameState {
                             // Heartbeat
                         }
                         WorldCommandPayload::Lobby(_) => {
-                             warn!("Received lobby command in game state, ignoring");
+                            warn!("Received lobby command in game state, ignoring");
                         }
                         WorldCommandPayload::Game(game_cmd) => match game_cmd {
                             GameCommandPacket::Walk(pkt) => {
@@ -251,7 +407,7 @@ impl GameState {
                     }
                 }
                 Err(e) => {
-                    return Err(format!("Error reading frame: {}", e).into());
+                    return Err(GameError::Codec(e));
                 }
             }
         }

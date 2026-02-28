@@ -1,8 +1,8 @@
-use crate::net::packets::game::GameCommandPacket;
-use crate::net::packets::lobby::{LobbyCommandPacket, LobbyEventPacket};
+use crate::net::packet::game::GameCommandPacket;
+use crate::net::packet::lobby::{LobbyCommandPacket, LobbyEventPacket};
 use crate::net::{
-    error::{Error, ParseErrorKind},
-    packets::status::StatusEventPacket,
+    error::{Error, ParsePacketError},
+    packet::status::StatusEventPacket,
 };
 use std::fmt;
 use std::str::FromStr;
@@ -25,13 +25,13 @@ impl FromStr for WorldCommandPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
-        let sequence = seq_str
-            .parse::<u32>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid sequence".to_string()))?;
+        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "sequence".to_string(),
+                value: seq_str.to_string(),
+            })
+        })?;
 
         let payload_str = parts.next().unwrap_or("");
 
@@ -58,10 +58,8 @@ impl FromStr for WorldCommandPacket {
                 WorldCommandPayload::Game(game_cmd)
             }
             _ => {
-                return Err(Error::parse(
-                    ParseErrorKind::InvalidTag,
-                    format!("Unknown command: {}", tag),
-                ));
+                let game_cmd = payload_str.parse::<GameCommandPacket>()?;
+                WorldCommandPayload::Game(game_cmd)
             }
         };
 

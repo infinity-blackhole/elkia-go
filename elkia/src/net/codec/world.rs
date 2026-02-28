@@ -1,5 +1,5 @@
-use crate::net::error::Error;
-use crate::net::packets::world::{WorldCommandPacket, WorldEventPacket};
+use crate::net::error::{Error, ParsePacketError};
+use crate::net::packet::world::{WorldCommandPacket, WorldEventPacket};
 use bytes::{Buf, BufMut, BytesMut};
 use std::io;
 use tokio_util::codec::{Decoder, Encoder};
@@ -31,7 +31,7 @@ impl WorldCodec {
         decrypted
     }
 
-    fn unpack(&self, data: &[u8]) -> Result<String, io::Error> {
+    fn unpack(&self, data: &[u8]) -> Result<String, Error> {
         let mut unpacked = Vec::new();
         let mut remaining = data;
 
@@ -88,10 +88,7 @@ impl WorldCodec {
             }
         }
 
-        match String::from_utf8(unpacked) {
-            Ok(s) => Ok(s),
-            Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF-8")),
-        }
+        String::from_utf8(unpacked).map_err(|e| Error::from(ParsePacketError::FromUtf8(e)))
     }
 }
 
@@ -178,7 +175,11 @@ impl Encoder<&[u8]> for WorldCodec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::net::packets::world::WorldCommandPayload;
+    use crate::net::packet::lobby::{CharacterListStartPacket, LobbyEventPacket};
+    use crate::net::packet::world::WorldCommandPayload;
+    use crate::net::packet::world::WorldEventPacket;
+    use bytes::BytesMut;
+    use tokio_util::codec::{Decoder, Encoder};
 
     #[test]
     fn test_world_codec_decode_manual() {
@@ -211,7 +212,7 @@ mod tests {
         let packet = codec.decode(&mut src).unwrap().unwrap();
 
         match packet.payload {
-            WorldCommandPayload::Game(crate::net::packets::game::GameCommandPacket::Walk(p)) => {
+            WorldCommandPayload::Game(crate::net::packet::game::GameCommandPacket::Walk(p)) => {
                 assert_eq!(packet.sequence, 123);
                 assert_eq!(p.x, 10);
                 assert_eq!(p.y, 20);
@@ -243,7 +244,9 @@ mod tests {
     fn test_world_codec_encode_packet() {
         let mut codec = WorldCodec::new(0);
         let mut dst = BytesMut::new();
-        let packet = WorldEventPacket::CharacterListStart(123);
+        let packet = WorldEventPacket::Lobby(LobbyEventPacket::CharacterListStart(
+            CharacterListStartPacket { sequence: 123 },
+        ));
         codec.encode(packet, &mut dst).unwrap();
         // "clist_start 123"
         // len = 15. chunk_len = 15 (0x0F).

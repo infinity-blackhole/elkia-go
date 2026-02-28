@@ -1,5 +1,5 @@
-use crate::net::error::{Error, ParseErrorKind};
-use crate::net::packets::status::StatusEventPacket;
+use crate::net::error::{Error, ParsePacketError};
+use crate::net::packet::status::StatusEventPacket;
 use std::fmt;
 use std::str::FromStr;
 
@@ -22,10 +22,9 @@ impl FromStr for SyncPacket {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(3, ' ');
 
-        let seq_part = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
+        let seq_part = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::EmptyInput))?;
 
         // Remove hardcoded prefix skipping which might be incorrect for decoded Packet
         let seq_str = if seq_part.len() > 2 && seq_part.starts_with("xx") {
@@ -35,21 +34,22 @@ impl FromStr for SyncPacket {
         };
 
         let sequence = seq_str.parse::<u32>().map_err(|_| {
-            Error::parse(
-                ParseErrorKind::Malformed,
-                format!("Invalid sequence: {}", seq_str),
-            )
+            Error::from(ParsePacketError::InvalidField {
+                field: "sequence".to_string(),
+                value: seq_str.to_string(),
+            })
         })?;
 
-        let code_str = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Missing code".to_string(),
-        ))?;
+        let code_str = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "code".to_string(),
+            )))?;
         let code = code_str.parse::<u32>().map_err(|_| {
-            Error::parse(
-                ParseErrorKind::Malformed,
-                format!("Invalid code: {}", code_str),
-            )
+            Error::from(ParsePacketError::InvalidField {
+                field: "code".to_string(),
+                value: code_str.to_string(),
+            })
         })?;
 
         Ok(SyncPacket { sequence, code })
@@ -67,19 +67,18 @@ impl FromStr for UsernamePacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
-        let sequence = seq_str
-            .parse::<u32>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid sequence".to_string()))?;
+        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "sequence".to_string(),
+                value: seq_str.to_string(),
+            })
+        })?;
         let username = parts
             .next()
-            .ok_or(Error::parse(
-                ParseErrorKind::Malformed,
-                "Missing username".to_string(),
-            ))?
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "username".to_string(),
+            )))?
             .to_string();
         Ok(UsernamePacket { sequence, username })
     }
@@ -96,19 +95,18 @@ impl FromStr for PasswordPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let seq_str = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
-        let sequence = seq_str
-            .parse::<u32>()
-            .map_err(|_| Error::parse(ParseErrorKind::Malformed, "Invalid sequence".to_string()))?;
+        let seq_str = parts.next().ok_or(Error::from(ParsePacketError::EmptyInput))?;
+        let sequence = seq_str.parse::<u32>().map_err(|_| {
+            Error::from(ParsePacketError::InvalidField {
+                field: "sequence".to_string(),
+                value: seq_str.to_string(),
+            })
+        })?;
         let password = parts
             .next()
-            .ok_or(Error::parse(
-                ParseErrorKind::Malformed,
-                "Missing password".to_string(),
-            ))?
+            .ok_or(Error::from(ParsePacketError::MissingField(
+                "password".to_string(),
+            )))?
             .to_string();
         Ok(PasswordPacket { sequence, password })
     }

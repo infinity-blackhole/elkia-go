@@ -1,6 +1,6 @@
-use crate::net::error::{Error, ParseErrorKind};
-use crate::net::packets::handshake::{
-    HandshakeEventPacket, HandshakeCommandPacket, PasswordPacket, SyncPacket, UsernamePacket,
+use crate::net::error::{Error, ParsePacketError};
+use crate::net::packet::handshake::{
+    HandshakeCommandPacket, HandshakeEventPacket, PasswordPacket, SyncPacket, UsernamePacket,
 };
 use bytes::{Buf, BufMut, BytesMut};
 use std::io;
@@ -61,7 +61,7 @@ impl Decoder for HandshakeCodec {
 
             let s = match String::from_utf8(decoded) {
                 Ok(s) => s,
-                Err(e) => return Err(Error::parse(ParseErrorKind::Utf8Error, e.to_string())),
+                Err(e) => return Err(Error::from(ParsePacketError::FromUtf8(e))),
             };
 
             let packet = match self.state {
@@ -85,10 +85,7 @@ impl Decoder for HandshakeCodec {
                 }
                 State::Done => {
                     // Should not happen in normal flow, but maybe reconnect/error
-                    return Err(Error::parse(
-                        ParseErrorKind::InvalidSequence,
-                        "Unexpected packet after handshake".to_string(),
-                    ));
+                    return Err(Error::from(ParsePacketError::InvalidSequence));
                 }
             };
 

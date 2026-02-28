@@ -1,4 +1,7 @@
-use crate::net::{error::{Error, ParseErrorKind}, packets::status::StatusEventPacket};
+use crate::net::{
+    error::{Error, ParsePacketError},
+    packet::status::StatusEventPacket,
+};
 use std::{fmt, str::FromStr};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,33 +21,30 @@ impl FromStr for GatewayCommandPacket {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parts = input.splitn(2, ' ');
-        let tag = parts.next().ok_or(Error::parse(
-            ParseErrorKind::Malformed,
-            "Empty input".to_string(),
-        ))?;
+        let tag = parts
+            .next()
+            .ok_or(Error::from(ParsePacketError::EmptyInput))?;
 
         match tag {
             "NoS0575" => {
-                let rest = parts.next().ok_or(Error::parse(
-                    ParseErrorKind::Malformed,
-                    "Missing payload".to_string(),
-                ))?;
+                let rest = parts
+                    .next()
+                    .ok_or(Error::from(ParsePacketError::MissingField(
+                        "payload".to_string(),
+                    )))?;
                 let fields: Vec<&str> = rest.split(' ').collect();
                 if fields.len() != 4 {
-                    return Err(Error::parse(
-                        ParseErrorKind::Malformed,
-                        format!("Invalid length: {}", fields.len()),
-                    ));
+                    return Err(Error::from(ParsePacketError::InvalidLength {
+                        expected: 4,
+                        actual: fields.len(),
+                    }));
                 }
                 // fields[0] ignored (e.g. session id)
                 let username = fields[1].to_string();
                 let password = match decode_password(fields[2]) {
                     Ok(p) => p,
                     Err(e) => {
-                        return Err(Error::parse(
-                            ParseErrorKind::Malformed,
-                            format!("Password decode error: {}", e),
-                        ));
+                        return Err(e);
                     }
                 };
                 let client_version = fields[3].to_string();
@@ -55,10 +55,7 @@ impl FromStr for GatewayCommandPacket {
                     client_version,
                 }))
             }
-            _ => Err(Error::parse(
-                ParseErrorKind::InvalidTag,
-                format!("Invalid tag: {}", tag),
-            )),
+            _ => Err(Error::from(ParsePacketError::UnexpectedTag(tag.to_string()))),
         }
     }
 }
@@ -80,7 +77,7 @@ fn decode_password(s: &str) -> Result<String, Error> {
         }
     }
 
-    String::from_utf8(filtered).map_err(|e| Error::parse(ParseErrorKind::Utf8Error, e.to_string()))
+    String::from_utf8(filtered).map_err(|e| Error::from(ParsePacketError::FromUtf8(e)))
 }
 
 #[derive(Debug, PartialEq, Clone)]
