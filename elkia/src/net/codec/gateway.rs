@@ -1,5 +1,4 @@
-use crate::net::packets::auth::AuthPacket;
-use crate::net::packets::handshake::HandshakeEventPacket;
+use crate::net::packets::gateway::{GatewayCommandPacket, GatewayEventPacket};
 use bytes::{Buf, BufMut, BytesMut};
 use std::io;
 use tokio_util::codec::{Decoder, Encoder};
@@ -7,7 +6,7 @@ use tokio_util::codec::{Decoder, Encoder};
 pub struct GatewayCodec;
 
 impl Decoder for GatewayCodec {
-    type Item = AuthPacket;
+    type Item = GatewayCommandPacket;
     type Error = io::Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
@@ -26,7 +25,7 @@ impl Decoder for GatewayCodec {
             }
 
             match String::from_utf8(decrypted) {
-                Ok(s) => match s.parse::<AuthPacket>() {
+                Ok(s) => match s.parse::<GatewayCommandPacket>() {
                     Ok(packet) => Ok(Some(packet)),
                     Err(e) => Err(io::Error::new(io::ErrorKind::InvalidData, e.to_string())),
                 },
@@ -38,16 +37,16 @@ impl Decoder for GatewayCodec {
     }
 }
 
-impl Encoder<HandshakeEventPacket> for GatewayCodec {
+impl Encoder<GatewayEventPacket> for GatewayCodec {
     type Error = io::Error;
 
     fn encode(
         &mut self,
-        item: HandshakeEventPacket,
+        item: GatewayEventPacket,
         dst: &mut BytesMut,
     ) -> Result<(), Self::Error> {
         let s = match item {
-            HandshakeEventPacket::EndpointList(e) => {
+            GatewayEventPacket::EndpointList(e) => {
                 let mut s = format!("NsTeST {} ", e.code);
                 for (i, endpoint) in e.endpoints.iter().enumerate() {
                     if i > 0 {
@@ -57,7 +56,7 @@ impl Encoder<HandshakeEventPacket> for GatewayCodec {
                 }
                 s
             }
-            HandshakeEventPacket::Status(s) => format!("{}", s),
+            GatewayEventPacket::Status(s) => format!("{}", s),
         };
         self.encode(s, dst)
     }

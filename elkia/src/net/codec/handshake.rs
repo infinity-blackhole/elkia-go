@@ -1,6 +1,6 @@
 use crate::net::error::{Error, ParseErrorKind};
 use crate::net::packets::handshake::{
-    HandshakePacket, HandshakeEventPacket, PasswordPacket, SyncPacket, UsernamePacket,
+    HandshakeEventPacket, HandshakeCommandPacket, PasswordPacket, SyncPacket, UsernamePacket,
 };
 use bytes::{Buf, BufMut, BytesMut};
 use std::io;
@@ -31,7 +31,7 @@ impl Default for HandshakeCodec {
 }
 
 impl Decoder for HandshakeCodec {
-    type Item = HandshakePacket;
+    type Item = HandshakeCommandPacket;
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
@@ -69,19 +69,19 @@ impl Decoder for HandshakeCodec {
                     use std::str::FromStr;
                     let cmd = SyncPacket::from_str(&s)?;
                     self.state = State::Username;
-                    HandshakePacket::Sync(cmd)
+                    HandshakeCommandPacket::Sync(cmd)
                 }
                 State::Username => {
                     use std::str::FromStr;
                     let cmd = UsernamePacket::from_str(&s)?;
                     self.state = State::Password;
-                    HandshakePacket::Username(cmd)
+                    HandshakeCommandPacket::Username(cmd)
                 }
                 State::Password => {
                     use std::str::FromStr;
                     let cmd = PasswordPacket::from_str(&s)?;
                     self.state = State::Done;
-                    HandshakePacket::Password(cmd)
+                    HandshakeCommandPacket::Password(cmd)
                 }
                 State::Done => {
                     // Should not happen in normal flow, but maybe reconnect/error
@@ -140,8 +140,6 @@ impl Encoder<&[u8]> for HandshakeCodec {
         Ok(())
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

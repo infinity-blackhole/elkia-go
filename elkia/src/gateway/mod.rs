@@ -1,8 +1,7 @@
 use crate::auth::AuthService;
 use crate::net::codec::gateway::GatewayCodec;
-use crate::net::packets::auth::{AuthPacket, LoginPacket};
-use crate::net::packets::handshake::{Endpoint, EndpointListEvent, HandshakeEventPacket};
-use crate::net::packets::status::{FailCode, FailPacket, StatusPacket};
+use crate::net::packets::gateway::{GatewayCommandPacket, LoginPacket,Endpoint, EndpointListPacket, GatewayEventPacket};
+use crate::net::packets::status::{FailCode, FailPacket, StatusEventPacket};
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -51,7 +50,10 @@ impl AuthServer {
                     }
                     Err(e) => {
                         error!("Error handling packet: {}", e);
-                        if let Err(send_err) = framed.send(HandshakeEventPacket::Status(StatusPacket::Error(e))).await {
+                        if let Err(send_err) = framed
+                            .send(GatewayEventPacket::Status(StatusEventPacket::Error(e)))
+                            .await
+                        {
                             error!("Failed to send error packet: {}", send_err);
                         }
                         // Usually, auth failure implies disconnection or retry.
@@ -70,14 +72,14 @@ impl AuthServer {
 
     pub async fn handle_packet(
         &self,
-        packet: AuthPacket,
-    ) -> Result<HandshakeEventPacket, FailPacket> {
+        packet: GatewayCommandPacket,
+    ) -> Result<GatewayEventPacket, FailPacket> {
         match packet {
-            AuthPacket::Login(login_cmd) => self.handle_login(login_cmd).await,
+            GatewayCommandPacket::Login(login_cmd) => self.handle_login(login_cmd).await,
         }
     }
 
-    async fn handle_login(&self, cmd: LoginPacket) -> Result<HandshakeEventPacket, FailPacket> {
+    async fn handle_login(&self, cmd: LoginPacket) -> Result<GatewayEventPacket, FailPacket> {
         info!("Login attempt for user: {}", cmd.username);
 
         match self
@@ -106,7 +108,7 @@ impl AuthServer {
                     world_name: "Elkia".to_string(),
                 }];
 
-                Ok(HandshakeEventPacket::EndpointList(EndpointListEvent {
+                Ok(GatewayEventPacket::EndpointList(EndpointListPacket {
                     code,
                     endpoints,
                 }))
@@ -165,10 +167,10 @@ mod tests {
             client_version: "1.0".to_string(),
         };
 
-        let response = server.handle_packet(AuthPacket::Login(cmd)).await;
+        let response = server.handle_packet(GatewayCommandPacket::Login(cmd)).await;
         assert!(response.is_ok());
 
-        if let HandshakeEventPacket::EndpointList(event) = response.unwrap() {
+        if let GatewayEventPacket::EndpointList(event) = response.unwrap() {
             assert_eq!(event.code, 12345);
             assert!(!event.endpoints.is_empty());
             let endpoint = &event.endpoints[0];

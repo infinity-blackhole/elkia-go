@@ -1,4 +1,4 @@
-pub mod auth;
+pub mod gateway;
 pub mod game;
 pub mod handshake;
 pub mod lobby;

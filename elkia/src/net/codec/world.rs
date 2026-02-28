@@ -181,22 +181,43 @@ mod tests {
     use crate::net::packets::world::WorldCommandPayload;
 
     #[test]
-    fn test_world_codec_decode_username() {
-        // Input from legacy TestChannelDecodeIdentifierCommand
-        let input = b"\xc6\xe4\xcb\x91\x46\xcd\xd6\xdc\xd0\xd9\xd0\xc4\x07\xd4\x49\xff\xd0\xcb\xde\xd1\xd7\xd0\xd2\xda\xc1\x70\x43\xdc\xd0\xd2\x3f\xc7\xe4\xcb\xa1\x10\x48\xd7\xd6\xdd\xc8\xd6\xc8\xd6\xf8\xc1\xa0\x41\xda\xc1\xe0\x42\xf1\xcd";
-
+    fn test_world_codec_decode_manual() {
         let mut codec = WorldCodec::new(0);
-        let mut src = BytesMut::from(&input[..]);
+        // key=0 -> mode=0, offset=64
+        let offset = 64u8;
 
-        // First packet (Username)
-        let res1 = codec.decode(&mut src).unwrap().unwrap();
-        assert_eq!(
-            res1,
-            WorldCommandPacket {
-                sequence: 60471,
-                payload: WorldCommandPayload::Command("ricofo8350@otanhome.com".to_string())
+        // "123 walk 10 20"
+        let payload = "123 walk 10 20";
+        let len = payload.len() as u8;
+
+        let mut raw = Vec::new();
+        // 1. Length byte
+        raw.push(len);
+        // 2. Inverted payload bytes
+        for b in payload.as_bytes() {
+            raw.push(b ^ 0xFF);
+        }
+
+        // 3. Encrypt (add offset)
+        let mut encrypted = BytesMut::new();
+        for b in raw {
+            encrypted.put_u8(b.wrapping_add(offset));
+        }
+        // 4. Delimiter
+        encrypted.put_u8(0xffu8.wrapping_add(offset));
+
+        // Decode
+        let mut src = encrypted;
+        let packet = codec.decode(&mut src).unwrap().unwrap();
+
+        match packet.payload {
+            WorldCommandPayload::Game(crate::net::packets::game::GameCommandPacket::Walk(p)) => {
+                assert_eq!(packet.sequence, 123);
+                assert_eq!(p.x, 10);
+                assert_eq!(p.y, 20);
             }
-        );
+            _ => panic!("Expected Walk packet, got {:?}", packet),
+        }
     }
 
     #[test]

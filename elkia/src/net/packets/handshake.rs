@@ -1,10 +1,10 @@
 use crate::net::error::{Error, ParseErrorKind};
-use crate::net::packets::status::StatusPacket;
+use crate::net::packets::status::StatusEventPacket;
 use std::fmt;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum HandshakePacket {
+pub enum HandshakeCommandPacket {
     Sync(SyncPacket),
     Username(UsernamePacket),
     Password(PasswordPacket),
@@ -116,51 +116,13 @@ impl FromStr for PasswordPacket {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum HandshakeEventPacket {
-    EndpointList(EndpointListEvent),
-    Status(StatusPacket),
+    Status(StatusEventPacket),
 }
 
 impl fmt::Display for HandshakeEventPacket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            HandshakeEventPacket::EndpointList(ep) => write!(f, "{}", ep),
             HandshakeEventPacket::Status(s) => write!(f, "{}", s),
         }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Endpoint {
-    pub host: String,
-    pub port: String,
-    pub weight: u32,
-    pub world_id: u32,
-    pub channel_id: u32,
-    pub world_name: String,
-}
-
-impl fmt::Display for Endpoint {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}:{}:{}:{}.{}.{}",
-            self.host, self.port, self.weight, self.world_id, self.channel_id, self.world_name
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct EndpointListEvent {
-    pub code: u32,
-    pub endpoints: Vec<Endpoint>,
-}
-
-impl fmt::Display for EndpointListEvent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "NsTeST {} ", self.code)?;
-        for ep in &self.endpoints {
-            write!(f, "{} ", ep)?;
-        }
-        write!(f, "-1:-1:-1:10000.10000.1")
     }
 }

@@ -1,5 +1,5 @@
-use crate::net::error::{Error, ParseErrorKind};
-use std::str::FromStr;
+use crate::net::{error::{Error, ParseErrorKind}, packets::status::StatusEventPacket};
+use std::{fmt, str::FromStr};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct LoginPacket {
@@ -9,11 +9,11 @@ pub struct LoginPacket {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum AuthPacket {
+pub enum GatewayCommandPacket {
     Login(LoginPacket),
 }
 
-impl FromStr for AuthPacket {
+impl FromStr for GatewayCommandPacket {
     type Err = Error;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
@@ -49,7 +49,7 @@ impl FromStr for AuthPacket {
                 };
                 let client_version = fields[3].to_string();
 
-                Ok(AuthPacket::Login(LoginPacket {
+                Ok(GatewayCommandPacket::Login(LoginPacket {
                     username,
                     password,
                     client_version,
@@ -81,4 +81,55 @@ fn decode_password(s: &str) -> Result<String, Error> {
     }
 
     String::from_utf8(filtered).map_err(|e| Error::parse(ParseErrorKind::Utf8Error, e.to_string()))
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum GatewayEventPacket {
+    EndpointList(EndpointListPacket),
+    Status(StatusEventPacket),
+}
+
+impl fmt::Display for GatewayEventPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GatewayEventPacket::EndpointList(ep) => write!(f, "{}", ep),
+            GatewayEventPacket::Status(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Endpoint {
+    pub host: String,
+    pub port: String,
+    pub weight: u32,
+    pub world_id: u32,
+    pub channel_id: u32,
+    pub world_name: String,
+}
+
+impl fmt::Display for Endpoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}:{}.{}.{}",
+            self.host, self.port, self.weight, self.world_id, self.channel_id, self.world_name
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct EndpointListPacket {
+    pub code: u32,
+    pub endpoints: Vec<Endpoint>,
+}
+
+impl fmt::Display for EndpointListPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "NsTeST {} ", self.code)?;
+        for ep in &self.endpoints {
+            write!(f, "{} ", ep)?;
+        }
+        write!(f, "-1:-1:-1:10000.10000.1")
+    }
 }

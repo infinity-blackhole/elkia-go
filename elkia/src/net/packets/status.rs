@@ -3,16 +3,16 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum StatusPacket {
+pub enum StatusEventPacket {
     Error(FailPacket),
     Info(InfoPacket),
 }
 
-impl fmt::Display for StatusPacket {
+impl fmt::Display for StatusEventPacket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StatusPacket::Error(e) => write!(f, "{}", e),
-            StatusPacket::Info(i) => write!(f, "{}", i),
+            StatusEventPacket::Error(e) => write!(f, "{}", e),
+            StatusEventPacket::Info(i) => write!(f, "{}", i),
         }
     }
 }
