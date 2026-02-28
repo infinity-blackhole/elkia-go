@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrorOpCode = "failc"
-	InfoOpCode  = "info"
+	ErrorTag = "failc"
+	InfoTag  = "info"
 )
 
 type ErrorEvent struct {
@@ -48,7 +48,7 @@ type InfoEvent struct {
 
 func (f *InfoEvent) MarshalNosTale() ([]byte, error) {
 	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, "%s %s", InfoOpCode, f.Content); err != nil {
+	if _, err := fmt.Fprintf(&b, "%s %s", InfoTag, f.Content); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
@@ -60,7 +60,7 @@ func (f *InfoEvent) UnmarshalNosTale(b []byte) error {
 	if len(bs) != 2 {
 		return fmt.Errorf("invalid length: %d", len(bs))
 	}
-	if string(bs[0]) != InfoOpCode {
+	if string(bs[0]) != InfoTag {
 		return fmt.Errorf("invalid prefix: %s", string(bs[0]))
 	}
 	f.Content = string(bs[1])
